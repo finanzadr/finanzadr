@@ -184,6 +184,7 @@ export default function FinanzasDR() {
       @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
       @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
       @keyframes slideToggle { from{opacity:0} to{opacity:1} }
+      html, body, #root { width:100%; min-height:100vh; margin:0; padding:0; background:${C.bg}; }
       .ticker-track { display:flex; animation:ticker 50s linear infinite; white-space:nowrap; }
       .ticker-track:hover { animation-play-state:paused; }
       .fade-in { animation: fadeIn 0.4s ease forwards; }
@@ -208,7 +209,7 @@ export default function FinanzasDR() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", background: C.bg, color: C.text, fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", width: "100vw", maxWidth: "100%", background: C.bg, color: C.text, fontFamily: "'Inter', sans-serif", overflowX: "hidden" }}>
 
       {/* Ticker */}
       <div style={{ background: C.bg, borderBottom: `1px solid ${C.border}`, height: 36, display: "flex", alignItems: "center", overflow: "hidden" }}>
