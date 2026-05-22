@@ -205,6 +205,7 @@ export default function FinanzasDR() {
     ["ws",         "📰 Noticias"],
     ["blog",       "📚 Aprende"],
     ["calc",       "🧮 Calculadora"],
+    ["snapshot",   "📸 Compartir"],
     ["newsletter", "📧 Newsletter"],
   ];
 
@@ -534,6 +535,17 @@ export default function FinanzasDR() {
 
             {/* Selector de símbolo */}
             <TradingViewCharts />
+          </div>
+        )}
+
+        {/* SNAPSHOT */}
+        {tab === "snapshot" && (
+          <div className="fade-in">
+            <SectionTitle>📸 Market Snapshot</SectionTitle>
+            <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 24 }}>
+              Genera una card visual del mercado lista para compartir en X, Instagram o TikTok.
+            </p>
+            <SnapshotCard stocks={stocks} />
           </div>
         )}
 
@@ -1038,6 +1050,245 @@ function TradingViewCharts() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Snapshot Card Component ───────────────────────────────────────
+function SnapshotCard({ stocks }) {
+  const canvasRef = useRef(null);
+  const [copied, setCopied] = useState(false);
+  const [style, setStyle] = useState("dark");
+
+  const gainers = stocks.filter(s => s.c > 0).length;
+  const pct = Math.round(gainers / stocks.length * 100);
+  const sentiment = pct >= 70 ? "ALCISTA 🟢" : pct >= 40 ? "NEUTRAL ⚪" : "BAJISTA 🔴";
+  const topMover = [...stocks].sort((a,b) => Math.abs(b.c) - Math.abs(a.c))[0];
+  const date = new Date().toLocaleDateString("es-DO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  const generateCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = 1080, H = 1080;
+    canvas.width = W;
+    canvas.height = H;
+
+    const isDark = style === "dark";
+    const bg      = isDark ? "#07080f" : "#f4f5f8";
+    const card    = isDark ? "#0d0f1e" : "#ffffff";
+    const border  = isDark ? "#1a1e35" : "#e0e4ef";
+    const gold    = "#c8a84b";
+    const textCol = isDark ? "#dde1f5" : "#1a1d2e";
+    const subCol  = isDark ? "#8890b5" : "#555e7a";
+    const green   = "#00d68f";
+    const red     = "#ff4466";
+
+    // Background
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Top accent line
+    ctx.fillStyle = gold;
+    ctx.fillRect(0, 0, W, 6);
+
+    // Header
+    ctx.fillStyle = gold;
+    ctx.font = "bold 72px Georgia, serif";
+    ctx.fillText("FinanzaDR", 60, 100);
+
+    ctx.fillStyle = subCol;
+    ctx.font = "28px 'Courier New', monospace";
+    ctx.fillText("MARKET SNAPSHOT · " + date.toUpperCase(), 60, 145);
+
+    // Divider
+    ctx.fillStyle = border;
+    ctx.fillRect(60, 165, W - 120, 2);
+
+    // Sentiment
+    ctx.fillStyle = textCol;
+    ctx.font = "bold 36px 'Courier New', monospace";
+    ctx.fillText("SENTIMIENTO:", 60, 220);
+    ctx.fillStyle = pct >= 70 ? green : pct >= 40 ? gold : red;
+    ctx.font = "bold 52px Georgia, serif";
+    ctx.fillText(sentiment, 60, 285);
+
+    ctx.fillStyle = subCol;
+    ctx.font = "26px 'Courier New', monospace";
+    ctx.fillText(`${gainers} de ${stocks.length} activos en verde — ${pct}% positivo`, 60, 330);
+
+    // Divider
+    ctx.fillStyle = border;
+    ctx.fillRect(60, 355, W - 120, 2);
+
+    // Stock grid — 4 columns
+    const cols = 4;
+    const cellW = (W - 120) / cols;
+    const startY = 390;
+
+    stocks.forEach((st, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = 60 + col * cellW;
+      const y = startY + row * 160;
+
+      // Card bg
+      ctx.fillStyle = card;
+      roundRect(ctx, x + 8, y, cellW - 16, 140, 12);
+      ctx.fill();
+
+      // Left border
+      ctx.fillStyle = st.c >= 0 ? green : red;
+      ctx.fillRect(x + 8, y, 4, 140);
+
+      // Symbol
+      ctx.fillStyle = gold;
+      ctx.font = "bold 28px 'Courier New', monospace";
+      ctx.fillText(st.s, x + 22, y + 38);
+
+      // Name
+      ctx.fillStyle = subCol;
+      ctx.font = "18px 'Courier New', monospace";
+      const name = st.n.length > 12 ? st.n.substring(0, 12) + "..." : st.n;
+      ctx.fillText(name, x + 22, y + 65);
+
+      // Price
+      ctx.fillStyle = textCol;
+      ctx.font = "bold 30px 'Courier New', monospace";
+      const price = st.p >= 1000 ? st.p.toLocaleString("en-US", { maximumFractionDigits: 0 }) : st.p.toFixed(2);
+      ctx.fillText(price, x + 22, y + 105);
+
+      // Change
+      ctx.fillStyle = st.c >= 0 ? green : red;
+      ctx.font = "bold 22px 'Courier New', monospace";
+      ctx.fillText(`${st.c >= 0 ? "▲" : "▼"} ${Math.abs(st.c)}%`, x + 22, y + 132);
+    });
+
+    // Top Mover
+    const tmY = startY + Math.ceil(stocks.length / cols) * 160 + 20;
+    ctx.fillStyle = border;
+    ctx.fillRect(60, tmY, W - 120, 2);
+
+    ctx.fillStyle = subCol;
+    ctx.font = "26px 'Courier New', monospace";
+    ctx.fillText("TOP MOVER DEL DÍA:", 60, tmY + 48);
+    ctx.fillStyle = gold;
+    ctx.font = "bold 48px Georgia, serif";
+    ctx.fillText(`${topMover.s} — ${topMover.c >= 0 ? "▲" : "▼"} ${Math.abs(topMover.c)}%`, 60, tmY + 105);
+
+    // Footer
+    ctx.fillStyle = border;
+    ctx.fillRect(60, H - 100, W - 120, 2);
+    ctx.fillStyle = gold;
+    ctx.font = "bold 32px 'Courier New', monospace";
+    ctx.fillText("finanzadr.com", 60, H - 55);
+    ctx.fillStyle = subCol;
+    ctx.font = "22px 'Courier New', monospace";
+    ctx.fillText("Wall Street en tu idioma · Educación financiera para latinos", W - 60, H - 55);
+    ctx.textAlign = "right";
+    ctx.fillText("Wall Street en tu idioma · No constituye asesoría de inversión", W - 60, H - 55);
+    ctx.textAlign = "left";
+  };
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  useEffect(() => { generateCanvas(); }, [stocks, style]);
+
+  const downloadImage = () => {
+    const canvas = canvasRef.current;
+    const link = document.createElement("a");
+    link.download = `finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
+  const shareOnX = () => {
+    const gainers = stocks.filter(s => s.c > 0).length;
+    const text = `📊 Market Snapshot — ${date}\n\n${stocks.slice(0,4).map(s => `${s.s}: ${s.c >= 0 ? "▲" : "▼"}${Math.abs(s.c)}%`).join(" | ")}\n\nSentimiento: ${sentiment} (${pct}%)\n\n#WallStreet #Inversiones #FinanzasDR\n\nfinanzadr.com`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const copyImage = async () => {
+    const canvas = canvasRef.current;
+    canvas.toBlob(async (blob) => {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        downloadImage();
+      }
+    });
+  };
+
+  return (
+    <div>
+      {/* Style toggle */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {["dark", "light"].map(s => (
+          <button key={s} onClick={() => setStyle(s)} style={{
+            padding: "9px 20px", borderRadius: 8,
+            border: `1px solid ${style === s ? C.gold : C.border}`,
+            background: style === s ? C.goldBg : "none",
+            color: style === s ? C.gold : C.muted,
+            fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 600, cursor: "pointer",
+          }}>
+            {s === "dark" ? "🌙 Oscuro" : "☀️ Claro"}
+          </button>
+        ))}
+      </div>
+
+      {/* Canvas preview */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, marginBottom: 20, overflow: "hidden" }}>
+        <canvas ref={canvasRef} style={{ width: "100%", height: "auto", borderRadius: 8, display: "block" }} />
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button onClick={downloadImage} style={{
+          background: C.gold, color: "#000", border: "none",
+          padding: "13px 24px", borderRadius: 8, cursor: "pointer",
+          fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          ⬇️ Descargar PNG
+        </button>
+        <button onClick={copyImage} style={{
+          background: copied ? C.green : "none",
+          color: copied ? "#000" : C.gold,
+          border: `1px solid ${copied ? C.green : C.gold}`,
+          padding: "13px 24px", borderRadius: 8, cursor: "pointer",
+          fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          {copied ? "✅ ¡Copiado!" : "📋 Copiar Imagen"}
+        </button>
+        <button onClick={shareOnX} style={{
+          background: "#000", color: "#fff",
+          border: "1px solid #333",
+          padding: "13px 24px", borderRadius: 8, cursor: "pointer",
+          fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          𝕏 Compartir en X
+        </button>
+      </div>
+
+      <p style={{ fontSize: 12, color: C.muted, fontFamily: "'IBM Plex Mono'", marginTop: 12 }}>
+        💡 Descarga la imagen y súbela a Instagram, TikTok o X para generar tráfico a finanzadr.com
+      </p>
     </div>
   );
 }
