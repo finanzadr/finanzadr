@@ -1,18 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 // ── Datos Wall Street ────────────────────────────────────────────
 const WS_STOCKS = [
-  { s: "SPX",  n: "S&P 500",   p: 5284.22, c:  0.43 },
-  { s: "DJI",  n: "Dow Jones", p: 39127.14,c: -0.12 },
-  { s: "NDX",  n: "NASDAQ",    p: 16460.88,c:  0.71 },
-  { s: "AAPL", n: "Apple",     p: 189.43,  c:  1.24 },
-  { s: "NVDA", n: "NVIDIA",    p: 875.32,  c:  2.11 },
-  { s: "TSLA", n: "Tesla",     p: 245.67,  c: -0.89 },
-  { s: "MSFT", n: "Microsoft", p: 415.22,  c:  0.55 },
-  { s: "AMZN", n: "Amazon",    p: 182.45,  c:  0.32 },
-  { s: "GOOG", n: "Alphabet",  p: 174.12,  c:  0.67 },
-  { s: "META", n: "Meta",      p: 508.90,  c:  1.02 },
+  { s: "SPX",  n: "S&P 500",    p: 5284.22,  c:  0.43 },
+  { s: "NDX",  n: "NASDAQ 100", p: 16460.88, c:  0.71 },
+  { s: "DIA",  n: "Dow Jones",  p: 391.27,   c: -0.12 },
+  { s: "SPY",  n: "S&P 500 ETF",p: 528.40,   c:  0.43 },
+  { s: "QQQ",  n: "NASDAQ ETF", p: 446.82,   c:  0.71 },
+  { s: "IWM",  n: "Russell 2000",p: 198.54,  c: -0.34 },
+  { s: "AAPL", n: "Apple",      p: 189.43,   c:  1.24 },
+  { s: "MSFT", n: "Microsoft",  p: 415.22,   c:  0.55 },
+  { s: "NVDA", n: "NVIDIA",     p: 875.32,   c:  2.11 },
+  { s: "GOOGL",n: "Alphabet",   p: 174.12,   c:  0.67 },
+  { s: "AMZN", n: "Amazon",     p: 182.45,   c:  0.32 },
+  { s: "META", n: "Meta",       p: 508.90,   c:  1.02 },
+  { s: "TSLA", n: "Tesla",      p: 245.67,   c: -0.89 },
 ];
 
 // ── Contenido estático ───────────────────────────────────────────
@@ -155,6 +158,7 @@ export default function FinanzasDR() {
   const tabs = [
     ["inicio",     "🚀 Empieza Aquí"],
     ["mercados",   "📊 Mercados"],
+    ["charts",     "📈 Charts en Vivo"],
     ["ws",         "📰 Noticias"],
     ["blog",       "📚 Aprende"],
     ["calc",       "🧮 Calculadora"],
@@ -352,6 +356,17 @@ export default function FinanzasDR() {
 
         {/* CALCULADORA */}
         {tab === "calc" && <div className="fade-in"><CompoundCalc /></div>}
+
+        {/* CHARTS EN VIVO */}
+        {tab === "charts" && (
+          <div className="fade-in">
+            <SectionTitle>Charts en Vivo</SectionTitle>
+            <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 24 }}>Gráficas en tiempo real de los mercados más importantes — powered by TradingView</p>
+
+            {/* Selector de símbolo */}
+            <TradingViewCharts />
+          </div>
+        )}
 
         {/* NEWSLETTER */}
         {tab === "newsletter" && (
@@ -595,6 +610,151 @@ function CompoundCalc() {
           </ResponsiveContainer>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── TradingView Charts Component ─────────────────────────────────
+function TradingViewCharts() {
+  const [activeSymbol, setActiveSymbol] = useState("SPY");
+  const [activeInterval, setActiveInterval] = useState("D");
+  const chartRef = useRef(null);
+
+  const symbols = [
+    { s: "SPY",  n: "S&P 500",    cat: "Índices" },
+    { s: "QQQ",  n: "NASDAQ",     cat: "Índices" },
+    { s: "DIA",  n: "Dow Jones",  cat: "Índices" },
+    { s: "IWM",  n: "Russell 2000",cat: "Índices" },
+    { s: "AAPL", n: "Apple",      cat: "Mag 7" },
+    { s: "MSFT", n: "Microsoft",  cat: "Mag 7" },
+    { s: "NVDA", n: "NVIDIA",     cat: "Mag 7" },
+    { s: "GOOGL",n: "Alphabet",   cat: "Mag 7" },
+    { s: "AMZN", n: "Amazon",     cat: "Mag 7" },
+    { s: "META", n: "Meta",       cat: "Mag 7" },
+    { s: "TSLA", n: "Tesla",      cat: "Mag 7" },
+  ];
+
+  const intervals = [
+    { v: "1",  l: "1m" },
+    { v: "5",  l: "5m" },
+    { v: "15", l: "15m" },
+    { v: "60", l: "1H" },
+    { v: "D",  l: "1D" },
+    { v: "W",  l: "1W" },
+    { v: "M",  l: "1M" },
+  ];
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+    chartRef.current.innerHTML = "";
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.TradingView) {
+        new window.TradingView.widget({
+          container_id: "tv_chart_container",
+          symbol: activeSymbol,
+          interval: activeInterval,
+          timezone: "America/New_York",
+          theme: "dark",
+          style: "1",
+          locale: "es",
+          toolbar_bg: "#0d0f1e",
+          enable_publishing: false,
+          hide_top_toolbar: false,
+          hide_legend: false,
+          save_image: false,
+          backgroundColor: "#07080f",
+          gridColor: "#1a1e3540",
+          width: "100%",
+          height: 520,
+          studies: ["RSI@tv-basicstudies", "MACD@tv-basicstudies"],
+          show_popup_button: true,
+          popup_width: "1000",
+          popup_height: "650",
+        });
+      }
+    };
+    document.head.appendChild(script);
+    return () => { if (script.parentNode) script.parentNode.removeChild(script); };
+  }, [activeSymbol, activeInterval]);
+
+  const cats = [...new Set(symbols.map(s => s.cat))];
+
+  return (
+    <div>
+      {/* Symbol selector by category */}
+      {cats.map(cat => (
+        <div key={cat} style={{ marginBottom: 16 }}>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>── {cat.toUpperCase()}</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {symbols.filter(s => s.cat === cat).map(sym => (
+              <button key={sym.s} onClick={() => setActiveSymbol(sym.s)} style={{
+                padding: "8px 16px", borderRadius: 6, border: `1px solid ${activeSymbol === sym.s ? C.gold : C.border}`,
+                background: activeSymbol === sym.s ? C.goldBg : C.card,
+                color: activeSymbol === sym.s ? C.gold : C.sub,
+                fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                transition: "all 0.15s",
+              }}>
+                {sym.s} <span style={{ fontSize: 10, opacity: 0.7 }}>{sym.n}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Interval selector */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, alignItems: "center" }}>
+        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted, marginRight: 8 }}>INTERVALO:</span>
+        {intervals.map(iv => (
+          <button key={iv.v} onClick={() => setActiveInterval(iv.v)} style={{
+            padding: "6px 14px", borderRadius: 5, border: `1px solid ${activeInterval === iv.v ? C.gold : C.border}`,
+            background: activeInterval === iv.v ? C.goldBg : "none",
+            color: activeInterval === iv.v ? C.gold : C.muted,
+            fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, cursor: "pointer",
+          }}>{iv.l}</button>
+        ))}
+      </div>
+
+      {/* Chart container */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ background: "#09091a", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: C.gold }}>{activeSymbol}</div>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted }}>Powered by TradingView · Datos en tiempo real</div>
+        </div>
+        <div id="tv_chart_container" ref={chartRef} style={{ width: "100%", height: 520 }} />
+      </div>
+
+      {/* Mini charts grid */}
+      <div style={{ marginTop: 24 }}>
+        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 16 }}>── VISTA RÁPIDA — LOS 7 MAGNÍFICOS</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 16 }}>
+          {["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA"].map(sym => (
+            <MiniChart key={sym} symbol={sym} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniChart({ symbol }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    ref.current.innerHTML = `
+      <iframe
+        src="https://s.tradingview.com/widgetembed/?frameElementId=tv_${symbol}&symbol=${symbol}&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=1&saveimage=0&toolbarbg=0d0f1e&studies=[]&theme=dark&style=1&timezone=America%2FNew_York&withdateranges=0&showpopupbutton=0&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=es&utm_source=finanzadr.com"
+        style="width:100%;height:200px;border:none;"
+        allowtransparency="true"
+        scrolling="no"
+      ></iframe>`;
+  }, [symbol]);
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+      <div style={{ padding: "10px 14px", background: "#09091a", borderBottom: `1px solid ${C.border}`, fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 700, color: C.gold }}>{symbol}</div>
+      <div ref={ref} />
     </div>
   );
 }
