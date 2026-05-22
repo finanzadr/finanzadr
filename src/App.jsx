@@ -475,19 +475,24 @@ function NewsletterForm() {
 }
 
 function CompoundCalc() {
-  const [capital, setCapital] = useState(5000);
-  const [aporte, setAporte] = useState(200);
-  const [tasa, setTasa] = useState(10);
-  const [anos, setAnos] = useState(20);
-  const [moneda, setMoneda] = useState("USD");
+  const [capital,    setCapital]    = useState(10000);
+  const [aporte,     setAporte]     = useState(200);
+  const [tasa,       setTasa]       = useState(10);
+  const [anos,       setAnos]       = useState(15);
+  const [moneda,     setMoneda]     = useState("USD");
   const [frecuencia, setFrecuencia] = useState("Mensual");
-  const [escenario, setEscenario] = useState("Aportes Constantes");
+  const [capitaliz,  setCapitaliz]  = useState("Anual");
+  const [modelo,     setModelo]     = useState("Lineal");
+  const [escenario,  setEscenario]  = useState("Aportes Constantes");
+  const [vistaTabla, setVistaTabla] = useState("Anual");
 
-  const sym = moneda === "DOP" ? "RD$" : "$";
-  const fmtM = (n) => `${sym}${Math.round(n).toLocaleString("es-DO")}`;
+  const sym   = moneda === "DOP" ? "RD$" : "$";
+  const fmtM  = (n) => `${sym}${(+n).toLocaleString("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmtPct = (n) => `${(+n).toFixed(2)}%`;
+
   const freqMap = { "Mensual": 12, "Semanal": 52, "Anual": 1 };
-  const periodosFrecuencia = freqMap[frecuencia] || 12;
-  const tasaPorPeriodo = Math.pow(1 + tasa / 100, 1 / periodosFrecuencia) - 1;
+  const periodos = freqMap[frecuencia] || 12;
+  const tasaPeriodo = Math.pow(1 + tasa / 100, 1 / periodos) - 1;
 
   const filas = [];
   let saldo = capital;
@@ -496,119 +501,209 @@ function CompoundCalc() {
     const aporteBase = escenario === "Sin Aportes" ? 0 : escenario === "Aportes Crecientes" ? aporte * Math.pow(1.05, y - 1) : aporte;
     let saldoInicio = saldo;
     let aporteAnualReal = 0;
-    for (let p = 0; p < periodosFrecuencia; p++) { saldo = saldo * (1 + tasaPorPeriodo) + aporteBase; aporteAnualReal += aporteBase; }
+    if (modelo === "Lineal") {
+      for (let p = 0; p < periodos; p++) { saldo = saldo * (1 + tasaPeriodo) + aporteBase; aporteAnualReal += aporteBase; }
+    } else {
+      aporteAnualReal = aporteBase * periodos;
+      saldo = saldo * Math.exp(tasa / 100) + aporteAnualReal;
+    }
     const interesAnual = saldo - saldoInicio - aporteAnualReal;
     totalInteresAcum += interesAnual;
-    filas.push({ ano: y, saldo: Math.round(saldo), aporteAcum: Math.round(capital + aporteBase * periodosFrecuencia * y), interesAcum: Math.round(totalInteresAcum), aporteAnual: Math.round(aporteAnualReal) });
+    filas.push({
+      ano: y,
+      saldo: saldo,
+      capitalBase: saldoInicio,
+      aporteBase: aporteAnualReal,
+      aporteAcum: capital + aporteBase * periodos * y,
+      interesAcum: totalInteresAcum,
+      aporteAnual: aporteAnualReal,
+      ganancia: interesAnual,
+      retorno: saldoInicio > 0 ? (interesAnual / saldoInicio * 100) : 0,
+    });
   }
 
-  const totalFinal = filas[filas.length - 1]?.saldo ?? capital;
-  const aporteTotal = escenario === "Sin Aportes" ? capital : capital + aporte * periodosFrecuencia * anos;
+  const totalFinal  = filas[filas.length - 1]?.saldo ?? capital;
+  const aporteTotal = escenario === "Sin Aportes" ? capital : capital + aporte * periodos * anos;
   const interesTotal = totalFinal - aporteTotal;
-  const multiplicador = (totalFinal / Math.max(aporteTotal, 1)).toFixed(2);
-  const fmtK = v => { if (v >= 1000000) return sym + (v / 1000000).toFixed(1) + "M"; if (v >= 1000) return sym + (v / 1000).toFixed(0) + "K"; return sym + v; };
+  const gananciaPct  = aporteTotal > 0 ? (interesTotal / aporteTotal * 100) : 0;
+  const fmtK = v => { if (v >= 1e6) return sym+(v/1e6).toFixed(1)+"M"; if (v >= 1000) return sym+(v/1000).toFixed(0)+"K"; return sym+Math.round(v); };
 
-  const selStyle = { background: "#0d0f1e", border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 13, padding: "10px 12px", outline: "none", cursor: "pointer", flex: 1 };
-  const inputNum = { flex: 1, background: "#0d0f1e", border: "none", outline: "none", color: C.gold, fontFamily: "'IBM Plex Mono'", fontSize: 16, fontWeight: 700, textAlign: "center", width: "100%", padding: "0 8px" };
-  const stepBtn = (fn, dir) => <button onClick={fn} style={{ width: 44, background: C.border, border: "none", color: C.gold, fontSize: 22, cursor: "pointer", borderRadius: dir === "left" ? "8px 0 0 8px" : "0 8px 8px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{dir === "left" ? "−" : "+"}</button>;
-  const numBox = (val, setVal, step, lbl, min = 0) => (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>{lbl}</div>
-      <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", height: 46 }}>
-        {stepBtn(() => setVal(v => Math.max(min, v - step)), "left")}
-        <input type="number" value={val || ""} min={min} placeholder="0" onChange={e => setVal(e.target.value === "" ? 0 : Math.max(min, +e.target.value))} style={inputNum} />
-        {stepBtn(() => setVal(v => v + step), "right")}
-      </div>
+  const inputStyle = { width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 14px", color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 600, outline: "none" };
+  const labelStyle = { fontSize: 13, color: C.sub, marginBottom: 6, display: "block" };
+  const selStyle   = { width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 14px", color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 13, outline: "none", cursor: "pointer" };
+  const stepBtn    = (fn, dir) => (
+    <button onClick={fn} style={{ width: 40, background: "#1a1e35", border: "none", color: C.gold, fontSize: 20, cursor: "pointer", borderRadius: dir === "left" ? "8px 0 0 8px" : "0 8px 8px 0", flexShrink: 0 }}>
+      {dir === "left" ? "−" : "+"}
+    </button>
+  );
+  const numInput = (val, setVal, step, min=0) => (
+    <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", height: 42 }}>
+      {stepBtn(() => setVal(v => Math.max(min, +(v - step).toFixed(2))), "left")}
+      <input type="number" value={val || ""} min={min} placeholder="0"
+        onChange={e => setVal(e.target.value === "" ? 0 : Math.max(min, +e.target.value))}
+        style={{ flex: 1, background: C.card, border: "none", outline: "none", color: C.gold, fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 700, textAlign: "center" }} />
+      {stepBtn(() => setVal(v => +(v + step).toFixed(2)), "right")}
     </div>
   );
 
   return (
     <div>
       <SectionTitle>Calculadora de Inversión</SectionTitle>
-      <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 8 }}>¿Cuánto tendrías si invirtieras $200/mes en el S&P 500? Descúbrelo aquí.</p>
-      <div style={{ background: C.goldBg, border: `1px solid ${C.gold}30`, borderRadius: 8, padding: "12px 18px", marginBottom: 24, display: "flex", gap: 10, alignItems: "center" }}>
-        <span style={{ fontSize: 20 }}>💡</span>
-        <p style={{ fontSize: 13, color: C.sub }}>El <strong style={{ color: C.gold }}>S&P 500</strong> ha retornado históricamente ~<strong style={{ color: C.gold }}>10% anual</strong> en promedio.</p>
-      </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, maxWidth: 280 }}>
+      <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 20 }}>
+        El S&P 500 ha retornado ~10% anual históricamente. Calcula el crecimiento de tu dinero con interés compuesto.
+      </p>
+
+      {/* Moneda */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, maxWidth: 260 }}>
         {["USD", "DOP"].map(m => (
-          <button key={m} onClick={() => setMoneda(m)} style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${moneda === m ? C.gold : C.border}`, background: moneda === m ? C.goldBg : "none", color: moneda === m ? C.gold : C.muted, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{m === "USD" ? "🇺🇸 USD" : "🇩🇴 DOP"}</button>
+          <button key={m} onClick={() => setMoneda(m)} style={{ flex: 1, padding: "9px", borderRadius: 8, border: `1px solid ${moneda === m ? C.gold : C.border}`, background: moneda === m ? C.goldBg : "none", color: moneda === m ? C.gold : C.muted, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            {m === "USD" ? "🇺🇸 USD" : "🇩🇴 DOP"}
+          </button>
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24 }}>
-          <Label>── Parámetros</Label>
-          {numBox(capital, setCapital, moneda === "DOP" ? 5000 : 500, `INVERSIÓN INICIAL (${sym})`)}
+
+      {/* Main grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+
+        {/* LEFT — Inputs */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px" }}>
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>APORTES PERIÓDICOS ({sym})</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 2, display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", height: 46 }}>
-                {stepBtn(() => setAporte(v => Math.max(0, v - (moneda === "DOP" ? 500 : 50))), "left")}
-                <input type="number" value={aporte || ""} min={0} placeholder="0" onChange={e => setAporte(e.target.value === "" ? 0 : Math.max(0, +e.target.value))} style={inputNum} />
-                {stepBtn(() => setAporte(v => v + (moneda === "DOP" ? 500 : 50)), "right")}
-              </div>
-              <select value={frecuencia} onChange={e => setFrecuencia(e.target.value)} style={{ ...selStyle, flex: 1 }}>
-                {["Mensual", "Semanal", "Anual"].map(o => <option key={o}>{o}</option>)}
+            <label style={labelStyle}>Inversión Inicial ({sym})</label>
+            {numInput(capital, setCapital, moneda === "DOP" ? 5000 : 1000)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+            <div>
+              <label style={labelStyle}>Aportes ({sym})</label>
+              {numInput(aporte, setAporte, moneda === "DOP" ? 500 : 50)}
+            </div>
+            <div>
+              <label style={labelStyle}>Frecuencia</label>
+              <select value={frecuencia} onChange={e => setFrecuencia(e.target.value)} style={selStyle}>
+                {["Mensual","Semanal","Anual"].map(o => <option key={o}>{o}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+            <div>
+              <label style={labelStyle}>Retorno Esperado (%)</label>
+              {numInput(tasa, setTasa, 0.5, 0.1)}
+            </div>
+            <div>
+              <label style={labelStyle}>Capitalización</label>
+              <select value={capitaliz} onChange={e => setCapitaliz(e.target.value)} style={selStyle}>
+                {["Anual","Mensual","Trimestral","Semestral"].map(o => <option key={o}>{o}</option>)}
               </select>
             </div>
           </div>
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>RETORNO ESPERADO (%/AÑO)</div>
-            <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", height: 46 }}>
-              {stepBtn(() => setTasa(v => Math.max(0.5, +(v - 0.5).toFixed(1))), "left")}
-              <input type="number" value={tasa || ""} min={0.5} max={100} step={0.5} onChange={e => setTasa(e.target.value === "" ? 0 : Math.max(0.5, +e.target.value))} style={inputNum} />
-              {stepBtn(() => setTasa(v => +(v + 0.5).toFixed(1)), "right")}
+            <label style={labelStyle}>Años de Crecimiento</label>
+            {numInput(anos, setAnos, 1, 1)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Modelo</label>
+              <select value={modelo} onChange={e => setModelo(e.target.value)} style={selStyle}>
+                {["Lineal","Exponencial"].map(o => <option key={o}>{o}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Escenario</label>
+              <select value={escenario} onChange={e => setEscenario(e.target.value)} style={selStyle}>
+                {["Aportes Constantes","Sin Aportes","Aportes Crecientes"].map(o => <option key={o}>{o}</option>)}
+              </select>
             </div>
           </div>
-          {numBox(anos, setAnos, 1, "AÑOS DE CRECIMIENTO", 1)}
-          <div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>ESCENARIO</div>
-            <select value={escenario} onChange={e => setEscenario(e.target.value)} style={{ ...selStyle, width: "100%" }}>
-              {["Aportes Constantes", "Sin Aportes", "Aportes Crecientes"].map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ background: `linear-gradient(135deg,#0f1228,#130f2a)`, border: `2px solid ${C.gold}`, borderRadius: 12, padding: "22px 24px", textAlign: "center" }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>VALOR FINAL EN {anos} AÑOS</div>
-            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 38, fontWeight: 800, color: C.gold, lineHeight: 1 }}>{fmtM(totalFinal)}</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, marginTop: 8 }}>Tu dinero crece ×{multiplicador}</div>
+
+        {/* RIGHT — Results */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Valor Final highlight */}
+          <div style={{ background: `linear-gradient(135deg,#0f1228,#130f2a)`, border: `2px solid ${C.gold}`, borderRadius: 12, padding: "20px 24px", textAlign: "center" }}>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 6 }}>VALOR FINAL EN {anos} AÑOS</div>
+            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 36, fontWeight: 800, color: C.gold }}>{fmtM(totalFinal)}</div>
           </div>
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px" }}>
+
+          {/* Results grid */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
             {[
-              { lbl: "Inversión Total",   val: fmtM(aporteTotal),              color: C.text  },
-              { lbl: "Intereses Ganados", val: fmtM(Math.max(0, interesTotal)), color: C.green },
-              { lbl: "Multiplicador",     val: `×${multiplicador}`,            color: C.gold  },
+              { lbl: "Inversión Total",     val: fmtM(aporteTotal),                    color: C.text  },
+              { lbl: "Capital % del Final", val: fmtPct(aporteTotal/totalFinal*100),   color: C.muted },
+              { lbl: "Aporte Total",        val: fmtM(escenario==="Sin Aportes"?0:aporte*periodos*anos), color: C.sub },
+              { lbl: "Ganancia Total",      val: fmtM(Math.max(0, interesTotal)),       color: C.green },
+              { lbl: "Ganancia Porcentual", val: fmtPct(Math.max(0, gananciaPct)),      color: C.green },
             ].map((r, i, arr) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}20` : "none" }}>
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 20px", borderBottom: i < arr.length-1 ? `1px solid ${C.border}20` : "none" }}>
                 <span style={{ fontSize: 13, color: C.muted }}>{r.lbl}</span>
-                <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 600, color: r.color }}>{r.val}</span>
+                <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 700, color: r.color }}>{r.val}</span>
               </div>
             ))}
           </div>
-          <div style={{ background: C.goldBg, border: `1px solid ${C.gold}30`, borderRadius: 10, padding: "14px 18px" }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 6 }}>💡 RECUERDA</div>
+
+          <div style={{ background: C.goldBg, border: `1px solid ${C.gold}30`, borderRadius: 10, padding: "12px 16px" }}>
             <p style={{ fontSize: 12, color: C.sub, lineHeight: 1.7 }}>
-              {interesTotal > aporteTotal ? `¡Los intereses superan lo que invertiste! Esto es el poder del interés compuesto.` : `En ${anos} años ganaste ${fmtM(Math.max(0, interesTotal))} solo en intereses. La clave es empezar hoy.`}
+              💡 {interesTotal > aporteTotal ? "¡Los intereses superan tu inversión! El interés compuesto está trabajando para ti." : `En ${anos} años ganaste ${fmtM(Math.max(0,interesTotal))} en intereses. La clave es empezar hoy.`}
             </p>
           </div>
         </div>
       </div>
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px 26px", marginTop: 24 }}>
+
+      {/* Chart */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px", marginTop: 24 }}>
         <Label>── Proyección de Crecimiento</Label>
-        <div style={{ width: "100%", height: 280 }}>
+        <div style={{ width: "100%", height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={filas} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
               <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, fill: C.muted }} />
               <YAxis stroke={C.muted} tick={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, fill: C.muted }} tickFormatter={fmtK} />
-              <Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'IBM Plex Mono'", fontSize: 12 }} formatter={(v, n) => [fmtM(v), n === "aporteAcum" ? "Capital Base" : n === "interesAcum" ? "Ganancias" : "Ganancia Año"]} labelFormatter={v => `Año ${v}`} />
-              <Bar dataKey="aporteAcum"  stackId="a" fill="#1e4a7a" name="aporteAcum"  radius={[0, 0, 0, 0]} />
-              <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="interesAcum" radius={[4, 4, 0, 0]} />
+              <Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'IBM Plex Mono'", fontSize: 12 }}
+                formatter={(v, n) => [fmtM(v), n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias":"Ganancia Año"]}
+                labelFormatter={v => `Año ${v}`} />
+              <Legend wrapperStyle={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, paddingTop: 12 }}
+                formatter={v => v==="aporteAcum"?"Capital Base":v==="interesAcum"?"Ganancias Acum.":"Ganancia (Año)"} />
+              <Bar dataKey="aporteAcum"  stackId="a" fill="#1e4a7a" name="aporteAcum"  radius={[0,0,0,0]} />
+              <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="interesAcum" radius={[4,4,0,0]} />
               <Line type="monotone" dataKey="aporteAnual" stroke={C.gold} strokeWidth={2.5} dot={{ fill: C.gold, r: 3 }} name="aporteAnual" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* Toggle Anual / Mensual */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0 12px" }}>
+        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: vistaTabla==="Anual" ? C.gold : C.muted }}>Anual</span>
+        <div onClick={() => setVistaTabla(v => v==="Anual"?"Mensual":"Anual")} style={{ width: 44, height: 24, borderRadius: 12, cursor: "pointer", position: "relative", background: vistaTabla==="Mensual" ? C.gold : C.border, transition: "background 0.25s" }}>
+          <div style={{ position: "absolute", top: 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.25s", left: vistaTabla==="Mensual" ? 23 : 3 }} />
+        </div>
+        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: vistaTabla==="Mensual" ? C.gold : C.muted }}>Mensual</span>
+      </div>
+
+      {/* Tabla año por año */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'IBM Plex Mono'", fontSize: 12, minWidth: 700 }}>
+          <thead>
+            <tr style={{ background: "#ffffff08", borderBottom: `1px solid ${C.border}` }}>
+              {["Año","Capital Base","Aporte Base","Aporte Total","Capital Total","Retorno","Ganancia","Ganancia Acum.","Valor Final"].map((h,i) => (
+                <th key={i} style={{ padding: "10px 12px", fontWeight: 500, textAlign: i===0?"left":"right", color: C.muted, whiteSpace: "nowrap" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((f, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${C.border}20`, background: i%2===0?"transparent":"#ffffff03" }}>
+                <td style={{ padding:"10px 12px", color: C.gold }}>{f.ano}</td>
+                <td style={{ padding:"10px 12px", textAlign:"right", color: C.text }}>{fmtM(f.capitalBase)}</td>
+                <td style={{ padding:"10px 12px", textAlign:"right", color: C.muted }}>{fmtM(f.aporteBase)}</td>
+                <td style={{ padding:"10px 12px", textAlign:"right", color: C.muted }}>{fmtM(f.aporteAcum)}</td>
+                <td style={{ padding:"10px 12px", textAlign:"right", color: C.text, fontWeight:700 }}>{fmtM(f.capitalBase + f.aporteBase)}</td>
+                <td style={{ padding:"10px 12px", textAlign:"right", color: f.retorno>=0?C.green:C.red }}>{fmtPct(f.retorno)}</td>
+                <td style={{ padding:"10px 12px", textAlign:"right", color: C.sub }}>{fmtM(f.ganancia)}</td>
+                <td style={{ padding:"10px 12px", textAlign:"right", color: C.sub }}>{fmtM(f.interesAcum)}</td>
+                <td style={{ padding:"10px 12px", textAlign:"right", color: C.gold, fontWeight:700 }}>{fmtM(f.saldo)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
