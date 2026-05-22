@@ -163,15 +163,14 @@ export default function FinanzasDR() {
   const [lastUpdate, setLastUpdate]   = useState(null);
   const [realErr, setRealErr]         = useState(null);
   const [noticias, setNoticias]         = useState(NOTICIAS);
-  const [noticiasES, setNoticiasES]     = useState([]);
   const [noticiasLoading, setNoticiasLoading] = useState(false);
-  const [idiomaNews, setIdiomaNews]     = useState("es");
 
   // Update C whenever theme changes
   C = dark ? DARK : LIGHT;
 
-  // Fetch English news from Finnhub
-  const fetchNoticiasEN = async () => {
+  // Fetch news from Finnhub
+  const fetchNoticias = async () => {
+    setNoticiasLoading(true);
     try {
       const res  = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
       const data = await res.json();
@@ -187,45 +186,12 @@ export default function FinanzasDR() {
             if (mins < 1440) return `Hace ${Math.floor(mins/60)}h`;
             return `Hace ${Math.floor(mins/1440)} días`;
           })(),
-          categoria: "Mercados",
+          categoria: cats[n.category] || "Mercados",
           url: n.url,
         }));
         setNoticias(mapped);
       }
     } catch (e) {}
-  };
-
-  // Fetch Spanish news from Google News RSS
-  const fetchNoticiasES = async () => {
-    try {
-      const queries = ["wall+street+bolsa", "acciones+mercado+financiero", "inversiones+economia"];
-      const query = queries[Math.floor(Math.random() * queries.length)];
-      const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=es-419&gl=US&ceid=US:es-419`;
-      const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&api_key=public&count=10`;
-      const res  = await fetch(proxyUrl);
-      const data = await res.json();
-      if (data?.items?.length > 0) {
-        const mapped = data.items.slice(0, 10).map(n => ({
-          titulo: n.title?.replace(/ - .*$/, "") || "Sin título",
-          resumen: n.description?.replace(/<[^>]*>/g, "")?.slice(0, 240) + "..." || "Sin resumen disponible.",
-          fuente: n.author || n.source || "Google News",
-          tiempo: (() => {
-            const mins = Math.floor((Date.now() - new Date(n.pubDate)) / 60000);
-            if (mins < 60) return `Hace ${mins} min`;
-            if (mins < 1440) return `Hace ${Math.floor(mins/60)}h`;
-            return `Hace ${Math.floor(mins/1440)} días`;
-          })(),
-          categoria: "Mercados",
-          url: n.link,
-        }));
-        setNoticiasES(mapped);
-      }
-    } catch (e) {}
-  };
-
-  const fetchNoticias = async () => {
-    setNoticiasLoading(true);
-    await Promise.all([fetchNoticiasEN(), fetchNoticiasES()]);
     setNoticiasLoading(false);
   };
 
@@ -604,26 +570,16 @@ export default function FinanzasDR() {
               <div>
                 <SectionTitle>Noticias Wall Street</SectionTitle>
                 <p style={{ fontSize: 13, color: C.sub, marginTop: 4 }}>
-                  {noticiasLoading ? "Cargando noticias..." : idiomaNews === "es" ? "Noticias de hoy en español · Google News" : "Today's news · Powered by Finnhub"}
+                  {noticiasLoading ? "Cargando noticias..." : "Noticias reales de hoy · Powered by Finnhub"}
                 </p>
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ display: "flex", background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden" }}>
-                  <button onClick={() => setIdiomaNews("es")} style={{ padding: "8px 16px", border: "none", background: idiomaNews === "es" ? C.gold : "none", color: idiomaNews === "es" ? "#000" : C.muted, fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-                    🇪🇸 Español
-                  </button>
-                  <button onClick={() => setIdiomaNews("en")} style={{ padding: "8px 16px", border: "none", background: idiomaNews === "en" ? C.gold : "none", color: idiomaNews === "en" ? "#000" : C.muted, fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-                    🇺🇸 English
-                  </button>
-                </div>
-                <button onClick={fetchNoticias} disabled={noticiasLoading} style={{
-                  background: noticiasLoading ? C.border : C.gold, color: noticiasLoading ? C.muted : "#000",
-                  border: "none", padding: "9px 16px", borderRadius: 6, cursor: noticiasLoading ? "not-allowed" : "pointer",
-                  fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 700,
-                }}>
-                  {noticiasLoading ? "⏳" : "🔄 Actualizar"}
-                </button>
-              </div>
+              <button onClick={fetchNoticias} disabled={noticiasLoading} style={{
+                background: noticiasLoading ? C.border : C.gold, color: noticiasLoading ? C.muted : "#000",
+                border: "none", padding: "9px 18px", borderRadius: 6, cursor: noticiasLoading ? "not-allowed" : "pointer",
+                fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 700,
+              }}>
+                {noticiasLoading ? "⏳ Cargando..." : "🔄 Actualizar"}
+              </button>
             </div>
 
             {noticiasLoading ? (
@@ -633,7 +589,7 @@ export default function FinanzasDR() {
               </div>
             ) : (
               <div style={{ display: "grid", gap: 14 }}>
-                {(idiomaNews === "es" ? (noticiasES.length > 0 ? noticiasES : NOTICIAS) : noticias).map((item, i) => (
+                {noticias.map((item, i) => (
                   <div key={i}
                     style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "20px 24px", cursor: item.url ? "pointer" : "default", transition: "border-color 0.2s" }}
                     onMouseEnter={e => { if(item.url) e.currentTarget.style.borderColor = C.gold+"66"; }}
@@ -645,8 +601,7 @@ export default function FinanzasDR() {
                       </div>
                       {item.url && (
                         <a href={item.url} target="_blank" rel="noopener noreferrer"
-                          style={{ fontSize: 11, color: C.gold, fontFamily: "'IBM Plex Mono'", fontWeight: 600, textDecoration: "none" }}
-                          onClick={e => e.stopPropagation()}>
+                          style={{ fontSize: 11, color: C.gold, fontFamily: "'IBM Plex Mono'", fontWeight: 600, textDecoration: "none" }}>
                           Leer artículo ↗
                         </a>
                       )}
