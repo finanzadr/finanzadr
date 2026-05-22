@@ -212,7 +212,7 @@ export default function FinanzasDR() {
       </nav>
 
       {/* Contenido */}
-      <main style={{ padding: "32px", maxWidth: "100%", margin: "0 auto" }}>
+      <main style={{ padding: "32px", maxWidth: "100%"  , margin: "0 auto" }}>
 
         {/* EMPIEZA AQUÍ */}
         {tab === "inicio" && (
