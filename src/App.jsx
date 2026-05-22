@@ -272,60 +272,152 @@ export default function FinanzasDR() {
       {/* Contenido */}
       <main style={{ padding: "32px", maxWidth: "100%", margin: "0 auto" }}>
 
-        {/* EMPIEZA AQUÍ */}
+        {/* EMPIEZA AQUÍ — LIVE MARKET PULSE */}
         {tab === "inicio" && (
           <div className="fade-in">
-            <div style={{ background: dark ? `linear-gradient(135deg,#0f1228,#130f2a)` : `linear-gradient(135deg,#eef0f8,#e8eaf5)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
-              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12 }}>PARA PRINCIPIANTES</div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 800, color: C.text, marginBottom: 14, lineHeight: 1.3 }}>
-                Invierte en Wall Street<br/><span style={{ color: C.gold }}>sin importar dónde vives</span>
-              </h1>
-              <p style={{ fontSize: 15, color: C.sub, maxWidth: 520, margin: "0 auto 24px", lineHeight: 1.8 }}>
-                Apple, Amazon, NVIDIA — estas empresas están disponibles para cualquier latino. Te enseñamos cómo desde cero, paso a paso.
-              </p>
-              <button onClick={() => setTab("calc")} style={{ background: C.gold, color: "#000", border: "none", padding: "12px 28px", borderRadius: 8, cursor: "pointer", fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700 }}>
-                🧮 Calcular mi inversión
-              </button>
+
+            {/* Hero */}
+            <div style={{ background: dark ? `linear-gradient(135deg,#0f1228,#130f2a)` : `linear-gradient(135deg,#eef0f8,#e8eaf5)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px 40px 32px", marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 20 }}>
+                <div style={{ maxWidth: 520 }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 3, marginBottom: 10 }}>WALL STREET EN TIEMPO REAL</div>
+                  <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 38, fontWeight: 800, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>
+                    Institutional-grade<br/><span style={{ color: C.gold }}>market intelligence.</span>
+                  </h1>
+                  <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.8, marginBottom: 20 }}>
+                    Track markets, analiza sentimiento y aprende a invertir en Wall Street con herramientas de nivel institucional — en español.
+                  </p>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <button onClick={() => setTab("mercados")} style={{ background: C.gold, color: "#000", border: "none", padding: "12px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 700 }}>
+                      📊 Ver Mercados
+                    </button>
+                    <button onClick={() => setTab("charts")} style={{ background: "none", border: `1px solid ${C.gold}`, color: C.gold, padding: "12px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 700 }}>
+                      📈 Charts en Vivo
+                    </button>
+                    <button onClick={() => setTab("calc")} style={{ background: "none", border: `1px solid ${C.border}`, color: C.sub, padding: "12px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 700 }}>
+                      🧮 Calculadora
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live stats */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, minWidth: 260 }}>
+                  {stocks.slice(0, 4).map(st => (
+                    <div key={st.s} style={{ background: dark ? "#ffffff08" : "#00000008", borderRadius: 10, padding: "12px 14px", border: `1px solid ${C.border}` }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 700, color: C.gold, marginBottom: 4 }}>{st.s}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 16, fontWeight: 700, color: C.text }}>{fmt(st.p)}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: clr(st.c) }}>{arr(st.c)} {Math.abs(st.c)}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Consejos */}
-            <SectionTitle>4 Consejos para empezar</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 16, marginTop: 20, marginBottom: 32 }}>
-              {CONSEJOS.map((item, i) => (
-                <div key={i} className="card-hover" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "22px 20px" }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icono}</div>
-                  <div style={{ background: C.goldBg, color: C.gold, display: "inline-block", padding: "2px 10px", borderRadius: 4, fontSize: 10, fontFamily: "'IBM Plex Mono'", marginBottom: 10 }}>{item.nivel}</div>
-                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, fontWeight: 700, color: C.text, marginBottom: 8, lineHeight: 1.4 }}>{item.consejo}</h3>
-                  <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.7 }}>{item.detalle}</p>
+            {/* Market Pulse */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div>
+                  <Label style={{ margin: 0 }}>── MARKET PULSE · EN VIVO</Label>
                 </div>
-              ))}
+                {lastUpdate && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.green }}>✓ {lastUpdate}</span>}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10 }}>
+                {stocks.map(st => (
+                  <div key={st.s} className="card-hover" style={{ background: C.card, border: `1px solid ${st.c >= 0 ? C.green+"33" : C.red+"33"}`, borderLeft: `3px solid ${clr(st.c)}`, borderRadius: 8, padding: "12px 14px", cursor: "pointer" }} onClick={() => setTab("charts")}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 700, color: C.gold }}>{st.s}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: clr(st.c) }}>{arr(st.c)}{Math.abs(st.c)}%</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>{st.n}</div>
+                    <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 17, fontWeight: 700, color: C.text }}>{fmt(st.p)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Market Summary Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16, marginBottom: 28 }}>
+              {/* Market Sentiment */}
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px" }}>
+                <Label style={{ margin: "0 0 12px 0" }}>── SENTIMIENTO HOY</Label>
+                {(() => {
+                  const gainers = stocks.filter(s => s.c > 0).length;
+                  const pct = Math.round(gainers / stocks.length * 100);
+                  const sentiment = pct >= 70 ? "Alcista 🟢" : pct >= 40 ? "Neutral ⚪" : "Bajista 🔴";
+                  const color = pct >= 70 ? C.green : pct >= 40 ? C.gold : C.red;
+                  return (
+                    <div>
+                      <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 800, color, marginBottom: 8 }}>{sentiment}</div>
+                      <div style={{ background: C.border, borderRadius: 99, height: 6, marginBottom: 8 }}>
+                        <div style={{ background: color, borderRadius: 99, height: 6, width: `${pct}%`, transition: "width 0.5s" }} />
+                      </div>
+                      <p style={{ fontSize: 12, color: C.sub }}>{gainers} de {stocks.length} activos en verde — {pct}% positivo</p>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Top Mover */}
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px" }}>
+                <Label style={{ margin: "0 0 12px 0" }}>── TOP MOVER</Label>
+                {(() => {
+                  const top = [...stocks].sort((a,b) => Math.abs(b.c) - Math.abs(a.c))[0];
+                  return (
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 800, color: C.gold }}>{top.s}</span>
+                        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 20, fontWeight: 700, color: clr(top.c) }}>{arr(top.c)}{Math.abs(top.c)}%</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: C.sub, marginBottom: 6 }}>{top.n}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 16, color: C.text, fontWeight: 700 }}>{fmt(top.p)}</div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Quick Actions */}
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px" }}>
+                <Label style={{ margin: "0 0 12px 0" }}>── ACCESO RÁPIDO</Label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[
+                    { icon: "📈", label: "Charts en Vivo", tab: "charts" },
+                    { icon: "📰", label: "Noticias Wall St.", tab: "ws" },
+                    { icon: "🧮", label: "Calculadora", tab: "calc" },
+                    { icon: "📧", label: "Newsletter Gratis", tab: "newsletter" },
+                  ].map((a, i) => (
+                    <button key={i} onClick={() => setTab(a.tab)} style={{ background: C.goldBg, border: `1px solid ${C.gold}30`, borderRadius: 7, padding: "9px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
+                      <span style={{ fontSize: 16 }}>{a.icon}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 600, color: C.gold }}>{a.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Brokers */}
             <SectionTitle>¿Dónde abrir tu cuenta?</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 14, marginTop: 20, marginBottom: 32 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 12, marginTop: 16, marginBottom: 28 }}>
               {[
-                { name: "Robinhood",           emoji: "🟢", nivel: "Principiante", detalle: "Sin comisiones, muy fácil de usar. Ideal para empezar a invertir desde cero." },
-                { name: "Webull",              emoji: "🔵", nivel: "Principiante", detalle: "Sin comisiones, con más herramientas de análisis. Muy popular entre nuevos inversores." },
-                { name: "Moomoo",              emoji: "🟠", nivel: "Intermedio",   detalle: "Plataforma avanzada con datos en tiempo real y herramientas profesionales gratis." },
-                { name: "Tastytrade",          emoji: "🟣", nivel: "Intermedio",   detalle: "Especializado en opciones y futuros. Ideal para ir más allá de acciones básicas." },
-                { name: "Interactive Brokers", emoji: "🌐", nivel: "Avanzado",     detalle: "Acepta clientes de RD y Latinoamérica directamente. El más completo del mercado." },
+                { name: "Robinhood",           emoji: "🟢", nivel: "Principiante", detalle: "Sin comisiones, muy fácil de usar. Ideal para empezar." },
+                { name: "Webull",              emoji: "🔵", nivel: "Principiante", detalle: "Sin comisiones, con más herramientas de análisis." },
+                { name: "Moomoo",              emoji: "🟠", nivel: "Intermedio",   detalle: "Datos en tiempo real y herramientas profesionales gratis." },
+                { name: "Tastytrade",          emoji: "🟣", nivel: "Intermedio",   detalle: "Especializado en opciones y futuros." },
+                { name: "Interactive Brokers", emoji: "🌐", nivel: "Avanzado",     detalle: "Acepta clientes de RD y Latinoamérica directamente." },
               ].map((b, i) => (
-                <div key={i} className="card-hover" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "18px 16px" }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>{b.emoji}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>{b.name}</div>
+                <div key={i} className="card-hover" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 14px" }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>{b.emoji}</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 4 }}>{b.name}</div>
                   <div style={{ background: C.goldBg, color: C.gold, display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 10, fontFamily: "'IBM Plex Mono'", marginBottom: 8 }}>{b.nivel}</div>
-                  <p style={{ fontSize: 12, color: C.sub, lineHeight: 1.6 }}>{b.detalle}</p>
+                  <p style={{ fontSize: 11, color: C.sub, lineHeight: 1.6 }}>{b.detalle}</p>
                 </div>
               ))}
             </div>
 
             {/* Pasos */}
             <SectionTitle>Tu camino en 4 pasos</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 14, marginTop: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 14, marginTop: 16 }}>
               {[
-                { n: "01", t: "Elige una plataforma", d: "Robinhood o Fidelity si eres principiante. Interactive Brokers si vives fuera de EE.UU." },
+                { n: "01", t: "Elige una plataforma", d: "Robinhood o Webull si eres principiante. Interactive Brokers si vives fuera de EE.UU." },
                 { n: "02", t: "Abre tu cuenta", d: "Necesitas pasaporte, dirección y un método de pago. El proceso es 100% online." },
                 { n: "03", t: "Empieza con ETFs", d: "El S&P 500 (VOO o SPY) es el mejor inicio. 500 empresas, un solo producto." },
                 { n: "04", t: "Invierte consistente", d: "Más importante que el monto es la consistencia. $50/mes durante 20 años supera $10,000 de golpe." },
