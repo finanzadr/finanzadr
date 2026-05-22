@@ -2,20 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 // ── Datos Wall Street ────────────────────────────────────────────
+const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
+
 const WS_STOCKS = [
-  { s: "SPX",  n: "S&P 500",    p: 5284.22,  c:  0.43 },
-  { s: "NDX",  n: "NASDAQ 100", p: 16460.88, c:  0.71 },
-  { s: "DIA",  n: "Dow Jones",  p: 391.27,   c: -0.12 },
-  { s: "SPY",  n: "S&P 500 ETF",p: 528.40,   c:  0.43 },
-  { s: "QQQ",  n: "NASDAQ ETF", p: 446.82,   c:  0.71 },
-  { s: "IWM",  n: "Russell 2000",p: 198.54,  c: -0.34 },
-  { s: "AAPL", n: "Apple",      p: 189.43,   c:  1.24 },
-  { s: "MSFT", n: "Microsoft",  p: 415.22,   c:  0.55 },
-  { s: "NVDA", n: "NVIDIA",     p: 875.32,   c:  2.11 },
-  { s: "GOOGL",n: "Alphabet",   p: 174.12,   c:  0.67 },
-  { s: "AMZN", n: "Amazon",     p: 182.45,   c:  0.32 },
-  { s: "META", n: "Meta",       p: 508.90,   c:  1.02 },
-  { s: "TSLA", n: "Tesla",      p: 245.67,   c: -0.89 },
+  { s: "SPY",  n: "S&P 500",       p: 528.40,  c: 0.43  },
+  { s: "QQQ",  n: "NASDAQ ETF",    p: 446.82,  c: 0.71  },
+  { s: "IWM",  n: "Russell 2000",  p: 198.54,  c: -0.34 },
+  { s: "NVDA", n: "NVIDIA",        p: 875.32,  c: 2.11  },
+  { s: "TLT",  n: "Bonos 20+ Año", p: 88.45,   c: -0.22 },
+  { s: "XLU",  n: "Utilities ETF", p: 71.20,   c: 0.15  },
+  { s: "GLD",  n: "Oro ETF",       p: 224.80,  c: 0.38  },
+  { s: "BTC-USD", n: "Bitcoin",    p: 94500.00,c: 1.45  },
 ];
 
 // ── Contenido estático ───────────────────────────────────────────
@@ -132,13 +129,50 @@ let C = { ...DARK };
 
 // ── Componente principal ─────────────────────────────────────────
 export default function FinanzasDR() {
-  const [tab, setTab]     = useState("inicio");
+  const [tab, setTab]       = useState("inicio");
   const [stocks, setStocks] = useState(WS_STOCKS);
   const [expanded, setExpanded] = useState(null);
-  const [dark, setDark]   = useState(true);
+  const [dark, setDark]     = useState(true);
+  const [realLoading, setRealLoading] = useState(false);
+  const [lastUpdate, setLastUpdate]   = useState(null);
+  const [realErr, setRealErr]         = useState(null);
 
   // Update C whenever theme changes
   C = dark ? DARK : LIGHT;
+
+  // Fetch real prices from Finnhub
+  const fetchRealPrices = async () => {
+    setRealLoading(true);
+    setRealErr(null);
+    try {
+      const updated = await Promise.all(
+        WS_STOCKS.map(async (st) => {
+          try {
+            const symbol = st.s === "BTC-USD" ? "BINANCE:BTCUSDT" : st.s;
+            const res  = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`);
+            const data = await res.json();
+            if (data.c && data.c > 0) {
+              const changeP = data.dp ?? ((data.c - data.pc) / data.pc * 100);
+              return { ...st, p: data.c, c: +changeP.toFixed(2) };
+            }
+            return st;
+          } catch { return st; }
+        })
+      );
+      setStocks(updated);
+      setLastUpdate(new Date().toLocaleTimeString("es-DO"));
+    } catch (e) {
+      setRealErr("No se pudo conectar con Finnhub.");
+    }
+    setRealLoading(false);
+  };
+
+  // Auto-fetch on load then every 60 seconds
+  useEffect(() => {
+    fetchRealPrices();
+    const t = setInterval(fetchRealPrices, 60000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -161,13 +195,6 @@ export default function FinanzasDR() {
     `;
     document.head.appendChild(style);
     return () => { document.head.removeChild(link); document.head.removeChild(style); };
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setStocks(prev => prev.map(s => ({ ...s, p: +(s.p * (1 + (Math.random() - 0.499) * 0.0007)).toFixed(2) })));
-    }, 2500);
-    return () => clearInterval(t);
   }, []);
 
   const tabs = [
@@ -248,7 +275,7 @@ export default function FinanzasDR() {
         {/* EMPIEZA AQUÍ */}
         {tab === "inicio" && (
           <div className="fade-in">
-            <div style={{ background: `linear-gradient(135deg,#0f1228,#130f2a)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
+            <div style={{ background: dark ? `linear-gradient(135deg,#0f1228,#130f2a)` : `linear-gradient(135deg,#eef0f8,#e8eaf5)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12 }}>PARA PRINCIPIANTES</div>
               <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 800, color: C.text, marginBottom: 14, lineHeight: 1.3 }}>
@@ -315,18 +342,36 @@ export default function FinanzasDR() {
         {/* MERCADOS */}
         {tab === "mercados" && (
           <div className="fade-in">
-            <SectionTitle>Mercados Wall Street</SectionTitle>
-            <Label>── Índices & Acciones EE.UU. — Precios de referencia</Label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 12 }}>
+              <SectionTitle>Mercados Wall Street</SectionTitle>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                {lastUpdate && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.green }}>✓ Actualizado {lastUpdate}</span>}
+                {realErr    && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.red }}>⚠ {realErr}</span>}
+                <button onClick={fetchRealPrices} disabled={realLoading} style={{
+                  background: realLoading ? C.border : C.gold, color: realLoading ? C.muted : "#000",
+                  border: "none", padding: "9px 18px", borderRadius: 6, cursor: realLoading ? "not-allowed" : "pointer",
+                  fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 700, transition: "all 0.2s",
+                }}>
+                  {realLoading ? "⏳ Cargando..." : "🔴 Actualizar Precios"}
+                </button>
+              </div>
+            </div>
+            <Label>── Precios en tiempo real · Powered by Finnhub</Label>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 12, marginBottom: 32 }}>
               {stocks.map(st => <StockCard key={st.s} st={st} />)}
             </div>
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px 28px" }}>
-              <Label>── ¿Qué es cada índice?</Label>
+              <Label>── ¿Qué es cada activo?</Label>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 16 }}>
                 {[
-                  { s: "S&P 500",   d: "Las 500 empresas más grandes de EE.UU. El mejor indicador de la economía americana. Históricamente sube ~10% al año." },
-                  { s: "Dow Jones", d: "Las 30 empresas industriales más importantes. Es el índice más antiguo y conocido de Wall Street." },
-                  { s: "NASDAQ",    d: "Dominado por tecnología. Apple, Microsoft, Amazon, Google. Más volátil pero con mayor potencial de crecimiento." },
+                  { s: "SPY",     d: "ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU. El activo más popular para inversores a largo plazo." },
+                  { s: "QQQ",     d: "ETF del NASDAQ 100 — dominado por tecnología. Apple, Microsoft, NVIDIA, Amazon. Alto potencial de crecimiento." },
+                  { s: "IWM",     d: "ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU. Indica la salud de la economía doméstica americana." },
+                  { s: "NVDA",    d: "NVIDIA — líder mundial en chips de inteligencia artificial. Una de las acciones más influyentes del mercado actual." },
+                  { s: "TLT",     d: "ETF de bonos del Tesoro a 20+ años. Sube cuando los inversores buscan seguridad. Indica el sentimiento del mercado." },
+                  { s: "XLU",     d: "ETF del sector Utilities (electricidad, agua, gas). Considerado defensivo — estable en mercados volátiles." },
+                  { s: "GLD",     d: "ETF del oro. Activo refugio por excelencia. Sube en momentos de incertidumbre económica o inflación alta." },
+                  { s: "BTC-USD", d: "Bitcoin — la criptomoneda más importante del mundo. Alta volatilidad pero con creciente adopción institucional." },
                 ].map((x, i) => (
                   <div key={i} style={{ borderLeft: `3px solid ${C.gold}`, paddingLeft: 16 }}>
                     <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: C.gold, marginBottom: 6 }}>{x.s}</div>
@@ -402,7 +447,7 @@ export default function FinanzasDR() {
         {/* NEWSLETTER */}
         {tab === "newsletter" && (
           <div className="fade-in">
-            <div style={{ background: `linear-gradient(135deg,#0f1228,#130f2a)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
+            <div style={{ background: dark ? `linear-gradient(135deg,#0f1228,#130f2a)` : `linear-gradient(135deg,#eef0f8,#e8eaf5)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12 }}>GRATIS · CADA SEMANA</div>
               <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 32, fontWeight: 800, color: C.text, marginBottom: 14, lineHeight: 1.3 }}>
@@ -649,7 +694,7 @@ function CompoundCalc() {
         {/* RIGHT — Results */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Valor Final highlight */}
-          <div style={{ background: `linear-gradient(135deg,#0f1228,#130f2a)`, border: `2px solid ${C.gold}`, borderRadius: 12, padding: "20px 24px", textAlign: "center" }}>
+          <div style={{ background: `linear-gradient(135deg, ${C.card}, ${C.bg})`, border: `2px solid ${C.gold}`, borderRadius: 12, padding: "20px 24px", textAlign: "center" }}>
             <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 6 }}>VALOR FINAL EN {anos} AÑOS</div>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 36, fontWeight: 800, color: C.gold }}>{fmtM(totalFinal)}</div>
           </div>
@@ -713,10 +758,10 @@ function CompoundCalc() {
       </div>
 
       {/* Tabla */}
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", overflowX: "auto", maxHeight: 480, overflowY: "auto" }}>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'IBM Plex Mono'", fontSize: 12, minWidth: 700 }}>
-          <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
-            <tr style={{ background: "#0d0f1e", borderBottom: `1px solid ${C.border}` }}>
+          <thead>
+            <tr style={{ background: C.card, borderBottom: `1px solid ${C.border}` }}>
               {[vistaTabla==="Mensual"?"Mes":"Año","Capital Base","Aporte","Aporte Acum.","Ganancia","Ganancia Acum.","Valor Final"].map((h,i) => (
                 <th key={i} style={{ padding: "10px 12px", fontWeight: 500, textAlign: i===0?"left":"right", color: C.muted, whiteSpace: "nowrap" }}>{h}</th>
               ))}
