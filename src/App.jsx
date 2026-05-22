@@ -5,14 +5,14 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
 
 const WS_STOCKS = [
-  { s: "SPY",  n: "S&P 500",       p: 528.40,  c: 0.43  },
-  { s: "QQQ",  n: "NASDAQ ETF",    p: 446.82,  c: 0.71  },
-  { s: "IWM",  n: "Russell 2000",  p: 198.54,  c: -0.34 },
-  { s: "NVDA", n: "NVIDIA",        p: 875.32,  c: 2.11  },
-  { s: "TLT",  n: "Bonos 20+ Año", p: 88.45,   c: -0.22 },
-  { s: "XLU",  n: "Utilities ETF", p: 71.20,   c: 0.15  },
-  { s: "GLD",  n: "Oro ETF",       p: 224.80,  c: 0.38  },
-  { s: "BTC-USD", n: "Bitcoin",    p: 94500.00,c: 1.45  },
+  { s: "SPY",     n: "S&P 500",       p: 528.40,  c:  0.43 },
+  { s: "QQQ",     n: "NASDAQ ETF",    p: 446.82,  c:  0.71 },
+  { s: "IWM",     n: "Russell 2000",  p: 198.54,  c: -0.34 },
+  { s: "DIA",     n: "Dow Jones ETF", p: 391.27,  c: -0.12 },
+  { s: "TLT",     n: "Bonos 20+ Año", p: 88.45,   c: -0.22 },
+  { s: "XLU",     n: "Utilities ETF", p: 71.20,   c:  0.15 },
+  { s: "GLD",     n: "Oro ETF",       p: 224.80,  c:  0.38 },
+  { s: "BTC-USD", n: "Bitcoin",       p: 94500.00,c:  1.45 },
 ];
 
 // ── Contenido estático ───────────────────────────────────────────
@@ -461,7 +461,7 @@ export default function FinanzasDR() {
                   { s: "SPY",     d: "ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU. El activo más popular para inversores a largo plazo." },
                   { s: "QQQ",     d: "ETF del NASDAQ 100 — dominado por tecnología. Apple, Microsoft, NVIDIA, Amazon. Alto potencial de crecimiento." },
                   { s: "IWM",     d: "ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU. Indica la salud de la economía doméstica americana." },
-                  { s: "NVDA",    d: "NVIDIA — líder mundial en chips de inteligencia artificial. Una de las acciones más influyentes del mercado actual." },
+                  { s: "DIA",     d: "ETF del Dow Jones Industrial Average — las 30 empresas industriales más importantes de EE.UU. El índice más antiguo de Wall Street." },
                   { s: "TLT",     d: "ETF de bonos del Tesoro a 20+ años. Sube cuando los inversores buscan seguridad. Indica el sentimiento del mercado." },
                   { s: "XLU",     d: "ETF del sector Utilities (electricidad, agua, gas). Considerado defensivo — estable en mercados volátiles." },
                   { s: "GLD",     d: "ETF del oro. Activo refugio por excelencia. Sube en momentos de incertidumbre económica o inflación alta." },
