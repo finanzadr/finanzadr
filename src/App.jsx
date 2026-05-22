@@ -17,10 +17,36 @@ const WS_STOCKS = [
 
 // ── Contenido estático ───────────────────────────────────────────
 const NOTICIAS = [
-  { titulo: "La Fed mantiene tasas de interés en 5.25% por tercer mes consecutivo", resumen: "La Reserva Federal decidió mantener las tasas sin cambios mientras evalúa el impacto de la inflación. Los mercados reaccionaron positivamente, con el S&P 500 subiendo un 0.8% tras el anuncio. Los analistas esperan un posible recorte para el tercer trimestre de 2026.", fuente: "Reuters", tiempo: "Hace 2 horas", categoria: "Fed" },
-  { titulo: "NVIDIA supera expectativas con ganancias récord impulsadas por IA", resumen: "NVIDIA reportó ingresos de $26 mil millones en el último trimestre, superando las proyecciones de Wall Street en un 15%. La demanda de chips para inteligencia artificial sigue siendo el motor principal del crecimiento. La acción subió 4% en el mercado extendido.", fuente: "Bloomberg", tiempo: "Hace 4 horas", categoria: "Acciones" },
-  { titulo: "S&P 500 alcanza nuevo máximo histórico impulsado por sector tecnológico", resumen: "El índice S&P 500 cerró en un nuevo récord histórico, superando los 5,300 puntos por primera vez. Las acciones tecnológicas lideraron las ganancias, con Apple y Microsoft contribuyendo significativamente al alza. Es el quinto máximo del año en lo que va de 2026.", fuente: "CNBC", tiempo: "Hace 6 horas", categoria: "Mercados" },
-  { titulo: "Bitcoin supera los $95,000 por primera vez en tres meses", resumen: "La criptomoneda más grande del mundo volvió a superar los $95,000, impulsada por la aprobación de nuevos ETFs de Bitcoin en Europa. Los inversores institucionales siguen aumentando sus posiciones en activos digitales. El volumen de transacciones alcanzó niveles récord esta semana.", fuente: "WSJ", tiempo: "Hace 8 horas", categoria: "Cripto" },
+  {
+    titulo: "S&P 500 cierra en máximo histórico mientras mercados celebran pausa de la Fed",
+    resumen: "El S&P 500 alcanzó un nuevo récord cerrando por encima de 5,800 puntos este viernes, impulsado por datos de empleo más fuertes de lo esperado. La Reserva Federal señaló que mantendría las tasas sin cambios hasta tener mayor claridad sobre la inflación. Los inversores celebraron la noticia con compras masivas en el sector tecnológico.",
+    fuente: "Reuters", tiempo: "Hace 1 hora", categoria: "Mercados"
+  },
+  {
+    titulo: "NVIDIA supera los $1,000 por acción por primera vez en su historia",
+    resumen: "Las acciones de NVIDIA cruzaron la barrera de los $1,000 por primera vez impulsadas por una demanda récord de chips para inteligencia artificial. La compañía reportó ingresos trimestrales de $44 mil millones, un 78% más que el año anterior. Los analistas de Wall Street elevaron sus objetivos de precio hasta $1,400.",
+    fuente: "Bloomberg", tiempo: "Hace 3 horas", categoria: "Acciones"
+  },
+  {
+    titulo: "El oro alcanza nuevos máximos históricos ante la incertidumbre geopolítica global",
+    resumen: "El precio del oro superó los $3,400 por onza este mes, estableciendo un nuevo récord histórico. Los inversores buscan refugio en metales preciosos ante las tensiones geopolíticas y el debilitamiento del dólar. El ETF GLD registró entradas de capital de más de $2 mil millones en la última semana.",
+    fuente: "WSJ", tiempo: "Hace 5 horas", categoria: "Materias Primas"
+  },
+  {
+    titulo: "Bitcoin consolida por encima de los $90,000 con creciente adopción institucional",
+    resumen: "Bitcoin mantiene su posición por encima de los $90,000 respaldado por compras institucionales y la aprobación de nuevos ETFs en mercados europeos y asiáticos. BlackRock y Fidelity reportaron que sus ETFs de Bitcoin acumulan más de $50 mil millones en activos. Los analistas anticipan nuevos máximos hacia fin de año.",
+    fuente: "CNBC", tiempo: "Hace 7 horas", categoria: "Cripto"
+  },
+  {
+    titulo: "Los bonos del Tesoro a 10 años suben ante señales de desaceleración económica",
+    resumen: "El rendimiento del bono del Tesoro a 10 años cayó al 4.2% mientras los inversores buscan activos más seguros. Los datos de manufactura publicados esta semana mostraron una contracción por segundo mes consecutivo. El ETF TLT subió un 2.3% en la semana, atrayendo capital de inversores defensivos.",
+    fuente: "Financial Times", tiempo: "Hace 9 horas", categoria: "Bonos"
+  },
+  {
+    titulo: "Dow Jones supera los 42,000 puntos impulsado por sector financiero y salud",
+    resumen: "El Dow Jones Industrial Average superó los 42,000 puntos esta semana, liderado por fuertes ganancias en el sector financiero y de salud. JPMorgan Chase y UnitedHealth reportaron resultados trimestrales superiores a las expectativas. El ETF DIA acumula una ganancia del 8% en lo que va del año.",
+    fuente: "MarketWatch", tiempo: "Hace 11 horas", categoria: "Mercados"
+  },
 ];
 
 const GUIAS = [
@@ -193,6 +219,34 @@ export default function FinanzasDR() {
       .card-hover { transition: all 0.2s; }
       .card-hover:hover { border-color: #c8a84b44 !important; transform: translateY(-2px); }
       .theme-toggle:hover { transform: scale(1.05); }
+
+      /* ── MOBILE RESPONSIVE ── */
+      @media (max-width: 768px) {
+        .main-padding { padding: 16px !important; }
+        .hero-grid { flex-direction: column !important; }
+        .hero-stocks { display: grid !important; grid-template-columns: 1fr 1fr !important; width: 100% !important; }
+        .header-right { flex-direction: column !important; align-items: flex-end !important; gap: 8px !important; }
+        .toggle-text { display: none !important; }
+        .grid-2col { grid-template-columns: 1fr !important; }
+        .grid-3col { grid-template-columns: 1fr 1fr !important; }
+        .nav-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; scrollbar-width: none !important; }
+        .nav-scroll::-webkit-scrollbar { display: none !important; }
+        .pulse-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .summary-grid { grid-template-columns: 1fr !important; }
+        .calc-grid { grid-template-columns: 1fr !important; }
+        .hero-text h1 { font-size: 26px !important; }
+        .hero-text p { font-size: 13px !important; }
+        .section-title { font-size: 20px !important; }
+        .ticker-bar { height: 32px !important; font-size: 11px !important; }
+        .share-btns { flex-direction: column !important; }
+        .broker-grid { grid-template-columns: 1fr 1fr !important; }
+        .steps-grid { grid-template-columns: 1fr !important; }
+      }
+      @media (max-width: 480px) {
+        .pulse-grid { grid-template-columns: 1fr 1fr !important; }
+        .hero-stocks { grid-template-columns: 1fr 1fr !important; }
+        .broker-grid { grid-template-columns: 1fr !important; }
+      }
     `;
     document.head.appendChild(style);
     return () => { document.head.removeChild(link); document.head.removeChild(style); };
@@ -250,7 +304,7 @@ export default function FinanzasDR() {
             transition: "all 0.3s", flexShrink: 0,
           }}>
             <span style={{ fontSize: 18 }}>{dark ? "☀️" : "🌙"}</span>
-            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, color: C.text }}>
+            <span className="toggle-text" style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, color: C.text }}>
               {dark ? "Modo Claro" : "Modo Oscuro"}
             </span>
           </button>
@@ -258,7 +312,7 @@ export default function FinanzasDR() {
       </header>
 
       {/* Nav */}
-      <nav style={{ borderBottom: `1px solid ${C.border}`, display: "flex", padding: "0 32px", background: C.navBg, overflowX: "auto" }}>
+      <nav className="nav-scroll" style={{ borderBottom: `1px solid ${C.border}`, display: "flex", padding: "0 32px", background: C.navBg, overflowX: "auto" }}>
         {tabs.map(([id, label]) => (
           <button key={id} className="nav-btn" onClick={() => setTab(id)} style={{
             padding: "14px 18px", border: "none", background: "none", cursor: "pointer",
@@ -271,7 +325,7 @@ export default function FinanzasDR() {
       </nav>
 
       {/* Contenido */}
-      <main style={{ padding: "32px", maxWidth: "100%", margin: "0 auto" }}>
+      <main style={{ padding: "32px", maxWidth: "100%", margin: "0 auto" }} className="main-padding">
 
         {/* EMPIEZA AQUÍ — LIVE MARKET PULSE */}
         {tab === "inicio" && (
@@ -279,7 +333,7 @@ export default function FinanzasDR() {
 
             {/* Hero */}
             <div style={{ background: dark ? `linear-gradient(135deg,#0f1228,#130f2a)` : `linear-gradient(135deg,#eef0f8,#e8eaf5)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px 40px 32px", marginBottom: 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 20 }} className="hero-grid">
                 <div style={{ maxWidth: 520 }}>
                   <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 3, marginBottom: 10 }}>WALL STREET EN TIEMPO REAL</div>
                   <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 38, fontWeight: 800, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>
@@ -322,7 +376,7 @@ export default function FinanzasDR() {
                 </div>
                 {lastUpdate && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.green }}>✓ {lastUpdate}</span>}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10 }} className="pulse-grid">
                 {stocks.map(st => (
                   <div key={st.s} className="card-hover" style={{ background: C.card, border: `1px solid ${st.c >= 0 ? C.green+"33" : C.red+"33"}`, borderLeft: `3px solid ${clr(st.c)}`, borderRadius: 8, padding: "12px 14px", cursor: "pointer" }} onClick={() => setTab("charts")}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
@@ -337,7 +391,7 @@ export default function FinanzasDR() {
             </div>
 
             {/* Market Summary Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16, marginBottom: 28 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16, marginBottom: 28 }} className="summary-grid">
               {/* Market Sentiment */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px" }}>
                 <Label style={{ margin: "0 0 12px 0" }}>── SENTIMIENTO HOY</Label>
@@ -744,7 +798,7 @@ function CompoundCalc() {
       </div>
 
       {/* Main grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }} className="calc-grid">
 
         {/* LEFT — Inputs */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px" }}>
