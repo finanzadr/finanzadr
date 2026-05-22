@@ -414,7 +414,7 @@ export default function FinanzasDR() {
                 <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "26px 30px" }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
                     {post.tags.map((t, j) => (
-                      <span key={j} style={{ background: "#1a1e35", color: C.sub, padding: "2px 10px", borderRadius: 4, fontSize: 11, fontFamily: "'IBM Plex Mono'" }}>#{t}</span>
+                      <span key={j} style={{ background: C.border, color: C.sub, padding: "2px 10px", borderRadius: 4, fontSize: 11, fontFamily: "'IBM Plex Mono'" }}>#{t}</span>
                     ))}
                   </div>
                   <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 800, marginBottom: 8, lineHeight: 1.35, color: C.text }}>{post.titulo}</h3>
@@ -609,7 +609,7 @@ function CompoundCalc() {
   const labelStyle = { fontSize: 13, color: C.sub, marginBottom: 6, display: "block" };
   const selStyle   = { width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 14px", color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 13, outline: "none", cursor: "pointer" };
   const stepBtn    = (fn, dir) => (
-    <button onClick={fn} style={{ width: 40, background: "#1a1e35", border: "none", color: C.gold, fontSize: 20, cursor: "pointer", borderRadius: dir === "left" ? "8px 0 0 8px" : "0 8px 8px 0", flexShrink: 0 }}>
+    <button onClick={fn} style={{ width: 40, background: C.border, border: "none", color: C.gold, fontSize: 20, cursor: "pointer", borderRadius: dir === "left" ? "8px 0 0 8px" : "0 8px 8px 0", flexShrink: 0 }}>
       {dir === "left" ? "−" : "+"}
     </button>
   );
