@@ -162,9 +162,43 @@ export default function FinanzasDR() {
   const [realLoading, setRealLoading] = useState(false);
   const [lastUpdate, setLastUpdate]   = useState(null);
   const [realErr, setRealErr]         = useState(null);
+  const [noticias, setNoticias]       = useState(NOTICIAS);
+  const [noticiasLoading, setNoticiasLoading] = useState(false);
 
   // Update C whenever theme changes
   C = dark ? DARK : LIGHT;
+
+  // Fetch real news from Finnhub
+  const fetchNoticias = async () => {
+    setNoticiasLoading(true);
+    try {
+      const res  = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const categorias = { "earnings": "Ganancias", "ipo": "IPO", "merger": "Fusiones", "crypto": "Cripto", "forex": "Divisas", "economy": "Economía", "general": "Mercados" };
+        const mapped = data.slice(0, 8).map(n => ({
+          titulo: n.headline,
+          resumen: n.summary?.slice(0, 220) + (n.summary?.length > 220 ? "..." : "") || "Sin resumen disponible.",
+          fuente: n.source || "Finnhub",
+          tiempo: (() => {
+            const mins = Math.floor((Date.now()/1000 - n.datetime) / 60);
+            if (mins < 60) return `Hace ${mins} min`;
+            if (mins < 1440) return `Hace ${Math.floor(mins/60)}h`;
+            return `Hace ${Math.floor(mins/1440)} días`;
+          })(),
+          categoria: categorias[n.category] || "Mercados",
+          url: n.url,
+        }));
+        setNoticias(mapped);
+      }
+    } catch (e) {
+      // Keep static news if API fails
+    }
+    setNoticiasLoading(false);
+  };
+
+  // Auto-fetch news on load
+  useEffect(() => { fetchNoticias(); }, []);
 
   // Fetch real prices from Finnhub
   const fetchRealPrices = async () => {
@@ -534,20 +568,44 @@ export default function FinanzasDR() {
         {/* NOTICIAS */}
         {tab === "ws" && (
           <div className="fade-in">
-            <SectionTitle>Noticias Wall Street</SectionTitle>
-            <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 24 }}>Últimas noticias de los mercados financieros de EE.UU.</p>
-            <div style={{ display: "grid", gap: 16 }}>
-              {NOTICIAS.map((item, i) => (
-                <div key={i} className="card-hover" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "22px 26px" }}>
-                  <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ background: C.goldBg, color: C.gold, padding: "2px 10px", borderRadius: 4, fontSize: 10, fontFamily: "'IBM Plex Mono'", fontWeight: 600 }}>{item.categoria}</span>
-                    <span style={{ fontSize: 11, color: C.muted, fontFamily: "'IBM Plex Mono'" }}>{item.tiempo} · {item.fuente}</span>
-                  </div>
-                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 19, fontWeight: 700, color: C.text, marginBottom: 10, lineHeight: 1.4 }}>{item.titulo}</h3>
-                  <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.7 }}>{item.resumen}</p>
-                </div>
-              ))}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <SectionTitle>Noticias Wall Street</SectionTitle>
+                <p style={{ fontSize: 13, color: C.sub, marginTop: 4 }}>
+                  {noticiasLoading ? "Cargando noticias en tiempo real..." : "Noticias reales de hoy · Powered by Finnhub"}
+                </p>
+              </div>
+              <button onClick={fetchNoticias} disabled={noticiasLoading} style={{
+                background: noticiasLoading ? C.border : C.gold, color: noticiasLoading ? C.muted : "#000",
+                border: "none", padding: "9px 18px", borderRadius: 6, cursor: noticiasLoading ? "not-allowed" : "pointer",
+                fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 700,
+              }}>
+                {noticiasLoading ? "⏳ Cargando..." : "🔄 Actualizar"}
+              </button>
             </div>
+
+            {noticiasLoading ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+                <div style={{ fontSize: 36, marginBottom: 14 }}>⚙️</div>
+                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13 }}>Cargando noticias de hoy...</div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 16, marginTop: 20 }}>
+                {noticias.map((item, i) => (
+                  <div key={i} className="card-hover" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "22px 26px" }}
+                    onClick={() => item.url && window.open(item.url, "_blank")}
+                    style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "22px 26px", cursor: item.url ? "pointer" : "default" }}>
+                    <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
+                      <span style={{ background: C.goldBg, color: C.gold, padding: "2px 10px", borderRadius: 4, fontSize: 10, fontFamily: "'IBM Plex Mono'", fontWeight: 600 }}>{item.categoria}</span>
+                      <span style={{ fontSize: 11, color: C.muted, fontFamily: "'IBM Plex Mono'" }}>{item.tiempo} · {item.fuente}</span>
+                      {item.url && <span style={{ fontSize: 10, color: C.gold, fontFamily: "'IBM Plex Mono'" }}>↗ Leer más</span>}
+                    </div>
+                    <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 19, fontWeight: 700, color: C.text, marginBottom: 10, lineHeight: 1.4 }}>{item.titulo}</h3>
+                    <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.7 }}>{item.resumen}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
