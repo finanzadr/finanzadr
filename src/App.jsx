@@ -865,7 +865,7 @@ function TradingViewCharts() {
           hide_top_toolbar: false,
           hide_legend: false,
           save_image: false,
-          backgroundColor: "#07080f",
+          backgroundColor: C.bg,
           gridColor: "#1a1e3540",
           width: "100%",
           height: 560,
@@ -898,7 +898,7 @@ function TradingViewCharts() {
             onKeyDown={e => e.key === "Enter" && loadChart(input)}
             style={{
               flex: 1, minWidth: 200,
-              background: "#07080f", border: `1px solid ${C.border}`,
+              background: C.card, border: `1px solid ${C.border}`,
               borderRadius: 8, padding: "14px 18px",
               color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 15,
               outline: "none", letterSpacing: 1,
