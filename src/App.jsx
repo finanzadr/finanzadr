@@ -676,20 +676,6 @@ function CompoundCalc() {
             <label style={labelStyle}>Años de Crecimiento</label>
             {numInput(anos, setAnos, 1, 1)}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <label style={labelStyle}>Modelo</label>
-              <select value={modelo} onChange={e => setModelo(e.target.value)} style={selStyle}>
-                {["Lineal","Exponencial"].map(o => <option key={o}>{o}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Escenario</label>
-              <select value={escenario} onChange={e => setEscenario(e.target.value)} style={selStyle}>
-                {["Aportes Constantes","Sin Aportes","Aportes Crecientes"].map(o => <option key={o}>{o}</option>)}
-              </select>
-            </div>
-          </div>
         </div>
 
         {/* RIGHT — Results */}
