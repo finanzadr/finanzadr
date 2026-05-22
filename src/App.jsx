@@ -2,20 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 // ── Datos Wall Street ────────────────────────────────────────────
+const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
+
 const WS_STOCKS = [
-  { s: "SPX",  n: "S&P 500",    p: 5284.22,  c:  0.43 },
-  { s: "NDX",  n: "NASDAQ 100", p: 16460.88, c:  0.71 },
-  { s: "DIA",  n: "Dow Jones",  p: 391.27,   c: -0.12 },
-  { s: "SPY",  n: "S&P 500 ETF",p: 528.40,   c:  0.43 },
-  { s: "QQQ",  n: "NASDAQ ETF", p: 446.82,   c:  0.71 },
-  { s: "IWM",  n: "Russell 2000",p: 198.54,  c: -0.34 },
-  { s: "AAPL", n: "Apple",      p: 189.43,   c:  1.24 },
-  { s: "MSFT", n: "Microsoft",  p: 415.22,   c:  0.55 },
-  { s: "NVDA", n: "NVIDIA",     p: 875.32,   c:  2.11 },
-  { s: "GOOGL",n: "Alphabet",   p: 174.12,   c:  0.67 },
-  { s: "AMZN", n: "Amazon",     p: 182.45,   c:  0.32 },
-  { s: "META", n: "Meta",       p: 508.90,   c:  1.02 },
-  { s: "TSLA", n: "Tesla",      p: 245.67,   c: -0.89 },
+  { s: "SPY",  n: "S&P 500",       p: 528.40,  c: 0.43  },
+  { s: "QQQ",  n: "NASDAQ ETF",    p: 446.82,  c: 0.71  },
+  { s: "IWM",  n: "Russell 2000",  p: 198.54,  c: -0.34 },
+  { s: "NVDA", n: "NVIDIA",        p: 875.32,  c: 2.11  },
+  { s: "TLT",  n: "Bonos 20+ Año", p: 88.45,   c: -0.22 },
+  { s: "XLU",  n: "Utilities ETF", p: 71.20,   c: 0.15  },
+  { s: "GLD",  n: "Oro ETF",       p: 224.80,  c: 0.38  },
+  { s: "BTC-USD", n: "Bitcoin",    p: 94500.00,c: 1.45  },
 ];
 
 // ── Contenido estático ───────────────────────────────────────────
@@ -112,18 +109,70 @@ const fmt = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximum
 const clr = (c) => c >= 0 ? "#00d68f" : "#ff4466";
 const arr = (c) => c >= 0 ? "▲" : "▼";
 
-const C = {
+const DARK = {
   bg: "#07080f", card: "#0d0f1e", border: "#1a1e35",
   gold: "#c8a84b", goldBg: "#c8a84b18",
   green: "#00d68f", red: "#ff4466",
   text: "#dde1f5", muted: "#484e72", sub: "#8890b5",
+  navBg: "#09091a", tickerBg: "#0a0b16",
 };
+
+const LIGHT = {
+  bg: "#f4f5f8", card: "#ffffff", border: "#e0e4ef",
+  gold: "#b8860b", goldBg: "#b8860b15",
+  green: "#00875a", red: "#d93025",
+  text: "#1a1d2e", muted: "#8891a8", sub: "#555e7a",
+  navBg: "#ffffff", tickerBg: "#1a1d2e",
+};
+
+let C = { ...DARK };
 
 // ── Componente principal ─────────────────────────────────────────
 export default function FinanzasDR() {
-  const [tab, setTab]   = useState("inicio");
+  const [tab, setTab]       = useState("inicio");
   const [stocks, setStocks] = useState(WS_STOCKS);
   const [expanded, setExpanded] = useState(null);
+  const [dark, setDark]     = useState(true);
+  const [realLoading, setRealLoading] = useState(false);
+  const [lastUpdate, setLastUpdate]   = useState(null);
+  const [realErr, setRealErr]         = useState(null);
+
+  // Update C whenever theme changes
+  C = dark ? DARK : LIGHT;
+
+  // Fetch real prices from Finnhub
+  const fetchRealPrices = async () => {
+    setRealLoading(true);
+    setRealErr(null);
+    try {
+      const updated = await Promise.all(
+        WS_STOCKS.map(async (st) => {
+          try {
+            const symbol = st.s === "BTC-USD" ? "BINANCE:BTCUSDT" : st.s;
+            const res  = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`);
+            const data = await res.json();
+            if (data.c && data.c > 0) {
+              const changeP = data.dp ?? ((data.c - data.pc) / data.pc * 100);
+              return { ...st, p: data.c, c: +changeP.toFixed(2) };
+            }
+            return st;
+          } catch { return st; }
+        })
+      );
+      setStocks(updated);
+      setLastUpdate(new Date().toLocaleTimeString("es-DO"));
+    } catch (e) {
+      setRealErr("No se pudo conectar con Finnhub.");
+    }
+    setRealLoading(false);
+  };
+
+  // Auto-fetch on load then every 60 seconds
+  useEffect(() => {
+    fetchRealPrices();
+    const t = setInterval(fetchRealPrices, 60000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -134,25 +183,18 @@ export default function FinanzasDR() {
     style.textContent = `
       @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
       @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes slideToggle { from{opacity:0} to{opacity:1} }
       .ticker-track { display:flex; animation:ticker 50s linear infinite; white-space:nowrap; }
       .ticker-track:hover { animation-play-state:paused; }
       .fade-in { animation: fadeIn 0.4s ease forwards; }
-      * { box-sizing:border-box; margin:0; padding:0; }
-      body { background:#07080f; }
-      ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:#07080f} ::-webkit-scrollbar-thumb{background:#1a1e35;border-radius:2px}
+      * { box-sizing:border-box; margin:0; padding:0; transition: background 0.3s, color 0.2s, border-color 0.2s; }
       .nav-btn:hover { color: #c8a84b !important; }
       .card-hover { transition: all 0.2s; }
       .card-hover:hover { border-color: #c8a84b44 !important; transform: translateY(-2px); }
+      .theme-toggle:hover { transform: scale(1.05); }
     `;
     document.head.appendChild(style);
     return () => { document.head.removeChild(link); document.head.removeChild(style); };
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setStocks(prev => prev.map(s => ({ ...s, p: +(s.p * (1 + (Math.random() - 0.499) * 0.0007)).toFixed(2) })));
-    }, 2500);
-    return () => clearInterval(t);
   }, []);
 
   const tabs = [
@@ -166,17 +208,17 @@ export default function FinanzasDR() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", width: "100%", background: C.bg, color: C.text, fontFamily: "'Inter', sans-serif" }}>
 
       {/* Ticker */}
-      <div style={{ background: "#0a0b16", borderBottom: `1px solid ${C.border}`, height: 36, display: "flex", alignItems: "center", overflow: "hidden" }}>
+      <div style={{ background: C.bg, borderBottom: `1px solid ${C.border}`, height: 36, display: "flex", alignItems: "center", overflow: "hidden" }}>
         <div style={{ background: C.gold, color: "#000", fontFamily: "'IBM Plex Mono'", fontSize: 10, fontWeight: 700, padding: "0 14px", height: "100%", display: "flex", alignItems: "center", flexShrink: 0, letterSpacing: 1 }}>EN VIVO</div>
         <div style={{ overflow: "hidden", flex: 1 }}>
           <div className="ticker-track">
             {[...stocks, ...stocks].map((st, i) => (
               <span key={i} style={{ padding: "0 20px", fontFamily: "'IBM Plex Mono'", fontSize: 12 }}>
                 <span style={{ color: C.gold, fontWeight: 600, marginRight: 6 }}>{st.s}</span>
-                <span style={{ marginRight: 5 }}>{fmt(st.p)}</span>
+                <span style={{ marginRight: 5, color: C.text }}>{fmt(st.p)}</span>
                 <span style={{ color: clr(st.c) }}>{arr(st.c)} {Math.abs(st.c)}%</span>
               </span>
             ))}
@@ -186,20 +228,35 @@ export default function FinanzasDR() {
       </div>
 
       {/* Header */}
-      <header style={{ borderBottom: `1px solid ${C.border}`, padding: "20px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+      <header style={{ borderBottom: `1px solid ${C.border}`, padding: "20px 32px", background: C.bg, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 800, color: C.gold, letterSpacing: "-0.5px", lineHeight: 1 }}>FinanzaDR</div>
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted, marginTop: 4, letterSpacing: 2 }}>APRENDE A INVERTIR EN WALL STREET · PARA LATINOS</div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, color: C.gold, marginTop: 6, fontStyle: "italic", opacity: 0.85 }}>"Wall Street en tu idioma"</div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted }}>{new Date().toLocaleDateString("es-DO", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.green, marginTop: 2 }}>● NYSE/NASDAQ EN VIVO</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted }}>{new Date().toLocaleDateString("es-DO", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
+          </div>
+
+          {/* Theme Toggle */}
+          <button className="theme-toggle" onClick={() => setDark(d => !d)} style={{
+            background: dark ? "#1a1e35" : "#f0f2f8",
+            border: `1px solid ${C.border}`,
+            borderRadius: 50, padding: "8px 14px",
+            cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+            transition: "all 0.3s", flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 18 }}>{dark ? "☀️" : "🌙"}</span>
+            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, color: C.text }}>
+              {dark ? "Modo Claro" : "Modo Oscuro"}
+            </span>
+          </button>
         </div>
       </header>
 
       {/* Nav */}
-      <nav style={{ borderBottom: `1px solid ${C.border}`, display: "flex", padding: "0 32px", background: "#09091a", overflowX: "auto" }}>
+      <nav style={{ borderBottom: `1px solid ${C.border}`, display: "flex", padding: "0 32px", background: C.navBg, overflowX: "auto" }}>
         {tabs.map(([id, label]) => (
           <button key={id} className="nav-btn" onClick={() => setTab(id)} style={{
             padding: "14px 18px", border: "none", background: "none", cursor: "pointer",
@@ -217,7 +274,7 @@ export default function FinanzasDR() {
         {/* EMPIEZA AQUÍ */}
         {tab === "inicio" && (
           <div className="fade-in">
-            <div style={{ background: `linear-gradient(135deg,#0f1228,#130f2a)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
+            <div style={{ background: dark ? `linear-gradient(135deg,#0f1228,#130f2a)` : `linear-gradient(135deg,#eef0f8,#e8eaf5)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12 }}>PARA PRINCIPIANTES</div>
               <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 800, color: C.text, marginBottom: 14, lineHeight: 1.3 }}>
@@ -248,10 +305,11 @@ export default function FinanzasDR() {
             <SectionTitle>¿Dónde abrir tu cuenta?</SectionTitle>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 14, marginTop: 20, marginBottom: 32 }}>
               {[
-                { name: "Robinhood",           emoji: "🟢", nivel: "Principiante", detalle: "Sin comisiones, muy fácil de usar. Ideal para empezar." },
-                { name: "Fidelity",            emoji: "🔵", nivel: "Intermedio",   detalle: "Sin comisiones, más herramientas. Muy confiable." },
-                { name: "Interactive Brokers", emoji: "🌐", nivel: "Avanzado",     detalle: "Acepta directamente clientes de RD y Latinoamérica." },
-                { name: "Charles Schwab",      emoji: "🏦", nivel: "Intermedio",   detalle: "Sólido para ETFs y fondos indexados a largo plazo." },
+                { name: "Robinhood",           emoji: "🟢", nivel: "Principiante", detalle: "Sin comisiones, muy fácil de usar. Ideal para empezar a invertir desde cero." },
+                { name: "Webull",              emoji: "🔵", nivel: "Principiante", detalle: "Sin comisiones, con más herramientas de análisis. Muy popular entre nuevos inversores." },
+                { name: "Moomoo",              emoji: "🟠", nivel: "Intermedio",   detalle: "Plataforma avanzada con datos en tiempo real y herramientas profesionales gratis." },
+                { name: "Tastytrade",          emoji: "🟣", nivel: "Intermedio",   detalle: "Especializado en opciones y futuros. Ideal para ir más allá de acciones básicas." },
+                { name: "Interactive Brokers", emoji: "🌐", nivel: "Avanzado",     detalle: "Acepta clientes de RD y Latinoamérica directamente. El más completo del mercado." },
               ].map((b, i) => (
                 <div key={i} className="card-hover" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "18px 16px" }}>
                   <div style={{ fontSize: 28, marginBottom: 8 }}>{b.emoji}</div>
@@ -284,18 +342,36 @@ export default function FinanzasDR() {
         {/* MERCADOS */}
         {tab === "mercados" && (
           <div className="fade-in">
-            <SectionTitle>Mercados Wall Street</SectionTitle>
-            <Label>── Índices & Acciones EE.UU. — Precios de referencia</Label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 12 }}>
+              <SectionTitle>Mercados Wall Street</SectionTitle>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                {lastUpdate && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.green }}>✓ Actualizado {lastUpdate}</span>}
+                {realErr    && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.red }}>⚠ {realErr}</span>}
+                <button onClick={fetchRealPrices} disabled={realLoading} style={{
+                  background: realLoading ? C.border : C.gold, color: realLoading ? C.muted : "#000",
+                  border: "none", padding: "9px 18px", borderRadius: 6, cursor: realLoading ? "not-allowed" : "pointer",
+                  fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 700, transition: "all 0.2s",
+                }}>
+                  {realLoading ? "⏳ Cargando..." : "🔴 Actualizar Precios"}
+                </button>
+              </div>
+            </div>
+            <Label>── Precios en tiempo real · Powered by Finnhub</Label>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 12, marginBottom: 32 }}>
               {stocks.map(st => <StockCard key={st.s} st={st} />)}
             </div>
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px 28px" }}>
-              <Label>── ¿Qué es cada índice?</Label>
+              <Label>── ¿Qué es cada activo?</Label>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 16 }}>
                 {[
-                  { s: "S&P 500",   d: "Las 500 empresas más grandes de EE.UU. El mejor indicador de la economía americana. Históricamente sube ~10% al año." },
-                  { s: "Dow Jones", d: "Las 30 empresas industriales más importantes. Es el índice más antiguo y conocido de Wall Street." },
-                  { s: "NASDAQ",    d: "Dominado por tecnología. Apple, Microsoft, Amazon, Google. Más volátil pero con mayor potencial de crecimiento." },
+                  { s: "SPY",     d: "ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU. El activo más popular para inversores a largo plazo." },
+                  { s: "QQQ",     d: "ETF del NASDAQ 100 — dominado por tecnología. Apple, Microsoft, NVIDIA, Amazon. Alto potencial de crecimiento." },
+                  { s: "IWM",     d: "ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU. Indica la salud de la economía doméstica americana." },
+                  { s: "NVDA",    d: "NVIDIA — líder mundial en chips de inteligencia artificial. Una de las acciones más influyentes del mercado actual." },
+                  { s: "TLT",     d: "ETF de bonos del Tesoro a 20+ años. Sube cuando los inversores buscan seguridad. Indica el sentimiento del mercado." },
+                  { s: "XLU",     d: "ETF del sector Utilities (electricidad, agua, gas). Considerado defensivo — estable en mercados volátiles." },
+                  { s: "GLD",     d: "ETF del oro. Activo refugio por excelencia. Sube en momentos de incertidumbre económica o inflación alta." },
+                  { s: "BTC-USD", d: "Bitcoin — la criptomoneda más importante del mundo. Alta volatilidad pero con creciente adopción institucional." },
                 ].map((x, i) => (
                   <div key={i} style={{ borderLeft: `3px solid ${C.gold}`, paddingLeft: 16 }}>
                     <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: C.gold, marginBottom: 6 }}>{x.s}</div>
@@ -371,7 +447,7 @@ export default function FinanzasDR() {
         {/* NEWSLETTER */}
         {tab === "newsletter" && (
           <div className="fade-in">
-            <div style={{ background: `linear-gradient(135deg,#0f1228,#130f2a)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
+            <div style={{ background: dark ? `linear-gradient(135deg,#0f1228,#130f2a)` : `linear-gradient(135deg,#eef0f8,#e8eaf5)`, border: `1px solid ${C.gold}30`, borderRadius: 16, padding: "40px", marginBottom: 32, textAlign: "center" }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12 }}>GRATIS · CADA SEMANA</div>
               <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 32, fontWeight: 800, color: C.text, marginBottom: 14, lineHeight: 1.3 }}>
@@ -475,19 +551,24 @@ function NewsletterForm() {
 }
 
 function CompoundCalc() {
-  const [capital, setCapital] = useState(5000);
-  const [aporte, setAporte] = useState(200);
-  const [tasa, setTasa] = useState(10);
-  const [anos, setAnos] = useState(20);
-  const [moneda, setMoneda] = useState("USD");
+  const [capital,    setCapital]    = useState(10000);
+  const [aporte,     setAporte]     = useState(200);
+  const [tasa,       setTasa]       = useState(10);
+  const [anos,       setAnos]       = useState(15);
+  const [moneda,     setMoneda]     = useState("USD");
   const [frecuencia, setFrecuencia] = useState("Mensual");
-  const [escenario, setEscenario] = useState("Aportes Constantes");
+  const [capitaliz,  setCapitaliz]  = useState("Anual");
+  const [modelo,     setModelo]     = useState("Lineal");
+  const [escenario,  setEscenario]  = useState("Aportes Constantes");
+  const [vistaTabla, setVistaTabla] = useState("Anual");
 
-  const sym = moneda === "DOP" ? "RD$" : "$";
-  const fmtM = (n) => `${sym}${Math.round(n).toLocaleString("es-DO")}`;
+  const sym   = moneda === "DOP" ? "RD$" : "$";
+  const fmtM  = (n) => `${sym}${(+n).toLocaleString("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmtPct = (n) => `${(+n).toFixed(2)}%`;
+
   const freqMap = { "Mensual": 12, "Semanal": 52, "Anual": 1 };
-  const periodosFrecuencia = freqMap[frecuencia] || 12;
-  const tasaPorPeriodo = Math.pow(1 + tasa / 100, 1 / periodosFrecuencia) - 1;
+  const periodos = freqMap[frecuencia] || 12;
+  const tasaPeriodo = Math.pow(1 + tasa / 100, 1 / periodos) - 1;
 
   const filas = [];
   let saldo = capital;
@@ -496,119 +577,241 @@ function CompoundCalc() {
     const aporteBase = escenario === "Sin Aportes" ? 0 : escenario === "Aportes Crecientes" ? aporte * Math.pow(1.05, y - 1) : aporte;
     let saldoInicio = saldo;
     let aporteAnualReal = 0;
-    for (let p = 0; p < periodosFrecuencia; p++) { saldo = saldo * (1 + tasaPorPeriodo) + aporteBase; aporteAnualReal += aporteBase; }
+    if (modelo === "Lineal") {
+      for (let p = 0; p < periodos; p++) { saldo = saldo * (1 + tasaPeriodo) + aporteBase; aporteAnualReal += aporteBase; }
+    } else {
+      aporteAnualReal = aporteBase * periodos;
+      saldo = saldo * Math.exp(tasa / 100) + aporteAnualReal;
+    }
     const interesAnual = saldo - saldoInicio - aporteAnualReal;
     totalInteresAcum += interesAnual;
-    filas.push({ ano: y, saldo: Math.round(saldo), aporteAcum: Math.round(capital + aporteBase * periodosFrecuencia * y), interesAcum: Math.round(totalInteresAcum), aporteAnual: Math.round(aporteAnualReal) });
+    filas.push({
+      ano: y,
+      saldo: saldo,
+      capitalBase: saldoInicio,
+      aporteBase: aporteAnualReal,
+      aporteAcum: capital + aporteBase * periodos * y,
+      interesAcum: totalInteresAcum,
+      aporteAnual: aporteAnualReal,
+      ganancia: interesAnual,
+      retorno: saldoInicio > 0 ? (interesAnual / saldoInicio * 100) : 0,
+    });
   }
 
-  const totalFinal = filas[filas.length - 1]?.saldo ?? capital;
-  const aporteTotal = escenario === "Sin Aportes" ? capital : capital + aporte * periodosFrecuencia * anos;
+  const totalFinal  = filas[filas.length - 1]?.saldo ?? capital;
+  const aporteTotal = escenario === "Sin Aportes" ? capital : capital + aporte * periodos * anos;
   const interesTotal = totalFinal - aporteTotal;
-  const multiplicador = (totalFinal / Math.max(aporteTotal, 1)).toFixed(2);
-  const fmtK = v => { if (v >= 1000000) return sym + (v / 1000000).toFixed(1) + "M"; if (v >= 1000) return sym + (v / 1000).toFixed(0) + "K"; return sym + v; };
+  const gananciaPct  = aporteTotal > 0 ? (interesTotal / aporteTotal * 100) : 0;
+  const fmtK = v => { if (v >= 1e6) return sym+(v/1e6).toFixed(1)+"M"; if (v >= 1000) return sym+(v/1000).toFixed(0)+"K"; return sym+Math.round(v); };
 
-  const selStyle = { background: "#0d0f1e", border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 13, padding: "10px 12px", outline: "none", cursor: "pointer", flex: 1 };
-  const inputNum = { flex: 1, background: "#0d0f1e", border: "none", outline: "none", color: C.gold, fontFamily: "'IBM Plex Mono'", fontSize: 16, fontWeight: 700, textAlign: "center", width: "100%", padding: "0 8px" };
-  const stepBtn = (fn, dir) => <button onClick={fn} style={{ width: 44, background: C.border, border: "none", color: C.gold, fontSize: 22, cursor: "pointer", borderRadius: dir === "left" ? "8px 0 0 8px" : "0 8px 8px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{dir === "left" ? "−" : "+"}</button>;
-  const numBox = (val, setVal, step, lbl, min = 0) => (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>{lbl}</div>
-      <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", height: 46 }}>
-        {stepBtn(() => setVal(v => Math.max(min, v - step)), "left")}
-        <input type="number" value={val || ""} min={min} placeholder="0" onChange={e => setVal(e.target.value === "" ? 0 : Math.max(min, +e.target.value))} style={inputNum} />
-        {stepBtn(() => setVal(v => v + step), "right")}
-      </div>
+  const inputStyle = { width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 14px", color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 600, outline: "none" };
+  const labelStyle = { fontSize: 13, color: C.sub, marginBottom: 6, display: "block" };
+  const selStyle   = { width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 14px", color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 13, outline: "none", cursor: "pointer" };
+  const stepBtn    = (fn, dir) => (
+    <button onClick={fn} style={{ width: 40, background: "#1a1e35", border: "none", color: C.gold, fontSize: 20, cursor: "pointer", borderRadius: dir === "left" ? "8px 0 0 8px" : "0 8px 8px 0", flexShrink: 0 }}>
+      {dir === "left" ? "−" : "+"}
+    </button>
+  );
+  const numInput = (val, setVal, step, min=0) => (
+    <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", height: 42 }}>
+      {stepBtn(() => setVal(v => Math.max(min, +(v - step).toFixed(2))), "left")}
+      <input type="number" value={val || ""} min={min} placeholder="0"
+        onChange={e => setVal(e.target.value === "" ? 0 : Math.max(min, +e.target.value))}
+        style={{ flex: 1, background: C.card, border: "none", outline: "none", color: C.gold, fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 700, textAlign: "center" }} />
+      {stepBtn(() => setVal(v => +(v + step).toFixed(2)), "right")}
     </div>
   );
 
   return (
     <div>
       <SectionTitle>Calculadora de Inversión</SectionTitle>
-      <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 8 }}>¿Cuánto tendrías si invirtieras $200/mes en el S&P 500? Descúbrelo aquí.</p>
-      <div style={{ background: C.goldBg, border: `1px solid ${C.gold}30`, borderRadius: 8, padding: "12px 18px", marginBottom: 24, display: "flex", gap: 10, alignItems: "center" }}>
-        <span style={{ fontSize: 20 }}>💡</span>
-        <p style={{ fontSize: 13, color: C.sub }}>El <strong style={{ color: C.gold }}>S&P 500</strong> ha retornado históricamente ~<strong style={{ color: C.gold }}>10% anual</strong> en promedio.</p>
-      </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, maxWidth: 280 }}>
+      <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 20 }}>
+        El S&P 500 ha retornado ~10% anual históricamente. Calcula el crecimiento de tu dinero con interés compuesto.
+      </p>
+
+      {/* Moneda */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, maxWidth: 260 }}>
         {["USD", "DOP"].map(m => (
-          <button key={m} onClick={() => setMoneda(m)} style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${moneda === m ? C.gold : C.border}`, background: moneda === m ? C.goldBg : "none", color: moneda === m ? C.gold : C.muted, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{m === "USD" ? "🇺🇸 USD" : "🇩🇴 DOP"}</button>
+          <button key={m} onClick={() => setMoneda(m)} style={{ flex: 1, padding: "9px", borderRadius: 8, border: `1px solid ${moneda === m ? C.gold : C.border}`, background: moneda === m ? C.goldBg : "none", color: moneda === m ? C.gold : C.muted, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            {m === "USD" ? "🇺🇸 USD" : "🇩🇴 DOP"}
+          </button>
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24 }}>
-          <Label>── Parámetros</Label>
-          {numBox(capital, setCapital, moneda === "DOP" ? 5000 : 500, `INVERSIÓN INICIAL (${sym})`)}
+
+      {/* Main grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+
+        {/* LEFT — Inputs */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px" }}>
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>APORTES PERIÓDICOS ({sym})</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 2, display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", height: 46 }}>
-                {stepBtn(() => setAporte(v => Math.max(0, v - (moneda === "DOP" ? 500 : 50))), "left")}
-                <input type="number" value={aporte || ""} min={0} placeholder="0" onChange={e => setAporte(e.target.value === "" ? 0 : Math.max(0, +e.target.value))} style={inputNum} />
-                {stepBtn(() => setAporte(v => v + (moneda === "DOP" ? 500 : 50)), "right")}
-              </div>
-              <select value={frecuencia} onChange={e => setFrecuencia(e.target.value)} style={{ ...selStyle, flex: 1 }}>
-                {["Mensual", "Semanal", "Anual"].map(o => <option key={o}>{o}</option>)}
+            <label style={labelStyle}>Inversión Inicial ({sym})</label>
+            {numInput(capital, setCapital, moneda === "DOP" ? 5000 : 1000)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+            <div>
+              <label style={labelStyle}>Aportes ({sym})</label>
+              {numInput(aporte, setAporte, moneda === "DOP" ? 500 : 50)}
+            </div>
+            <div>
+              <label style={labelStyle}>Frecuencia</label>
+              <select value={frecuencia} onChange={e => setFrecuencia(e.target.value)} style={selStyle}>
+                {["Mensual","Semanal","Anual"].map(o => <option key={o}>{o}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+            <div>
+              <label style={labelStyle}>Retorno Esperado (%)</label>
+              {numInput(tasa, setTasa, 0.5, 0.1)}
+            </div>
+            <div>
+              <label style={labelStyle}>Capitalización</label>
+              <select value={capitaliz} onChange={e => setCapitaliz(e.target.value)} style={selStyle}>
+                {["Anual","Mensual","Trimestral","Semestral"].map(o => <option key={o}>{o}</option>)}
               </select>
             </div>
           </div>
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>RETORNO ESPERADO (%/AÑO)</div>
-            <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", height: 46 }}>
-              {stepBtn(() => setTasa(v => Math.max(0.5, +(v - 0.5).toFixed(1))), "left")}
-              <input type="number" value={tasa || ""} min={0.5} max={100} step={0.5} onChange={e => setTasa(e.target.value === "" ? 0 : Math.max(0.5, +e.target.value))} style={inputNum} />
-              {stepBtn(() => setTasa(v => +(v + 0.5).toFixed(1)), "right")}
+            <label style={labelStyle}>Años de Crecimiento</label>
+            {numInput(anos, setAnos, 1, 1)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Modelo</label>
+              <select value={modelo} onChange={e => setModelo(e.target.value)} style={selStyle}>
+                {["Lineal","Exponencial"].map(o => <option key={o}>{o}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Escenario</label>
+              <select value={escenario} onChange={e => setEscenario(e.target.value)} style={selStyle}>
+                {["Aportes Constantes","Sin Aportes","Aportes Crecientes"].map(o => <option key={o}>{o}</option>)}
+              </select>
             </div>
           </div>
-          {numBox(anos, setAnos, 1, "AÑOS DE CRECIMIENTO", 1)}
-          <div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>ESCENARIO</div>
-            <select value={escenario} onChange={e => setEscenario(e.target.value)} style={{ ...selStyle, width: "100%" }}>
-              {["Aportes Constantes", "Sin Aportes", "Aportes Crecientes"].map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ background: `linear-gradient(135deg,#0f1228,#130f2a)`, border: `2px solid ${C.gold}`, borderRadius: 12, padding: "22px 24px", textAlign: "center" }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>VALOR FINAL EN {anos} AÑOS</div>
-            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 38, fontWeight: 800, color: C.gold, lineHeight: 1 }}>{fmtM(totalFinal)}</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, marginTop: 8 }}>Tu dinero crece ×{multiplicador}</div>
+
+        {/* RIGHT — Results */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Valor Final highlight */}
+          <div style={{ background: `linear-gradient(135deg, ${C.card}, ${C.bg})`, border: `2px solid ${C.gold}`, borderRadius: 12, padding: "20px 24px", textAlign: "center" }}>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 6 }}>VALOR FINAL EN {anos} AÑOS</div>
+            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 36, fontWeight: 800, color: C.gold }}>{fmtM(totalFinal)}</div>
           </div>
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px" }}>
+
+          {/* Results grid */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
             {[
-              { lbl: "Inversión Total",   val: fmtM(aporteTotal),              color: C.text  },
-              { lbl: "Intereses Ganados", val: fmtM(Math.max(0, interesTotal)), color: C.green },
-              { lbl: "Multiplicador",     val: `×${multiplicador}`,            color: C.gold  },
+              { lbl: "Inversión Total",     val: fmtM(aporteTotal),                    color: C.text  },
+              { lbl: "Capital % del Final", val: fmtPct(aporteTotal/totalFinal*100),   color: C.muted },
+              { lbl: "Aporte Total",        val: fmtM(escenario==="Sin Aportes"?0:aporte*periodos*anos), color: C.sub },
+              { lbl: "Ganancia Total",      val: fmtM(Math.max(0, interesTotal)),       color: C.green },
+              { lbl: "Ganancia Porcentual", val: fmtPct(Math.max(0, gananciaPct)),      color: C.green },
             ].map((r, i, arr) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}20` : "none" }}>
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 20px", borderBottom: i < arr.length-1 ? `1px solid ${C.border}20` : "none" }}>
                 <span style={{ fontSize: 13, color: C.muted }}>{r.lbl}</span>
-                <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 600, color: r.color }}>{r.val}</span>
+                <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 700, color: r.color }}>{r.val}</span>
               </div>
             ))}
           </div>
-          <div style={{ background: C.goldBg, border: `1px solid ${C.gold}30`, borderRadius: 10, padding: "14px 18px" }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 6 }}>💡 RECUERDA</div>
+
+          <div style={{ background: C.goldBg, border: `1px solid ${C.gold}30`, borderRadius: 10, padding: "12px 16px" }}>
             <p style={{ fontSize: 12, color: C.sub, lineHeight: 1.7 }}>
-              {interesTotal > aporteTotal ? `¡Los intereses superan lo que invertiste! Esto es el poder del interés compuesto.` : `En ${anos} años ganaste ${fmtM(Math.max(0, interesTotal))} solo en intereses. La clave es empezar hoy.`}
+              💡 {interesTotal > aporteTotal ? "¡Los intereses superan tu inversión! El interés compuesto está trabajando para ti." : `En ${anos} años ganaste ${fmtM(Math.max(0,interesTotal))} en intereses. La clave es empezar hoy.`}
             </p>
           </div>
         </div>
       </div>
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px 26px", marginTop: 24 }}>
+
+      {/* Chart */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px", marginTop: 24 }}>
         <Label>── Proyección de Crecimiento</Label>
-        <div style={{ width: "100%", height: 280 }}>
+        <div style={{ width: "100%", height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={filas} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
               <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, fill: C.muted }} />
               <YAxis stroke={C.muted} tick={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, fill: C.muted }} tickFormatter={fmtK} />
-              <Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'IBM Plex Mono'", fontSize: 12 }} formatter={(v, n) => [fmtM(v), n === "aporteAcum" ? "Capital Base" : n === "interesAcum" ? "Ganancias" : "Ganancia Año"]} labelFormatter={v => `Año ${v}`} />
-              <Bar dataKey="aporteAcum"  stackId="a" fill="#1e4a7a" name="aporteAcum"  radius={[0, 0, 0, 0]} />
-              <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="interesAcum" radius={[4, 4, 0, 0]} />
-              <Line type="monotone" dataKey="aporteAnual" stroke={C.gold} strokeWidth={2.5} dot={{ fill: C.gold, r: 3 }} name="aporteAnual" />
+              <Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'IBM Plex Mono'", fontSize: 12 }}
+                formatter={(v, n) => [fmtM(v), n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias":n==="ganancia"?"Ganancia Año":n]}
+                labelFormatter={v => `Año ${v}`} />
+              <Legend wrapperStyle={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, paddingTop: 12 }}
+                formatter={v => v==="aporteAcum"?"Capital Base":v==="interesAcum"?"Ganancias Acum.":"Ganancia (Año)"} />
+              <Bar dataKey="aporteAcum"  stackId="a" fill="#1e4a7a" name="aporteAcum"  radius={[0,0,0,0]} />
+              <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="interesAcum" radius={[4,4,0,0]} />
+              <Line type="monotone" dataKey="ganancia" stroke={C.gold} strokeWidth={2.5} dot={{ fill: C.gold, r: 3 }} name="ganancia" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* Toggle Anual / Mensual */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0 12px" }}>
+        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: vistaTabla==="Anual" ? C.gold : C.muted }}>Anual</span>
+        <div onClick={() => setVistaTabla(v => v==="Anual"?"Mensual":"Anual")} style={{ width: 44, height: 24, borderRadius: 12, cursor: "pointer", position: "relative", background: vistaTabla==="Mensual" ? C.gold : C.border, transition: "background 0.25s" }}>
+          <div style={{ position: "absolute", top: 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.25s", left: vistaTabla==="Mensual" ? 23 : 3 }} />
+        </div>
+        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: vistaTabla==="Mensual" ? C.gold : C.muted }}>Mensual</span>
+        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, marginLeft: 8 }}>
+          {vistaTabla==="Mensual" ? `${anos * 12} filas` : `${anos} filas`}
+        </span>
+      </div>
+
+      {/* Tabla */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'IBM Plex Mono'", fontSize: 12, minWidth: 700 }}>
+          <thead>
+            <tr style={{ background: C.card, borderBottom: `1px solid ${C.border}` }}>
+              {[vistaTabla==="Mensual"?"Mes":"Año","Capital Base","Aporte","Aporte Acum.","Ganancia","Ganancia Acum.","Valor Final"].map((h,i) => (
+                <th key={i} style={{ padding: "10px 12px", fontWeight: 500, textAlign: i===0?"left":"right", color: C.muted, whiteSpace: "nowrap" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {vistaTabla === "Anual" ? (
+              filas.map((f, i) => (
+                <tr key={i} style={{ borderBottom: `1px solid ${C.border}20`, background: i%2===0?"transparent":"#ffffff03" }}>
+                  <td style={{ padding:"10px 12px", color: C.gold }}>Año {f.ano}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.text }}>{fmtM(f.capitalBase)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.muted }}>{fmtM(f.aporteBase)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.muted }}>{fmtM(f.aporteAcum)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.green }}>{fmtM(f.ganancia)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.sub }}>{fmtM(f.interesAcum)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.gold, fontWeight:700 }}>{fmtM(f.saldo)}</td>
+                </tr>
+              ))
+            ) : (
+              // Filas mensuales
+              (() => {
+                const rows = [];
+                let saldoM = capital;
+                let interesAcumM = 0;
+                let aporteAcumM = capital;
+                const tasaM = Math.pow(1 + tasa / 100, 1/12) - 1;
+                const aporteM = escenario === "Sin Aportes" ? 0 : aporte;
+                for (let m = 1; m <= anos * 12; m++) {
+                  const prev = saldoM;
+                  saldoM = saldoM * (1 + tasaM) + aporteM;
+                  const gananciaM = saldoM - prev - aporteM;
+                  interesAcumM += gananciaM;
+                  aporteAcumM += aporteM;
+                  rows.push(
+                    <tr key={m} style={{ borderBottom: `1px solid ${C.border}15`, background: m%2===0?"transparent":"#ffffff02" }}>
+                      <td style={{ padding:"8px 12px", color: C.gold }}>Mes {m}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.text }}>{fmtM(prev)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.muted }}>{fmtM(aporteM)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.muted }}>{fmtM(aporteAcumM)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.green }}>{fmtM(gananciaM)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.sub }}>{fmtM(interesAcumM)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.gold, fontWeight:700 }}>{fmtM(saldoM)}</td>
+                    </tr>
+                  );
+                }
+                return rows;
+              })()
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -616,23 +819,10 @@ function CompoundCalc() {
 
 // ── TradingView Charts Component ─────────────────────────────────
 function TradingViewCharts() {
-  const [activeSymbol, setActiveSymbol] = useState("SPY");
+  const [input, setInput]         = useState("");
+  const [activeSymbol, setActiveSymbol] = useState("");
   const [activeInterval, setActiveInterval] = useState("D");
   const chartRef = useRef(null);
-
-  const symbols = [
-    { s: "SPY",  n: "S&P 500",    cat: "Índices" },
-    { s: "QQQ",  n: "NASDAQ",     cat: "Índices" },
-    { s: "DIA",  n: "Dow Jones",  cat: "Índices" },
-    { s: "IWM",  n: "Russell 2000",cat: "Índices" },
-    { s: "AAPL", n: "Apple",      cat: "Mag 7" },
-    { s: "MSFT", n: "Microsoft",  cat: "Mag 7" },
-    { s: "NVDA", n: "NVIDIA",     cat: "Mag 7" },
-    { s: "GOOGL",n: "Alphabet",   cat: "Mag 7" },
-    { s: "AMZN", n: "Amazon",     cat: "Mag 7" },
-    { s: "META", n: "Meta",       cat: "Mag 7" },
-    { s: "TSLA", n: "Tesla",      cat: "Mag 7" },
-  ];
 
   const intervals = [
     { v: "1",  l: "1m" },
@@ -644,16 +834,25 @@ function TradingViewCharts() {
     { v: "M",  l: "1M" },
   ];
 
+  const loadChart = (sym) => {
+    const s = sym.trim().toUpperCase();
+    if (!s) return;
+    setActiveSymbol(s);
+  };
+
   useEffect(() => {
-    if (!chartRef.current) return;
+    if (!activeSymbol || !chartRef.current) return;
     chartRef.current.innerHTML = "";
+    const container = document.createElement("div");
+    container.id = "tv_chart_main";
+    chartRef.current.appendChild(container);
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/tv.js";
     script.async = true;
     script.onload = () => {
       if (window.TradingView) {
         new window.TradingView.widget({
-          container_id: "tv_chart_container",
+          container_id: "tv_chart_main",
           symbol: activeSymbol,
           interval: activeInterval,
           timezone: "America/New_York",
@@ -668,11 +867,9 @@ function TradingViewCharts() {
           backgroundColor: "#07080f",
           gridColor: "#1a1e3540",
           width: "100%",
-          height: 520,
+          height: 560,
           studies: ["RSI@tv-basicstudies", "MACD@tv-basicstudies"],
           show_popup_button: true,
-          popup_width: "1000",
-          popup_height: "650",
         });
       }
     };
@@ -680,81 +877,88 @@ function TradingViewCharts() {
     return () => { if (script.parentNode) script.parentNode.removeChild(script); };
   }, [activeSymbol, activeInterval]);
 
-  const cats = [...new Set(symbols.map(s => s.cat))];
-
   return (
     <div>
-      {/* Symbol selector by category */}
-      {cats.map(cat => (
-        <div key={cat} style={{ marginBottom: 16 }}>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>── {cat.toUpperCase()}</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {symbols.filter(s => s.cat === cat).map(sym => (
-              <button key={sym.s} onClick={() => setActiveSymbol(sym.s)} style={{
-                padding: "8px 16px", borderRadius: 6, border: `1px solid ${activeSymbol === sym.s ? C.gold : C.border}`,
-                background: activeSymbol === sym.s ? C.goldBg : C.card,
-                color: activeSymbol === sym.s ? C.gold : C.sub,
-                fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                transition: "all 0.15s",
-              }}>
-                {sym.s} <span style={{ fontSize: 10, opacity: 0.7 }}>{sym.n}</span>
-              </button>
+      {/* Search box */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "28px 32px", marginBottom: 24, textAlign: "center" }}>
+        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 3, marginBottom: 12 }}>BUSCA CUALQUIER ACTIVO</div>
+        <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 8 }}>
+          Acciones · ETFs · Cripto · Materias Primas
+        </h2>
+        <p style={{ fontSize: 13, color: C.sub, marginBottom: 24 }}>
+          Escribe el símbolo del activo que quieres analizar — AAPL, BTC, GLD, EUR/USD, lo que sea.
+        </p>
+        <div style={{ display: "flex", gap: 10, maxWidth: 500, margin: "0 auto", flexWrap: "wrap" }}>
+          <input
+            type="text"
+            placeholder="Ej: AAPL, TSLA, BTC, GLD, EUR/USD..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && loadChart(input)}
+            style={{
+              flex: 1, minWidth: 200,
+              background: "#07080f", border: `1px solid ${C.border}`,
+              borderRadius: 8, padding: "14px 18px",
+              color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 15,
+              outline: "none", letterSpacing: 1,
+            }}
+          />
+          <button
+            onClick={() => loadChart(input)}
+            style={{
+              background: C.gold, color: "#000", border: "none",
+              padding: "14px 28px", borderRadius: 8, cursor: "pointer",
+              fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700,
+            }}
+          >
+            Ver Chart →
+          </button>
+        </div>
+      </div>
+
+      {/* Chart area */}
+      {activeSymbol ? (
+        <div>
+          {/* Interval selector */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted, marginRight: 8 }}>INTERVALO:</span>
+            {intervals.map(iv => (
+              <button key={iv.v} onClick={() => setActiveInterval(iv.v)} style={{
+                padding: "6px 14px", borderRadius: 5,
+                border: `1px solid ${activeInterval === iv.v ? C.gold : C.border}`,
+                background: activeInterval === iv.v ? C.goldBg : "none",
+                color: activeInterval === iv.v ? C.gold : C.muted,
+                fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, cursor: "pointer",
+              }}>{iv.l}</button>
+            ))}
+          </div>
+
+          {/* Chart */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ background: "#09091a", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 14, fontWeight: 700, color: C.gold }}>{activeSymbol}</div>
+              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted }}>Powered by TradingView · Tiempo real</div>
+            </div>
+            <div ref={chartRef} style={{ width: "100%", minHeight: 560 }} />
+          </div>
+        </div>
+      ) : (
+        <div style={{ textAlign: "center", padding: "60px 32px", background: C.card, border: `1px dashed ${C.border}`, borderRadius: 12 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+          <p style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: C.muted, lineHeight: 1.8 }}>
+            Escribe el símbolo arriba y presiona <strong style={{ color: C.gold }}>Ver Chart</strong> para cargar la gráfica en tiempo real.
+          </p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 20, flexWrap: "wrap" }}>
+            {["SPY","QQQ","AAPL","NVDA","TSLA","BTC","GLD"].map(s => (
+              <button key={s} onClick={() => { setInput(s); loadChart(s); }} style={{
+                background: C.goldBg, border: `1px solid ${C.gold}40`, color: C.gold,
+                padding: "6px 14px", borderRadius: 6, cursor: "pointer",
+                fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 600,
+              }}>{s}</button>
             ))}
           </div>
         </div>
-      ))}
-
-      {/* Interval selector */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 16, alignItems: "center" }}>
-        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted, marginRight: 8 }}>INTERVALO:</span>
-        {intervals.map(iv => (
-          <button key={iv.v} onClick={() => setActiveInterval(iv.v)} style={{
-            padding: "6px 14px", borderRadius: 5, border: `1px solid ${activeInterval === iv.v ? C.gold : C.border}`,
-            background: activeInterval === iv.v ? C.goldBg : "none",
-            color: activeInterval === iv.v ? C.gold : C.muted,
-            fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, cursor: "pointer",
-          }}>{iv.l}</button>
-        ))}
-      </div>
-
-      {/* Chart container */}
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ background: "#09091a", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}` }}>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: C.gold }}>{activeSymbol}</div>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted }}>Powered by TradingView · Datos en tiempo real</div>
-        </div>
-        <div id="tv_chart_container" ref={chartRef} style={{ width: "100%", height: 520 }} />
-      </div>
-
-      {/* Mini charts grid */}
-      <div style={{ marginTop: 24 }}>
-        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 16 }}>── VISTA RÁPIDA — LOS 7 MAGNÍFICOS</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 16 }}>
-          {["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA"].map(sym => (
-            <MiniChart key={sym} symbol={sym} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MiniChart({ symbol }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    ref.current.innerHTML = `
-      <iframe
-        src="https://s.tradingview.com/widgetembed/?frameElementId=tv_${symbol}&symbol=${symbol}&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=1&saveimage=0&toolbarbg=0d0f1e&studies=[]&theme=dark&style=1&timezone=America%2FNew_York&withdateranges=0&showpopupbutton=0&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=es&utm_source=finanzadr.com"
-        style="width:100%;height:200px;border:none;"
-        allowtransparency="true"
-        scrolling="no"
-      ></iframe>`;
-  }, [symbol]);
-  return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
-      <div style={{ padding: "10px 14px", background: "#09091a", borderBottom: `1px solid ${C.border}`, fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 700, color: C.gold }}>{symbol}</div>
-      <div ref={ref} />
+      )}
     </div>
   );
 }
