@@ -676,32 +676,64 @@ function CompoundCalc() {
           <div style={{ position: "absolute", top: 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.25s", left: vistaTabla==="Mensual" ? 23 : 3 }} />
         </div>
         <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: vistaTabla==="Mensual" ? C.gold : C.muted }}>Mensual</span>
+        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, marginLeft: 8 }}>
+          {vistaTabla==="Mensual" ? `${anos * 12} filas` : `${anos} filas`}
+        </span>
       </div>
 
-      {/* Tabla año por año */}
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", overflowX: "auto" }}>
+      {/* Tabla */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", overflowX: "auto", maxHeight: 480, overflowY: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'IBM Plex Mono'", fontSize: 12, minWidth: 700 }}>
-          <thead>
-            <tr style={{ background: "#ffffff08", borderBottom: `1px solid ${C.border}` }}>
-              {["Año","Capital Base","Aporte Base","Aporte Total","Capital Total","Retorno","Ganancia","Ganancia Acum.","Valor Final"].map((h,i) => (
+          <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
+            <tr style={{ background: "#0d0f1e", borderBottom: `1px solid ${C.border}` }}>
+              {[vistaTabla==="Mensual"?"Mes":"Año","Capital Base","Aporte","Aporte Acum.","Ganancia","Ganancia Acum.","Valor Final"].map((h,i) => (
                 <th key={i} style={{ padding: "10px 12px", fontWeight: 500, textAlign: i===0?"left":"right", color: C.muted, whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filas.map((f, i) => (
-              <tr key={i} style={{ borderBottom: `1px solid ${C.border}20`, background: i%2===0?"transparent":"#ffffff03" }}>
-                <td style={{ padding:"10px 12px", color: C.gold }}>{f.ano}</td>
-                <td style={{ padding:"10px 12px", textAlign:"right", color: C.text }}>{fmtM(f.capitalBase)}</td>
-                <td style={{ padding:"10px 12px", textAlign:"right", color: C.muted }}>{fmtM(f.aporteBase)}</td>
-                <td style={{ padding:"10px 12px", textAlign:"right", color: C.muted }}>{fmtM(f.aporteAcum)}</td>
-                <td style={{ padding:"10px 12px", textAlign:"right", color: C.text, fontWeight:700 }}>{fmtM(f.capitalBase + f.aporteBase)}</td>
-                <td style={{ padding:"10px 12px", textAlign:"right", color: f.retorno>=0?C.green:C.red }}>{fmtPct(f.retorno)}</td>
-                <td style={{ padding:"10px 12px", textAlign:"right", color: C.sub }}>{fmtM(f.ganancia)}</td>
-                <td style={{ padding:"10px 12px", textAlign:"right", color: C.sub }}>{fmtM(f.interesAcum)}</td>
-                <td style={{ padding:"10px 12px", textAlign:"right", color: C.gold, fontWeight:700 }}>{fmtM(f.saldo)}</td>
-              </tr>
-            ))}
+            {vistaTabla === "Anual" ? (
+              filas.map((f, i) => (
+                <tr key={i} style={{ borderBottom: `1px solid ${C.border}20`, background: i%2===0?"transparent":"#ffffff03" }}>
+                  <td style={{ padding:"10px 12px", color: C.gold }}>Año {f.ano}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.text }}>{fmtM(f.capitalBase)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.muted }}>{fmtM(f.aporteBase)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.muted }}>{fmtM(f.aporteAcum)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.green }}>{fmtM(f.ganancia)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.sub }}>{fmtM(f.interesAcum)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", color: C.gold, fontWeight:700 }}>{fmtM(f.saldo)}</td>
+                </tr>
+              ))
+            ) : (
+              // Filas mensuales
+              (() => {
+                const rows = [];
+                let saldoM = capital;
+                let interesAcumM = 0;
+                let aporteAcumM = capital;
+                const tasaM = Math.pow(1 + tasa / 100, 1/12) - 1;
+                const aporteM = escenario === "Sin Aportes" ? 0 : aporte;
+                for (let m = 1; m <= anos * 12; m++) {
+                  const prev = saldoM;
+                  saldoM = saldoM * (1 + tasaM) + aporteM;
+                  const gananciaM = saldoM - prev - aporteM;
+                  interesAcumM += gananciaM;
+                  aporteAcumM += aporteM;
+                  rows.push(
+                    <tr key={m} style={{ borderBottom: `1px solid ${C.border}15`, background: m%2===0?"transparent":"#ffffff02" }}>
+                      <td style={{ padding:"8px 12px", color: C.gold }}>Mes {m}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.text }}>{fmtM(prev)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.muted }}>{fmtM(aporteM)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.muted }}>{fmtM(aporteAcumM)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.green }}>{fmtM(gananciaM)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.sub }}>{fmtM(interesAcumM)}</td>
+                      <td style={{ padding:"8px 12px", textAlign:"right", color: C.gold, fontWeight:700 }}>{fmtM(saldoM)}</td>
+                    </tr>
+                  );
+                }
+                return rows;
+              })()
+            )}
           </tbody>
         </table>
       </div>
