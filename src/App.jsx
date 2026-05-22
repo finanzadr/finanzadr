@@ -112,18 +112,33 @@ const fmt = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximum
 const clr = (c) => c >= 0 ? "#00d68f" : "#ff4466";
 const arr = (c) => c >= 0 ? "▲" : "▼";
 
-const C = {
+const DARK = {
   bg: "#07080f", card: "#0d0f1e", border: "#1a1e35",
   gold: "#c8a84b", goldBg: "#c8a84b18",
   green: "#00d68f", red: "#ff4466",
   text: "#dde1f5", muted: "#484e72", sub: "#8890b5",
+  navBg: "#09091a", tickerBg: "#0a0b16",
 };
+
+const LIGHT = {
+  bg: "#f4f5f8", card: "#ffffff", border: "#e0e4ef",
+  gold: "#b8860b", goldBg: "#b8860b15",
+  green: "#00875a", red: "#d93025",
+  text: "#1a1d2e", muted: "#8891a8", sub: "#555e7a",
+  navBg: "#ffffff", tickerBg: "#1a1d2e",
+};
+
+let C = { ...DARK };
 
 // ── Componente principal ─────────────────────────────────────────
 export default function FinanzasDR() {
-  const [tab, setTab]   = useState("inicio");
+  const [tab, setTab]     = useState("inicio");
   const [stocks, setStocks] = useState(WS_STOCKS);
   const [expanded, setExpanded] = useState(null);
+  const [dark, setDark]   = useState(true);
+
+  // Update C whenever theme changes
+  C = dark ? DARK : LIGHT;
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -134,15 +149,15 @@ export default function FinanzasDR() {
     style.textContent = `
       @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
       @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes slideToggle { from{opacity:0} to{opacity:1} }
       .ticker-track { display:flex; animation:ticker 50s linear infinite; white-space:nowrap; }
       .ticker-track:hover { animation-play-state:paused; }
       .fade-in { animation: fadeIn 0.4s ease forwards; }
-      * { box-sizing:border-box; margin:0; padding:0; }
-      body { background:#07080f; }
-      ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:#07080f} ::-webkit-scrollbar-thumb{background:#1a1e35;border-radius:2px}
+      * { box-sizing:border-box; margin:0; padding:0; transition: background 0.3s, color 0.2s, border-color 0.2s; }
       .nav-btn:hover { color: #c8a84b !important; }
       .card-hover { transition: all 0.2s; }
       .card-hover:hover { border-color: #c8a84b44 !important; transform: translateY(-2px); }
+      .theme-toggle:hover { transform: scale(1.05); }
     `;
     document.head.appendChild(style);
     return () => { document.head.removeChild(link); document.head.removeChild(style); };
@@ -169,37 +184,53 @@ export default function FinanzasDR() {
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'Inter', sans-serif" }}>
 
       {/* Ticker */}
-      <div style={{ background: "#0a0b16", borderBottom: `1px solid ${C.border}`, height: 36, display: "flex", alignItems: "center", overflow: "hidden" }}>
+      <div style={{ background: C.tickerBg, borderBottom: `1px solid ${C.border}`, height: 36, display: "flex", alignItems: "center", overflow: "hidden" }}>
         <div style={{ background: C.gold, color: "#000", fontFamily: "'IBM Plex Mono'", fontSize: 10, fontWeight: 700, padding: "0 14px", height: "100%", display: "flex", alignItems: "center", flexShrink: 0, letterSpacing: 1 }}>EN VIVO</div>
         <div style={{ overflow: "hidden", flex: 1 }}>
           <div className="ticker-track">
             {[...stocks, ...stocks].map((st, i) => (
               <span key={i} style={{ padding: "0 20px", fontFamily: "'IBM Plex Mono'", fontSize: 12 }}>
                 <span style={{ color: C.gold, fontWeight: 600, marginRight: 6 }}>{st.s}</span>
-                <span style={{ marginRight: 5 }}>{fmt(st.p)}</span>
+                <span style={{ marginRight: 5, color: dark ? C.text : "#ffffff" }}>{fmt(st.p)}</span>
                 <span style={{ color: clr(st.c) }}>{arr(st.c)} {Math.abs(st.c)}%</span>
               </span>
             ))}
           </div>
         </div>
-        <div style={{ padding: "0 16px", fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, flexShrink: 0 }}>WALL STREET</div>
+        <div style={{ padding: "0 16px", fontFamily: "'IBM Plex Mono'", fontSize: 11, color: dark ? C.muted : "#8890b5", flexShrink: 0 }}>WALL STREET</div>
       </div>
 
       {/* Header */}
-      <header style={{ borderBottom: `1px solid ${C.border}`, padding: "20px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+      <header style={{ borderBottom: `1px solid ${C.border}`, padding: "20px 32px", background: C.bg, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 800, color: C.gold, letterSpacing: "-0.5px", lineHeight: 1 }}>FinanzaDR</div>
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted, marginTop: 4, letterSpacing: 2 }}>APRENDE A INVERTIR EN WALL STREET · PARA LATINOS</div>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, color: C.gold, marginTop: 6, fontStyle: "italic", opacity: 0.85 }}>"Wall Street en tu idioma"</div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted }}>{new Date().toLocaleDateString("es-DO", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.green, marginTop: 2 }}>● NYSE/NASDAQ EN VIVO</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted }}>{new Date().toLocaleDateString("es-DO", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.green, marginTop: 2 }}>● NYSE/NASDAQ EN VIVO</div>
+          </div>
+
+          {/* Theme Toggle */}
+          <button className="theme-toggle" onClick={() => setDark(d => !d)} style={{
+            background: dark ? "#1a1e35" : "#f0f2f8",
+            border: `1px solid ${C.border}`,
+            borderRadius: 50, padding: "8px 14px",
+            cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+            transition: "all 0.3s", flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 18 }}>{dark ? "☀️" : "🌙"}</span>
+            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, color: C.text }}>
+              {dark ? "Modo Claro" : "Modo Oscuro"}
+            </span>
+          </button>
         </div>
       </header>
 
       {/* Nav */}
-      <nav style={{ borderBottom: `1px solid ${C.border}`, display: "flex", padding: "0 32px", background: "#09091a", overflowX: "auto" }}>
+      <nav style={{ borderBottom: `1px solid ${C.border}`, display: "flex", padding: "0 32px", background: C.navBg, overflowX: "auto" }}>
         {tabs.map(([id, label]) => (
           <button key={id} className="nav-btn" onClick={() => setTab(id)} style={{
             padding: "14px 18px", border: "none", background: "none", cursor: "pointer",
