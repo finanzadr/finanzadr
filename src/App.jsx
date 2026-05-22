@@ -212,7 +212,7 @@ export default function FinanzasDR() {
       </nav>
 
       {/* Contenido */}
-      <main style={{ padding: "32px", maxWidth: "100%"  , margin: "0 auto" }}>
+      <main style={{ padding: "32px", maxWidth: "100%", margin: "0 auto" }}>
 
         {/* EMPIEZA AQUÍ */}
         {tab === "inicio" && (
@@ -616,23 +616,10 @@ function CompoundCalc() {
 
 // ── TradingView Charts Component ─────────────────────────────────
 function TradingViewCharts() {
-  const [activeSymbol, setActiveSymbol] = useState("SPY");
+  const [input, setInput]         = useState("");
+  const [activeSymbol, setActiveSymbol] = useState("");
   const [activeInterval, setActiveInterval] = useState("D");
   const chartRef = useRef(null);
-
-  const symbols = [
-    { s: "SPY",  n: "S&P 500",    cat: "Índices" },
-    { s: "QQQ",  n: "NASDAQ",     cat: "Índices" },
-    { s: "DIA",  n: "Dow Jones",  cat: "Índices" },
-    { s: "IWM",  n: "Russell 2000",cat: "Índices" },
-    { s: "AAPL", n: "Apple",      cat: "Mag 7" },
-    { s: "MSFT", n: "Microsoft",  cat: "Mag 7" },
-    { s: "NVDA", n: "NVIDIA",     cat: "Mag 7" },
-    { s: "GOOGL",n: "Alphabet",   cat: "Mag 7" },
-    { s: "AMZN", n: "Amazon",     cat: "Mag 7" },
-    { s: "META", n: "Meta",       cat: "Mag 7" },
-    { s: "TSLA", n: "Tesla",      cat: "Mag 7" },
-  ];
 
   const intervals = [
     { v: "1",  l: "1m" },
@@ -644,16 +631,25 @@ function TradingViewCharts() {
     { v: "M",  l: "1M" },
   ];
 
+  const loadChart = (sym) => {
+    const s = sym.trim().toUpperCase();
+    if (!s) return;
+    setActiveSymbol(s);
+  };
+
   useEffect(() => {
-    if (!chartRef.current) return;
+    if (!activeSymbol || !chartRef.current) return;
     chartRef.current.innerHTML = "";
+    const container = document.createElement("div");
+    container.id = "tv_chart_main";
+    chartRef.current.appendChild(container);
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/tv.js";
     script.async = true;
     script.onload = () => {
       if (window.TradingView) {
         new window.TradingView.widget({
-          container_id: "tv_chart_container",
+          container_id: "tv_chart_main",
           symbol: activeSymbol,
           interval: activeInterval,
           timezone: "America/New_York",
@@ -668,11 +664,9 @@ function TradingViewCharts() {
           backgroundColor: "#07080f",
           gridColor: "#1a1e3540",
           width: "100%",
-          height: 520,
+          height: 560,
           studies: ["RSI@tv-basicstudies", "MACD@tv-basicstudies"],
           show_popup_button: true,
-          popup_width: "1000",
-          popup_height: "650",
         });
       }
     };
@@ -680,81 +674,88 @@ function TradingViewCharts() {
     return () => { if (script.parentNode) script.parentNode.removeChild(script); };
   }, [activeSymbol, activeInterval]);
 
-  const cats = [...new Set(symbols.map(s => s.cat))];
-
   return (
     <div>
-      {/* Symbol selector by category */}
-      {cats.map(cat => (
-        <div key={cat} style={{ marginBottom: 16 }}>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>── {cat.toUpperCase()}</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {symbols.filter(s => s.cat === cat).map(sym => (
-              <button key={sym.s} onClick={() => setActiveSymbol(sym.s)} style={{
-                padding: "8px 16px", borderRadius: 6, border: `1px solid ${activeSymbol === sym.s ? C.gold : C.border}`,
-                background: activeSymbol === sym.s ? C.goldBg : C.card,
-                color: activeSymbol === sym.s ? C.gold : C.sub,
-                fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                transition: "all 0.15s",
-              }}>
-                {sym.s} <span style={{ fontSize: 10, opacity: 0.7 }}>{sym.n}</span>
-              </button>
+      {/* Search box */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "28px 32px", marginBottom: 24, textAlign: "center" }}>
+        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 3, marginBottom: 12 }}>BUSCA CUALQUIER ACTIVO</div>
+        <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 8 }}>
+          Acciones · ETFs · Cripto · Materias Primas
+        </h2>
+        <p style={{ fontSize: 13, color: C.sub, marginBottom: 24 }}>
+          Escribe el símbolo del activo que quieres analizar — AAPL, BTC, GLD, EUR/USD, lo que sea.
+        </p>
+        <div style={{ display: "flex", gap: 10, maxWidth: 500, margin: "0 auto", flexWrap: "wrap" }}>
+          <input
+            type="text"
+            placeholder="Ej: AAPL, TSLA, BTC, GLD, EUR/USD..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && loadChart(input)}
+            style={{
+              flex: 1, minWidth: 200,
+              background: "#07080f", border: `1px solid ${C.border}`,
+              borderRadius: 8, padding: "14px 18px",
+              color: C.text, fontFamily: "'IBM Plex Mono'", fontSize: 15,
+              outline: "none", letterSpacing: 1,
+            }}
+          />
+          <button
+            onClick={() => loadChart(input)}
+            style={{
+              background: C.gold, color: "#000", border: "none",
+              padding: "14px 28px", borderRadius: 8, cursor: "pointer",
+              fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700,
+            }}
+          >
+            Ver Chart →
+          </button>
+        </div>
+      </div>
+
+      {/* Chart area */}
+      {activeSymbol ? (
+        <div>
+          {/* Interval selector */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted, marginRight: 8 }}>INTERVALO:</span>
+            {intervals.map(iv => (
+              <button key={iv.v} onClick={() => setActiveInterval(iv.v)} style={{
+                padding: "6px 14px", borderRadius: 5,
+                border: `1px solid ${activeInterval === iv.v ? C.gold : C.border}`,
+                background: activeInterval === iv.v ? C.goldBg : "none",
+                color: activeInterval === iv.v ? C.gold : C.muted,
+                fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, cursor: "pointer",
+              }}>{iv.l}</button>
+            ))}
+          </div>
+
+          {/* Chart */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ background: "#09091a", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 14, fontWeight: 700, color: C.gold }}>{activeSymbol}</div>
+              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted }}>Powered by TradingView · Tiempo real</div>
+            </div>
+            <div ref={chartRef} style={{ width: "100%", minHeight: 560 }} />
+          </div>
+        </div>
+      ) : (
+        <div style={{ textAlign: "center", padding: "60px 32px", background: C.card, border: `1px dashed ${C.border}`, borderRadius: 12 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+          <p style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: C.muted, lineHeight: 1.8 }}>
+            Escribe el símbolo arriba y presiona <strong style={{ color: C.gold }}>Ver Chart</strong> para cargar la gráfica en tiempo real.
+          </p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 20, flexWrap: "wrap" }}>
+            {["SPY","QQQ","AAPL","NVDA","TSLA","BTC","GLD"].map(s => (
+              <button key={s} onClick={() => { setInput(s); loadChart(s); }} style={{
+                background: C.goldBg, border: `1px solid ${C.gold}40`, color: C.gold,
+                padding: "6px 14px", borderRadius: 6, cursor: "pointer",
+                fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 600,
+              }}>{s}</button>
             ))}
           </div>
         </div>
-      ))}
-
-      {/* Interval selector */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 16, alignItems: "center" }}>
-        <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted, marginRight: 8 }}>INTERVALO:</span>
-        {intervals.map(iv => (
-          <button key={iv.v} onClick={() => setActiveInterval(iv.v)} style={{
-            padding: "6px 14px", borderRadius: 5, border: `1px solid ${activeInterval === iv.v ? C.gold : C.border}`,
-            background: activeInterval === iv.v ? C.goldBg : "none",
-            color: activeInterval === iv.v ? C.gold : C.muted,
-            fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, cursor: "pointer",
-          }}>{iv.l}</button>
-        ))}
-      </div>
-
-      {/* Chart container */}
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ background: "#09091a", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}` }}>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: C.gold }}>{activeSymbol}</div>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.muted }}>Powered by TradingView · Datos en tiempo real</div>
-        </div>
-        <div id="tv_chart_container" ref={chartRef} style={{ width: "100%", height: 520 }} />
-      </div>
-
-      {/* Mini charts grid */}
-      <div style={{ marginTop: 24 }}>
-        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, marginBottom: 16 }}>── VISTA RÁPIDA — LOS 7 MAGNÍFICOS</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 16 }}>
-          {["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA"].map(sym => (
-            <MiniChart key={sym} symbol={sym} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MiniChart({ symbol }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    ref.current.innerHTML = `
-      <iframe
-        src="https://s.tradingview.com/widgetembed/?frameElementId=tv_${symbol}&symbol=${symbol}&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=1&saveimage=0&toolbarbg=0d0f1e&studies=[]&theme=dark&style=1&timezone=America%2FNew_York&withdateranges=0&showpopupbutton=0&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=es&utm_source=finanzadr.com"
-        style="width:100%;height:200px;border:none;"
-        allowtransparency="true"
-        scrolling="no"
-      ></iframe>`;
-  }, [symbol]);
-  return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
-      <div style={{ padding: "10px 14px", background: "#09091a", borderBottom: `1px solid ${C.border}`, fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 700, color: C.gold }}>{symbol}</div>
-      <div ref={ref} />
+      )}
     </div>
   );
 }
