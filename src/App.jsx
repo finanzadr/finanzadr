@@ -657,13 +657,13 @@ function CompoundCalc() {
               <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, fill: C.muted }} />
               <YAxis stroke={C.muted} tick={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, fill: C.muted }} tickFormatter={fmtK} />
               <Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "'IBM Plex Mono'", fontSize: 12 }}
-                formatter={(v, n) => [fmtM(v), n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias":"Ganancia Año"]}
+                formatter={(v, n) => [fmtM(v), n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias":n==="ganancia"?"Ganancia Año":n]}
                 labelFormatter={v => `Año ${v}`} />
               <Legend wrapperStyle={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, paddingTop: 12 }}
                 formatter={v => v==="aporteAcum"?"Capital Base":v==="interesAcum"?"Ganancias Acum.":"Ganancia (Año)"} />
               <Bar dataKey="aporteAcum"  stackId="a" fill="#1e4a7a" name="aporteAcum"  radius={[0,0,0,0]} />
               <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="interesAcum" radius={[4,4,0,0]} />
-              <Line type="monotone" dataKey="aporteAnual" stroke={C.gold} strokeWidth={2.5} dot={{ fill: C.gold, r: 3 }} name="aporteAnual" />
+              <Line type="monotone" dataKey="ganancia" stroke={C.gold} strokeWidth={2.5} dot={{ fill: C.gold, r: 3 }} name="ganancia" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
