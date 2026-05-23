@@ -570,7 +570,7 @@ function CompoundCalc() {
             <ComposedChart data={filas} margin={{top:10,right:30,left:10,bottom:0}}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false}/>
               <XAxis dataKey="ano" stroke={C.muted} tick={{fontFamily:"'IBM Plex Mono'",fontSize:10,fill:C.muted}}/>
-              <YAxis stroke={C.muted} tick={{fontFamily:"'IBM Plex Mono'",fontSize:9,fill:C.muted}} tickFormatter={fmtK}/>
+              <YAxis stroke={C.muted} tick={{fontFamily:"'IBM Plex Mono'",fontSize:9,fill:C.muted}} tickFormatter={(v)=>v>=1000000?"$"+(v/1000000).toFixed(1)+"M":v>=1000?"$"+(v/1000).toFixed(0)+"K":"$"+Math.round(v)}/>
               <Tooltip contentStyle={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,fontFamily:"'IBM Plex Mono'",fontSize:12}} labelFormatter={v=>`Año ${v}`}/>
               <Legend wrapperStyle={{fontFamily:"'IBM Plex Mono'",fontSize:11,paddingTop:12}}/>
               <Bar dataKey="aporteAcum" stackId="a" fill="#1e4a7a" name="Capital Base"/>
@@ -740,4 +740,5 @@ function SnapshotCard({ stocks }) {
     </div>
   );
 }
+
 
