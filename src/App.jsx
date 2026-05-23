@@ -589,13 +589,12 @@ function CompoundCalc() {
       </div>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"20px 24px",overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse",fontFamily:"'IBM Plex Mono'",fontSize:12,minWidth:700}}>
-          <thead><tr style={{background:C.card,borderBottom:`1px solid ${C.border}`}}>{[vistaTabla==="Mensual"?"Mes":"Año","Capital Base","Aporte","Aporte Acum.","Ganancia","% Ganancia","Ganancia Acum.","Valor Final"].map((h,i)=>(<th key={i} style={{padding:"10px 12px",fontWeight:500,textAlign:i===0?"left":"right",color:C.muted,whiteSpace:"nowrap"}}>{h}</th>))}</tr></thead>
+          <thead><tr style={{background:C.card,borderBottom:`1px solid ${C.border}`}}>{[vistaTabla==="Mensual"?"Mes":"Año","Capital Base","Aporte","Capital Total","Ganancia","% Ganancia","Ganancia Acum.","Valor Final"].map((h,i)=>(<th key={i} style={{padding:"10px 12px",fontWeight:500,textAlign:i===0?"left":"right",color:C.muted,whiteSpace:"nowrap"}}>{h}</th>))}</tr></thead>
           <tbody>
             {vistaTabla==="Anual"?filas.map((f,i)=>(<tr key={i} style={{borderBottom:`1px solid ${C.border}20`,background:i%2===0?"transparent":"#ffffff03"}}>
               <td style={{padding:"10px 12px",color:C.gold}}>Año {f.ano}</td>
               <td style={{padding:"10px 12px",textAlign:"right",color:C.text}}>{fmtM(f.capitalBase)}</td>
-              <td style={{padding:"10px 12px",textAlign:"right",color:C.muted}}>{fmtM(f.aporteBase)}</td>
-              <td style={{padding:"10px 12px",textAlign:"right",color:C.muted}}>{fmtM(f.aporteAcum)}</td>
+              <td style={{padding:"10px 12px",textAlign:"right",color:C.muted}}>{fmtM(f.aporteBase)}</td><td style={{padding:"10px 12px",textAlign:"right",color:C.text}}>{fmtM(f.capitalBase+f.aporteBase)}</td>
               <td style={{padding:"10px 12px",textAlign:"right",color:C.green}}>{fmtM(f.ganancia)}</td><td style={{padding:"10px 12px",textAlign:"right",color:C.gold}}>{f.capitalBase>0?(f.ganancia/(f.capitalBase+f.aporteBase)*100).toFixed(2)+"%":"0%"}</td>
               <td style={{padding:"10px 12px",textAlign:"right",color:C.sub}}>{fmtM(f.interesAcum)}</td>
               <td style={{padding:"10px 12px",textAlign:"right",color:C.gold,fontWeight:700}}>{fmtM(f.saldo)}</td>
@@ -740,6 +739,9 @@ function SnapshotCard({ stocks }) {
     </div>
   );
 }
+
+
+
 
 
 
