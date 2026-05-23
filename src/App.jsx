@@ -509,8 +509,8 @@ function CompoundCalc() {
   const [capitaliz, setCapitaliz] = useState("Anual");
   const [vistaTabla, setVistaTabla] = useState("Anual");
   const sym = moneda==="DOP"?"RD$":"$";
-  const fmtM = (n) => `${sym}${(+n).toLocaleString("es-DO",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
   const fmtPct = (n) => `${(+n).toFixed(2)}%`;
+  const fmtM = (n) => `${sym}${(+n).toLocaleString("es-DO",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
   const freqMap = {"Mensual":12,"Semanal":52,"Anual":1};
   const periodos = freqMap[frecuencia]||12;
   const tasaPeriodo = Math.pow(1+tasa/100,1/periodos)-1;
@@ -740,5 +740,8 @@ function SnapshotCard({ stocks }) {
     </div>
   );
 }
+
+
+
 
 
