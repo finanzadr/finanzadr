@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Analytics } from "@vercel/analytics/react";
 
 // ── Datos Wall Street ────────────────────────────────────────────
 const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
@@ -703,6 +704,7 @@ export default function FinanzasDR() {
       <footer style={{ borderTop: `1px solid ${C.border}`, padding: "20px 32px", textAlign: "center", fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, marginTop: 40 }}>
         FinanzaDR © 2026 · Educación financiera para latinos · No constituye asesoría de inversión
       </footer>
+      <Analytics />
     </div>
   );
 }
