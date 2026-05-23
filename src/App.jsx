@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+ï»¿import { useState, useEffect, useRef } from "react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
@@ -13,23 +13,23 @@ const WS_STOCKS = [
   { s: "XLU",     n: "Utilities",     p: 71.20,   c:  0.15, icon: "?" },
   { s: "BTC-USD", n: "Bitcoin",       p: 94500.00,c:  1.45, icon: "?"  },
 ];const NOTICIAS = [
-  { titulo: "S&P 500 cierra en máximo histórico mientras mercados celebran pausa de la Fed", resumen: "El S&P 500 alcanzó un nuevo récord cerrando por encima de 5,800 puntos este viernes, impulsado por datos de empleo más fuertes de lo esperado. La Reserva Federal señaló que mantendría las tasas sin cambios hasta tener mayor claridad sobre la inflación.", fuente: "Reuters", tiempo: "Hace 1 hora", categoria: "Mercados" },
-  { titulo: "NVIDIA supera los $1,000 por acción por primera vez en su historia", resumen: "Las acciones de NVIDIA cruzaron la barrera de los $1,000 por primera vez impulsadas por una demanda récord de chips para inteligencia artificial. La compañía reportó ingresos trimestrales de $44 mil millones, un 78% más que el año anterior.", fuente: "Bloomberg", tiempo: "Hace 3 horas", categoria: "Acciones" },
-  { titulo: "El oro alcanza nuevos máximos históricos ante la incertidumbre geopolítica global", resumen: "El precio del oro superó los $3,400 por onza este mes, estableciendo un nuevo récord histórico. Los inversores buscan refugio en metales preciosos ante las tensiones geopolíticas y el debilitamiento del dólar.", fuente: "WSJ", tiempo: "Hace 5 horas", categoria: "Materias Primas" },
-  { titulo: "Bitcoin consolida por encima de los $90,000 con creciente adopción institucional", resumen: "Bitcoin mantiene su posición por encima de los $90,000 respaldado por compras institucionales y la aprobación de nuevos ETFs en mercados europeos y asiáticos.", fuente: "CNBC", tiempo: "Hace 7 horas", categoria: "Cripto" },
-  { titulo: "Los bonos del Tesoro a 10 años suben ante señales de desaceleración económica", resumen: "El rendimiento del bono del Tesoro a 10 años cayó al 4.2% mientras los inversores buscan activos más seguros. Los datos de manufactura mostraron una contracción por segundo mes consecutivo.", fuente: "Financial Times", tiempo: "Hace 9 horas", categoria: "Bonos" },
-  { titulo: "Dow Jones supera los 42,000 puntos impulsado por sector financiero y salud", resumen: "El Dow Jones Industrial Average superó los 42,000 puntos esta semana, liderado por fuertes ganancias en el sector financiero y de salud.", fuente: "MarketWatch", tiempo: "Hace 11 horas", categoria: "Mercados" },
+  { titulo: "S&P 500 cierra en mï¿½ximo histï¿½rico mientras mercados celebran pausa de la Fed", resumen: "El S&P 500 alcanzï¿½ un nuevo rï¿½cord cerrando por encima de 5,800 puntos este viernes, impulsado por datos de empleo mï¿½s fuertes de lo esperado. La Reserva Federal seï¿½alï¿½ que mantendrï¿½a las tasas sin cambios hasta tener mayor claridad sobre la inflaciï¿½n.", fuente: "Reuters", tiempo: "Hace 1 hora", categoria: "Mercados" },
+  { titulo: "NVIDIA supera los $1,000 por acciï¿½n por primera vez en su historia", resumen: "Las acciones de NVIDIA cruzaron la barrera de los $1,000 por primera vez impulsadas por una demanda rï¿½cord de chips para inteligencia artificial. La compaï¿½ï¿½a reportï¿½ ingresos trimestrales de $44 mil millones, un 78% mï¿½s que el aï¿½o anterior.", fuente: "Bloomberg", tiempo: "Hace 3 horas", categoria: "Acciones" },
+  { titulo: "El oro alcanza nuevos mï¿½ximos histï¿½ricos ante la incertidumbre geopolï¿½tica global", resumen: "El precio del oro superï¿½ los $3,400 por onza este mes, estableciendo un nuevo rï¿½cord histï¿½rico. Los inversores buscan refugio en metales preciosos ante las tensiones geopolï¿½ticas y el debilitamiento del dï¿½lar.", fuente: "WSJ", tiempo: "Hace 5 horas", categoria: "Materias Primas" },
+  { titulo: "Bitcoin consolida por encima de los $90,000 con creciente adopciï¿½n institucional", resumen: "Bitcoin mantiene su posiciï¿½n por encima de los $90,000 respaldado por compras institucionales y la aprobaciï¿½n de nuevos ETFs en mercados europeos y asiï¿½ticos.", fuente: "CNBC", tiempo: "Hace 7 horas", categoria: "Cripto" },
+  { titulo: "Los bonos del Tesoro a 10 aï¿½os suben ante seï¿½ales de desaceleraciï¿½n econï¿½mica", resumen: "El rendimiento del bono del Tesoro a 10 aï¿½os cayï¿½ al 4.2% mientras los inversores buscan activos mï¿½s seguros. Los datos de manufactura mostraron una contracciï¿½n por segundo mes consecutivo.", fuente: "Financial Times", tiempo: "Hace 9 horas", categoria: "Bonos" },
+  { titulo: "Dow Jones supera los 42,000 puntos impulsado por sector financiero y salud", resumen: "El Dow Jones Industrial Average superï¿½ los 42,000 puntos esta semana, liderado por fuertes ganancias en el sector financiero y de salud.", fuente: "MarketWatch", tiempo: "Hace 11 horas", categoria: "Mercados" },
 ];const GUIAS = [
-  { titulo: "Cómo abrir tu primera cuenta de inversión desde Latinoamérica", extracto: "Guía paso a paso para abrir una cuenta en Fidelity o Interactive Brokers desde cualquier país de América Latina.", contenido: "Invertir en Wall Street desde Latinoamérica es más fácil de lo que piensas.\n\nPASO 1: ELIGE TU PLATAFORMA\nPara principiantes recomendamos Fidelity o Interactive Brokers. Ambas aceptan clientes internacionales y no cobran comisiones.\n\nPASO 2: DOCUMENTOS NECESARIOS\nNecesitas tu pasaporte vigente, comprobante de domicilio y un número de teléfono. Todo el proceso es 100% online.\n\nPASO 3: ABRE LA CUENTA\nEntra a fidelity.com o interactivebrokers.com, selecciona Open an Account y elige Individual Brokerage Account.\n\nPASO 4: DEPOSITA TU PRIMER DINERO\nPuedes depositar desde $1 dólar usando transferencia bancaria o servicios como Wise o Remitly.\n\nPASO 5: COMPRA TU PRIMER ETF\nPara empezar, compra VOO (Vanguard S&P 500 ETF). Con un solo producto tienes exposición a las 500 empresas más grandes de EE.UU.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["principiantes", "brokers", "ETF"] },
-  { titulo: "¿Qué es el S&P 500 y por qué es la mejor inversión para principiantes?", extracto: "El S&P 500 ha generado un retorno promedio del 10% anual durante los últimos 50 años.", contenido: "El S&P 500 es el índice bursátil más importante del mundo. Incluye las 500 empresas más grandes de Estados Unidos.\n\nEn los últimos 50 años, el S&P 500 ha generado un retorno promedio del 10% anual.\n\nLos ETFs más populares son:\n- VOO (Vanguard): costo de solo 0.03% anual\n- SPY (SPDR): el más antiguo y líquido\n- IVV (iShares): otra excelente opción\n\nLA ESTRATEGIA GANADORA: DCA\nInvertir una cantidad fija cada mes sin importar si el mercado sube o baja.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["S&P 500", "ETF", "estrategia"] },
-  { titulo: "Los 5 errores más comunes al invertir por primera vez", extracto: "El 80% de los inversores principiantes cometen estos errores.", contenido: "ERROR 1: ESPERAR EL MOMENTO PERFECTO\nNo existe el momento perfecto. El tiempo en el mercado siempre supera al timing.\n\nERROR 2: PONER TODO EN UNA SOLA ACCIÓN\nLos ETFs como el S&P 500 te dan diversificación automática.\n\nERROR 3: VENDER CUANDO EL MERCADO CAE\nEl mercado siempre ha subido a largo plazo.\n\nERROR 4: INVERTIR DINERO QUE PUEDES NECESITAR\nSolo invierte dinero que no vas a necesitar en los próximos 5 años.\n\nERROR 5: NO EMPEZAR POR MIEDO\nEl dinero que no inviertes pierde valor cada año por la inflación.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["errores", "principiantes", "estrategia"] },
+  { titulo: "Cï¿½mo abrir tu primera cuenta de inversiï¿½n desde Latinoamï¿½rica", extracto: "Guï¿½a paso a paso para abrir una cuenta en Fidelity o Interactive Brokers desde cualquier paï¿½s de Amï¿½rica Latina.", contenido: "Invertir en Wall Street desde Latinoamï¿½rica es mï¿½s fï¿½cil de lo que piensas.\n\nPASO 1: ELIGE TU PLATAFORMA\nPara principiantes recomendamos Fidelity o Interactive Brokers. Ambas aceptan clientes internacionales y no cobran comisiones.\n\nPASO 2: DOCUMENTOS NECESARIOS\nNecesitas tu pasaporte vigente, comprobante de domicilio y un nï¿½mero de telï¿½fono. Todo el proceso es 100% online.\n\nPASO 3: ABRE LA CUENTA\nEntra a fidelity.com o interactivebrokers.com, selecciona Open an Account y elige Individual Brokerage Account.\n\nPASO 4: DEPOSITA TU PRIMER DINERO\nPuedes depositar desde $1 dï¿½lar usando transferencia bancaria o servicios como Wise o Remitly.\n\nPASO 5: COMPRA TU PRIMER ETF\nPara empezar, compra VOO (Vanguard S&P 500 ETF). Con un solo producto tienes exposiciï¿½n a las 500 empresas mï¿½s grandes de EE.UU.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["principiantes", "brokers", "ETF"] },
+  { titulo: "ï¿½Quï¿½ es el S&P 500 y por quï¿½ es la mejor inversiï¿½n para principiantes?", extracto: "El S&P 500 ha generado un retorno promedio del 10% anual durante los ï¿½ltimos 50 aï¿½os.", contenido: "El S&P 500 es el ï¿½ndice bursï¿½til mï¿½s importante del mundo. Incluye las 500 empresas mï¿½s grandes de Estados Unidos.\n\nEn los ï¿½ltimos 50 aï¿½os, el S&P 500 ha generado un retorno promedio del 10% anual.\n\nLos ETFs mï¿½s populares son:\n- VOO (Vanguard): costo de solo 0.03% anual\n- SPY (SPDR): el mï¿½s antiguo y lï¿½quido\n- IVV (iShares): otra excelente opciï¿½n\n\nLA ESTRATEGIA GANADORA: DCA\nInvertir una cantidad fija cada mes sin importar si el mercado sube o baja.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["S&P 500", "ETF", "estrategia"] },
+  { titulo: "Los 5 errores mï¿½s comunes al invertir por primera vez", extracto: "El 80% de los inversores principiantes cometen estos errores.", contenido: "ERROR 1: ESPERAR EL MOMENTO PERFECTO\nNo existe el momento perfecto. El tiempo en el mercado siempre supera al timing.\n\nERROR 2: PONER TODO EN UNA SOLA ACCIï¿½N\nLos ETFs como el S&P 500 te dan diversificaciï¿½n automï¿½tica.\n\nERROR 3: VENDER CUANDO EL MERCADO CAE\nEl mercado siempre ha subido a largo plazo.\n\nERROR 4: INVERTIR DINERO QUE PUEDES NECESITAR\nSolo invierte dinero que no vas a necesitar en los prï¿½ximos 5 aï¿½os.\n\nERROR 5: NO EMPEZAR POR MIEDO\nEl dinero que no inviertes pierde valor cada aï¿½o por la inflaciï¿½n.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["errores", "principiantes", "estrategia"] },
 ];
 
 const CONSEJOS = [
-  { icono: "??", nivel: "Principiante", consejo: "Empieza con ETFs, no acciones individuales", detalle: "Un ETF del S&P 500 te da exposición a 500 empresas con una sola compra." },
+  { icono: "??", nivel: "Principiante", consejo: "Empieza con ETFs, no acciones individuales", detalle: "Un ETF del S&P 500 te da exposiciï¿½n a 500 empresas con una sola compra." },
   { icono: "??", nivel: "Principiante", consejo: "Invierte una cantidad fija cada mes", detalle: "La estrategia DCA consiste en invertir la misma cantidad cada mes." },
-  { icono: "?", nivel: "Principiante", consejo: "Piensa en años, no en días", detalle: "Los inversores exitosos mantienen su estrategia por años." },
-  { icono: "??", nivel: "Principiante", consejo: "Abre una cuenta en Fidelity o Interactive Brokers", detalle: "Ambas plataformas aceptan clientes de Latinoamérica sin comisiones." },
+  { icono: "?", nivel: "Principiante", consejo: "Piensa en aï¿½os, no en dï¿½as", detalle: "Los inversores exitosos mantienen su estrategia por aï¿½os." },
+  { icono: "??", nivel: "Principiante", consejo: "Abre una cuenta en Fidelity o Interactive Brokers", detalle: "Ambas plataformas aceptan clientes de Latinoamï¿½rica sin comisiones." },
 ];
 
 const fmt = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -58,8 +58,8 @@ let C = { ...DARK };export default function FinanzasDR() {
       const res = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
       const data = await res.json();
       if (data && data.length > 0) {
-        const cats = { "earnings":"Ganancias","ipo":"IPO","merger":"Fusiones","crypto":"Cripto","forex":"Divisas","economy":"Economía","general":"Mercados" };
-        setNoticias(data.slice(0,10).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} días`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
+        const cats = { "earnings":"Ganancias","ipo":"IPO","merger":"Fusiones","crypto":"Cripto","forex":"Divisas","economy":"Economï¿½a","general":"Mercados" };
+        setNoticias(data.slice(0,10).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} dï¿½as`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
       }
     } catch(e) {}
     setNoticiasLoading(false);
@@ -125,7 +125,7 @@ let C = { ...DARK };export default function FinanzasDR() {
   }, []);
 
   const tabs = [
-    ["inicio","?? Empieza Aquí"],["mercados","?? Mercados"],["charts","?? Charts en Vivo"],
+    ["inicio","?? Empieza Aquï¿½"],["mercados","?? Mercados"],["charts","?? Charts en Vivo"],
     ["ws","?? Noticias"],["blog","?? Aprende"],["calc","?? Calculadora"],
     ["snapshot","?? Compartir"],["newsletter","?? Newsletter"],
   ];
@@ -160,7 +160,7 @@ let C = { ...DARK };export default function FinanzasDR() {
             </div>
           ))}
           <div style={{ padding:"0 16px", display:"flex", alignItems:"center", marginLeft:"auto", flexShrink:0 }}>
-            <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#484e72" }}>{lastUpdate ? `? ${lastUpdate}` : "NYSE · NASDAQ"}</span>
+            <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#484e72" }}>{lastUpdate ? `? ${lastUpdate}` : "NYSE ï¿½ NASDAQ"}</span>
           </div>
         </div>
       </div>
@@ -169,7 +169,7 @@ let C = { ...DARK };export default function FinanzasDR() {
       <header style={{ borderBottom:`1px solid ${C.border}`, padding:"20px 32px", background:C.bg, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
         <div>
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:30, fontWeight:800, color:C.gold }}>FinanzaDR</div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, marginTop:4, letterSpacing:2 }}>APRENDE A INVERTIR EN WALL STREET · PARA LATINOS</div>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, marginTop:4, letterSpacing:2 }}>APRENDE A INVERTIR EN WALL STREET ï¿½ PARA LATINOS</div>
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:13, color:C.gold, marginTop:6, fontStyle:"italic" }}>"Wall Street en tu idioma"</div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:16 }}>
@@ -201,7 +201,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                     Wall Street.<br/><span style={{ color:C.gold }}>En tu idioma.</span>
                   </h1>
                   <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, letterSpacing:2, marginBottom:16 }}>INSTITUTIONAL-GRADE MARKET INTELLIGENCE</p>
-                  <p style={{ fontSize:15, color:C.sub, lineHeight:1.8, marginBottom:28, maxWidth:460 }}>Precios en tiempo real, charts profesionales y educación financiera para latinos que quieren invertir en Wall Street.</p>
+                  <p style={{ fontSize:15, color:C.sub, lineHeight:1.8, marginBottom:28, maxWidth:460 }}>Precios en tiempo real, charts profesionales y educaciï¿½n financiera para latinos que quieren invertir en Wall Street.</p>
                   <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
                     <button onClick={() => setTab("mercados")} style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800 }}>?? Explorar Mercados</button>
                     <button onClick={() => setTab("charts")} style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700 }}>?? Charts en Vivo</button>
@@ -234,7 +234,7 @@ let C = { ...DARK };export default function FinanzasDR() {
             {/* MARKET PULSE */}
             <div style={{ marginBottom:24 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-                <Label style={{ margin:0 }}>-- MARKET PULSE · EN VIVO</Label>
+                <Label style={{ margin:0 }}>-- MARKET PULSE ï¿½ EN VIVO</Label>
                 {lastUpdate && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green }}>? {lastUpdate}</span>}
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:10 }} className="pulse-grid">
@@ -266,7 +266,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                     <div style={{ background:C.border, borderRadius:99, height:6, marginBottom:8 }}>
                       <div style={{ background:color, borderRadius:99, height:6, width:`${pct}%`, transition:"width 0.5s" }} />
                     </div>
-                    <p style={{ fontSize:12, color:C.sub }}>{gainers} de {stocks.length} activos en verde — {pct}% positivo</p>
+                    <p style={{ fontSize:12, color:C.sub }}>{gainers} de {stocks.length} activos en verde ï¿½ {pct}% positivo</p>
                   </div>);
                 })()}
               </div>
@@ -285,7 +285,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                 })()}
               </div>
               <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
-                <Label style={{ margin:"0 0 12px 0" }}>-- ACCESO RÁPIDO</Label>
+                <Label style={{ margin:"0 0 12px 0" }}>-- ACCESO Rï¿½PIDO</Label>
                 <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                   {[{icon:"??",label:"Charts en Vivo",tab:"charts"},{icon:"??",label:"Noticias Wall St.",tab:"ws"},{icon:"??",label:"Calculadora",tab:"calc"},{icon:"??",label:"Newsletter Gratis",tab:"newsletter"}].map((a,i) => (
                     <button key={i} onClick={() => setTab(a.tab)} style={{ background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:7, padding:"9px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:10 }}>
@@ -297,9 +297,9 @@ let C = { ...DARK };export default function FinanzasDR() {
               </div>
             </div>
 
-            <SectionTitle>¿Dónde abrir tu cuenta?</SectionTitle>
+            <SectionTitle>ï¿½Dï¿½nde abrir tu cuenta?</SectionTitle>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:12, marginTop:16, marginBottom:28 }}>
-              {[{name:"Robinhood",emoji:"??",nivel:"Principiante",detalle:"Sin comisiones, muy fácil de usar."},{name:"Webull",emoji:"??",nivel:"Principiante",detalle:"Sin comisiones, más herramientas."},{name:"Moomoo",emoji:"??",nivel:"Intermedio",detalle:"Datos en tiempo real profesionales."},{name:"Tastytrade",emoji:"??",nivel:"Intermedio",detalle:"Especializado en opciones y futuros."},{name:"Interactive Brokers",emoji:"??",nivel:"Avanzado",detalle:"Acepta clientes de RD y Latinoamérica."}].map((b,i) => (
+              {[{name:"Robinhood",emoji:"??",nivel:"Principiante",detalle:"Sin comisiones, muy fï¿½cil de usar."},{name:"Webull",emoji:"??",nivel:"Principiante",detalle:"Sin comisiones, mï¿½s herramientas."},{name:"Moomoo",emoji:"??",nivel:"Intermedio",detalle:"Datos en tiempo real profesionales."},{name:"Tastytrade",emoji:"??",nivel:"Intermedio",detalle:"Especializado en opciones y futuros."},{name:"Interactive Brokers",emoji:"??",nivel:"Avanzado",detalle:"Acepta clientes de RD y Latinoamï¿½rica."}].map((b,i) => (
                 <div key={i} className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"16px 14px" }}>
                   <div style={{ fontSize:24, marginBottom:8 }}>{b.emoji}</div>
                   <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{b.name}</div>
@@ -311,7 +311,7 @@ let C = { ...DARK };export default function FinanzasDR() {
 
             <SectionTitle>Tu camino en 4 pasos</SectionTitle>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:14, marginTop:16 }}>
-              {[{n:"01",t:"Elige una plataforma",d:"Robinhood o Webull si eres principiante. Interactive Brokers si vives fuera de EE.UU."},{n:"02",t:"Abre tu cuenta",d:"Necesitas pasaporte, dirección y un método de pago. 100% online."},{n:"03",t:"Empieza con ETFs",d:"El S&P 500 (VOO o SPY) es el mejor inicio. 500 empresas, un solo producto."},{n:"04",t:"Invierte consistente",d:"$50/mes durante 20 años supera $10,000 de golpe."}].map((s,i) => (
+              {[{n:"01",t:"Elige una plataforma",d:"Robinhood o Webull si eres principiante. Interactive Brokers si vives fuera de EE.UU."},{n:"02",t:"Abre tu cuenta",d:"Necesitas pasaporte, direcciï¿½n y un mï¿½todo de pago. 100% online."},{n:"03",t:"Empieza con ETFs",d:"El S&P 500 (VOO o SPY) es el mejor inicio. 500 empresas, un solo producto."},{n:"04",t:"Invierte consistente",d:"$50/mes durante 20 aï¿½os supera $10,000 de golpe."}].map((s,i) => (
                 <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 18px" }}>
                   <div style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:`${C.gold}40`, marginBottom:10 }}>{s.n}</div>
                   <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold, marginBottom:8 }}>{s.t}</div>
@@ -331,14 +331,14 @@ let C = { ...DARK };export default function FinanzasDR() {
                 </button>
               </div>
             </div>
-            <Label>-- Precios en tiempo real · Powered by Finnhub</Label>
+            <Label>-- Precios en tiempo real ï¿½ Powered by Finnhub</Label>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12, marginBottom:32 }}>
               {stocks.map(st => <StockCard key={st.s} st={st} />)}
             </div>
             <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px" }}>
-              <Label>-- ¿Qué es cada activo?</Label>
+              <Label>-- ï¿½Quï¿½ es cada activo?</Label>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16 }}>
-                {[{s:"SPY",d:"ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU."},{s:"QQQ",d:"ETF del NASDAQ 100 — dominado por tecnología."},{s:"DIA",d:"ETF del Dow Jones — las 30 empresas más importantes de EE.UU."},{s:"IWM",d:"ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU."},{s:"TLT",d:"ETF de bonos del Tesoro a 20+ años."},{s:"XLU",d:"ETF del sector Utilities — estable en mercados volátiles."},{s:"GLD",d:"ETF del oro — activo refugio por excelencia."},{s:"BTC-USD",d:"Bitcoin — la criptomoneda más importante del mundo."}].map((x,i) => (
+                {[{s:"SPY",d:"ETF que replica el S&P 500 ï¿½ las 500 empresas mï¿½s grandes de EE.UU."},{s:"QQQ",d:"ETF del NASDAQ 100 ï¿½ dominado por tecnologï¿½a."},{s:"DIA",d:"ETF del Dow Jones ï¿½ las 30 empresas mï¿½s importantes de EE.UU."},{s:"IWM",d:"ETF del Russell 2000 ï¿½ 2,000 empresas pequeï¿½as de EE.UU."},{s:"TLT",d:"ETF de bonos del Tesoro a 20+ aï¿½os."},{s:"XLU",d:"ETF del sector Utilities ï¿½ estable en mercados volï¿½tiles."},{s:"GLD",d:"ETF del oro ï¿½ activo refugio por excelencia."},{s:"BTC-USD",d:"Bitcoin ï¿½ la criptomoneda mï¿½s importante del mundo."}].map((x,i) => (
                   <div key={i} style={{ borderLeft:`3px solid ${C.gold}`, paddingLeft:16 }}>
                     <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>{x.s}</div>
                     <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{x.d}</p>
@@ -354,7 +354,7 @@ let C = { ...DARK };export default function FinanzasDR() {
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
               <div>
                 <SectionTitle>Noticias Wall Street</SectionTitle>
-                <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>{noticiasLoading?"Cargando noticias...":"Noticias reales de hoy · Powered by Finnhub"}</p>
+                <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>{noticiasLoading?"Cargando noticias...":"Noticias reales de hoy ï¿½ Powered by Finnhub"}</p>
               </div>
               <button onClick={fetchNoticias} disabled={noticiasLoading} style={{ background:noticiasLoading?C.border:C.gold, color:noticiasLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
                 {noticiasLoading?"? Cargando...":"?? Actualizar"}
@@ -375,7 +375,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
                       <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
                         <span style={{ background:C.goldBg, color:C.gold, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{item.categoria}</span>
-                        <span style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'" }}>{item.tiempo} · {item.fuente}</span>
+                        <span style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'" }}>{item.tiempo} ï¿½ {item.fuente}</span>
                       </div>
                       {item.url && <span style={{ fontSize:11, color:C.gold, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>?</span>}
                     </div>
@@ -391,7 +391,7 @@ let C = { ...DARK };export default function FinanzasDR() {
         {tab === "blog" && (
           <div className="fade-in">
             <SectionTitle>Aprende a Invertir</SectionTitle>
-            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Guías completas para inversores principiantes e intermedios</p>
+            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Guï¿½as completas para inversores principiantes e intermedios</p>
             <div style={{ display:"grid", gap:24 }}>
               {GUIAS.map((post,i) => (
                 <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
@@ -399,10 +399,10 @@ let C = { ...DARK };export default function FinanzasDR() {
                     {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
                   </div>
                   <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.titulo}</h3>
-                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
+                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} ï¿½ {post.fecha}</div>
                   <p style={{ fontSize:14, color:C.sub, lineHeight:1.75, whiteSpace:"pre-line" }}>{expanded===i?post.contenido:post.extracto}</p>
                   <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
-                    {expanded===i?"? Ver menos":"Leer guía completa ?"}
+                    {expanded===i?"? Ver menos":"Leer guï¿½a completa ?"}
                   </button>
                 </div>
               ))}
@@ -414,7 +414,7 @@ let C = { ...DARK };export default function FinanzasDR() {
         {tab === "charts" && (
           <div className="fade-in">
             <SectionTitle>Charts en Vivo</SectionTitle>
-            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Gráficas en tiempo real powered by TradingView</p>
+            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Grï¿½ficas en tiempo real powered by TradingView</p>
             <TradingViewCharts />
           </div>
         )}
@@ -429,16 +429,16 @@ let C = { ...DARK };export default function FinanzasDR() {
           <div className="fade-in">
             <div style={{ background:dark?"linear-gradient(135deg,#0f1228,#130f2a)":"linear-gradient(135deg,#eef0f8,#e8eaf5)", border:`1px solid ${C.gold}30`, borderRadius:16, padding:"40px", marginBottom:32, textAlign:"center" }}>
               <div style={{ fontSize:48, marginBottom:16 }}>??</div>
-              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, letterSpacing:3, marginBottom:12 }}>GRATIS · CADA SEMANA</div>
-              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:14, lineHeight:1.3 }}>Lo más importante de<br/><span style={{ color:C.gold }}>Wall Street en tu idioma</span></h1>
-              <p style={{ fontSize:15, color:C.sub, maxWidth:480, margin:"0 auto 32px", lineHeight:1.8 }}>Cada semana te enviamos un resumen claro de lo que pasó en los mercados.</p>
+              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, letterSpacing:3, marginBottom:12 }}>GRATIS ï¿½ CADA SEMANA</div>
+              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:14, lineHeight:1.3 }}>Lo mï¿½s importante de<br/><span style={{ color:C.gold }}>Wall Street en tu idioma</span></h1>
+              <p style={{ fontSize:15, color:C.sub, maxWidth:480, margin:"0 auto 32px", lineHeight:1.8 }}>Cada semana te enviamos un resumen claro de lo que pasï¿½ en los mercados.</p>
               <div style={{ maxWidth:480, margin:"0 auto" }}><NewsletterForm /></div>
             </div>
           </div>
         )}
       </main>
       <footer style={{ borderTop:`1px solid ${C.border}`, padding:"20px 32px", textAlign:"center", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginTop:40 }}>
-        FinanzaDR © 2026 · Educación financiera para latinos · No constituye asesoría de inversión
+        FinanzaDR ï¿½ 2026 ï¿½ Educaciï¿½n financiera para latinos ï¿½ No constituye asesorï¿½a de inversiï¿½n
       </footer>
     </div>
   );
@@ -481,7 +481,7 @@ function NewsletterForm() {
   if (status === "success") return (
     <div style={{ background:"#00d68f15", border:"1px solid #00d68f", borderRadius:12, padding:"28px 24px", textAlign:"center" }}>
       <div style={{ fontSize:40, marginBottom:12 }}>??</div>
-      <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:"#00d68f", marginBottom:8 }}>¡Ya estás suscrito!</div>
+      <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:"#00d68f", marginBottom:8 }}>ï¿½Ya estï¿½s suscrito!</div>
       <p style={{ fontSize:14, color:C.sub }}>Revisa tu correo para confirmar.</p>
     </div>
   );
@@ -494,7 +494,7 @@ function NewsletterForm() {
           {status==="loading"?"? Enviando...":"Suscribirse ?"}
         </button>
       </div>
-      {status==="error" && <p style={{ fontSize:12, color:C.red }}>?? Ingresa un email válido</p>}
+      {status==="error" && <p style={{ fontSize:12, color:C.red }}>?? Ingresa un email vï¿½lido</p>}
     </div>
   );
 }
@@ -535,47 +535,47 @@ function CompoundCalc() {
   const numInput=(val,setVal,step,min=0)=>(<div style={{display:"flex",border:`1px solid ${C.border}`,borderRadius:8,overflow:"hidden",height:42}}>{stepBtn(()=>setVal(v=>Math.max(min,+(v-step).toFixed(2))),"left")}<input type="number" value={val||""} min={min} onChange={e=>setVal(e.target.value===""?0:Math.max(min,+e.target.value))} style={{flex:1,background:C.card,border:"none",outline:"none",color:C.gold,fontFamily:"'IBM Plex Mono'",fontSize:15,fontWeight:700,textAlign:"center"}}/>{stepBtn(()=>setVal(v=>+(v+step).toFixed(2)),"right")}</div>);
   return (
     <div>
-      <SectionTitle>Calculadora de Inversión</SectionTitle>
-      <p style={{fontSize:13,color:C.sub,marginTop:4,marginBottom:20}}>El S&P 500 ha retornado ~10% anual históricamente.</p>
+      <SectionTitle>Calculadora de Inversiï¿½n</SectionTitle>
+      <p style={{fontSize:13,color:C.sub,marginTop:4,marginBottom:20}}>El S&P 500 ha retornado ~10% anual histï¿½ricamente.</p>
       <div style={{display:"flex",gap:8,marginBottom:24,maxWidth:260}}>
         {["USD","DOP"].map(m=>(<button key={m} onClick={()=>setMoneda(m)} style={{flex:1,padding:"9px",borderRadius:8,border:`1px solid ${moneda===m?C.gold:C.border}`,background:moneda===m?C.goldBg:"none",color:moneda===m?C.gold:C.muted,fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:600,cursor:"pointer"}}>{m==="USD"?"???? USD":"???? DOP"}</button>))}
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24,alignItems:"start"}} className="calc-grid">
         <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"24px"}}>
-          <div style={{marginBottom:18}}><label style={labelStyle}>Inversión Inicial ({sym})</label>{numInput(capital,setCapital,1000)}</div>
+          <div style={{marginBottom:18}}><label style={labelStyle}>Inversiï¿½n Inicial ({sym})</label>{numInput(capital,setCapital,1000)}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
             <div><label style={labelStyle}>Aportes ({sym})</label>{numInput(aporte,setAporte,50)}</div>
             <div><label style={labelStyle}>Frecuencia</label><select value={frecuencia} onChange={e=>setFrecuencia(e.target.value)} style={selStyle}>{["Mensual","Semanal","Anual"].map(o=><option key={o}>{o}</option>)}</select></div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
             <div><label style={labelStyle}>Retorno Esperado (%)</label>{numInput(tasa,setTasa,0.5,0.1)}</div>
-            <div><label style={labelStyle}>Capitalización</label><select value={capitaliz} onChange={e=>setCapitaliz(e.target.value)} style={selStyle}>{["Anual","Mensual","Trimestral","Semestral"].map(o=><option key={o}>{o}</option>)}</select></div>
+            <div><label style={labelStyle}>Capitalizaciï¿½n</label><select value={capitaliz} onChange={e=>setCapitaliz(e.target.value)} style={selStyle}>{["Anual","Mensual","Trimestral","Semestral"].map(o=><option key={o}>{o}</option>)}</select></div>
           </div>
-          <div style={{marginBottom:18}}><label style={labelStyle}>Años de Crecimiento</label>{numInput(anos,setAnos,1,1)}</div>
+          <div style={{marginBottom:18}}><label style={labelStyle}>Aï¿½os de Crecimiento</label>{numInput(anos,setAnos,1,1)}</div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           <div style={{background:`linear-gradient(135deg,${C.card},${C.bg})`,border:`2px solid ${C.gold}`,borderRadius:12,padding:"20px 24px",textAlign:"center"}}>
-            <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:C.gold,letterSpacing:2,marginBottom:6}}>VALOR FINAL EN {anos} AÑOS</div>
+            <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:C.gold,letterSpacing:2,marginBottom:6}}>VALOR FINAL EN {anos} Aï¿½OS</div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:36,fontWeight:800,color:C.gold}}>{fmtM(totalFinal)}</div>
           </div>
           <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,overflow:"hidden"}}>
-            {[{lbl:"Inversión Total",val:fmtM(aporteTotal),color:C.text},{lbl:"Capital % del Final",val:fmtPct(aporteTotal/totalFinal*100),color:C.muted},{lbl:"Aporte Total",val:fmtM(aporte*periodos*anos),color:C.sub},{lbl:"Ganancia Total",val:fmtM(Math.max(0,interesTotal)),color:C.green},{lbl:"Ganancia Porcentual",val:fmtPct(Math.max(0,gananciaPct)),color:C.green}].map((r,i,arr)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 20px",borderBottom:i<arr.length-1?`1px solid ${C.border}20`:"none"}}><span style={{fontSize:13,color:C.muted}}>{r.lbl}</span><span style={{fontFamily:"'IBM Plex Mono'",fontSize:15,fontWeight:700,color:r.color}}>{r.val}</span></div>))}
+            {[{lbl:"Inversiï¿½n Total",val:fmtM(aporteTotal),color:C.text},{lbl:"Capital % del Final",val:fmtPct(aporteTotal/totalFinal*100),color:C.muted},{lbl:"Aporte Total",val:fmtM(aporte*periodos*anos),color:C.sub},{lbl:"Ganancia Total",val:fmtM(Math.max(0,interesTotal)),color:C.green},{lbl:"Ganancia Porcentual",val:fmtPct(Math.max(0,gananciaPct)),color:C.green}].map((r,i,arr)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 20px",borderBottom:i<arr.length-1?`1px solid ${C.border}20`:"none"}}><span style={{fontSize:13,color:C.muted}}>{r.lbl}</span><span style={{fontFamily:"'IBM Plex Mono'",fontSize:15,fontWeight:700,color:r.color}}>{r.val}</span></div>))}
           </div>
         </div>
       </div>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"24px",marginTop:24}}>
-        <Label>-- Proyección de Crecimiento</Label>
+        <Label>-- Proyecciï¿½n de Crecimiento</Label>
         <div style={{width:"100%",height:300}}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={filas} margin={{top:10,right:30,left:10,bottom:0}}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false}/>
               <XAxis dataKey="ano" stroke={C.muted} tick={{fontFamily:"'IBM Plex Mono'",fontSize:10,fill:C.muted}}/>
               <YAxis stroke={C.muted} tick={{fontFamily:"'IBM Plex Mono'",fontSize:9,fill:C.muted}} tickFormatter={(v)=>v>=1000000?"$"+(v/1000000).toFixed(1)+"M":v>=1000?"$"+(v/1000).toFixed(0)+"K":"$"+Math.round(v)}/>
-              <Tooltip contentStyle={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,fontFamily:"'IBM Plex Mono'",fontSize:12}} labelFormatter={v=>`Año ${v}`} formatter={(v,n)=>["$"+Math.round(v).toLocaleString(),n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias Acum.":n==="ganancia"?"Ganancia Año":n]}/>
+              <Tooltip contentStyle={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,fontFamily:"'IBM Plex Mono'",fontSize:12}} labelFormatter={v=>`Aï¿½o ${v}`} formatter={(v,n)=>["$"+Math.round(v).toLocaleString(),n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias Acum.":n==="ganancia"?"Ganancia Aï¿½o":n]}/>
               <Legend wrapperStyle={{fontFamily:"'IBM Plex Mono'",fontSize:11,paddingTop:12}}/>
               <Bar dataKey="aporteAcum" stackId="a" fill="#1e4a7a" name="Capital Base"/>
               <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="Ganancias Acum." radius={[4,4,0,0]}/>
-              <Line type="monotone" dataKey="ganancia" stroke={C.gold} strokeWidth={2.5} dot={{fill:C.gold,r:3}} name="Ganancia Año"/>
+              <Line type="monotone" dataKey="ganancia" stroke={C.gold} strokeWidth={2.5} dot={{fill:C.gold,r:3}} name="Ganancia Aï¿½o"/>
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -589,10 +589,10 @@ function CompoundCalc() {
       </div>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"20px 24px",overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse",fontFamily:"'IBM Plex Mono'",fontSize:12,minWidth:700}}>
-          <thead><tr style={{background:C.card,borderBottom:`1px solid ${C.border}`}}>{[vistaTabla==="Mensual"?"Mes":"Año","Capital Base","Aporte","Capital Total","Ganancia","% Ganancia","Ganancia Acum.","Valor Final"].map((h,i)=>(<th key={i} style={{padding:"10px 12px",fontWeight:500,textAlign:i===0?"left":"right",color:C.muted,whiteSpace:"nowrap"}}>{h}</th>))}</tr></thead>
+          <thead><tr style={{background:C.card,borderBottom:`1px solid ${C.border}`}}>{[vistaTabla==="Mensual"?"Mes":"Aï¿½o","Capital Base","Aporte","Capital Total","Ganancia","% Ganancia","Ganancia Acum.","Valor Final"].map((h,i)=>(<th key={i} style={{padding:"10px 12px",fontWeight:500,textAlign:i===0?"left":"right",color:C.muted,whiteSpace:"nowrap"}}>{h}</th>))}</tr></thead>
           <tbody>
             {vistaTabla==="Anual"?filas.map((f,i)=>(<tr key={i} style={{borderBottom:`1px solid ${C.border}20`,background:i%2===0?"transparent":"#ffffff03"}}>
-              <td style={{padding:"10px 12px",color:C.gold}}>Año {f.ano}</td>
+              <td style={{padding:"10px 12px",color:C.gold}}>Aï¿½o {f.ano}</td>
               <td style={{padding:"10px 12px",textAlign:"right",color:C.text}}>{fmtM(f.capitalBase)}</td>
               <td style={{padding:"10px 12px",textAlign:"right",color:C.muted}}>{fmtM(f.aporteBase)}</td><td style={{padding:"10px 12px",textAlign:"right",color:C.text}}>{fmtM(f.capitalBase+f.aporteBase)}</td>
               <td style={{padding:"10px 12px",textAlign:"right",color:C.green}}>{fmtM(f.ganancia)}</td><td style={{padding:"10px 12px",textAlign:"right",color:C.gold}}>{f.capitalBase>0?(f.ganancia/(f.capitalBase+f.aporteBase)*100).toFixed(2)+"%":"0%"}</td>
@@ -643,8 +643,8 @@ function TradingViewCharts() {
     <div>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"28px 32px",marginBottom:24,textAlign:"center"}}>
         <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:C.gold,letterSpacing:3,marginBottom:12}}>BUSCA CUALQUIER ACTIVO</div>
-        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:800,color:C.text,marginBottom:8}}>Acciones · ETFs · Cripto · Materias Primas</h2>
-        <p style={{fontSize:13,color:C.sub,marginBottom:24}}>Escribe el símbolo del activo — AAPL, BTC, GLD, EUR/USD.</p>
+        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:800,color:C.text,marginBottom:8}}>Acciones ï¿½ ETFs ï¿½ Cripto ï¿½ Materias Primas</h2>
+        <p style={{fontSize:13,color:C.sub,marginBottom:24}}>Escribe el sï¿½mbolo del activo ï¿½ AAPL, BTC, GLD, EUR/USD.</p>
         <div style={{display:"flex",gap:10,maxWidth:500,margin:"0 auto",flexWrap:"wrap"}}>
           <input type="text" placeholder="Ej: AAPL, TSLA, BTC, GLD..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&loadChart(input)}
             style={{flex:1,minWidth:200,background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 18px",color:C.text,fontFamily:"'IBM Plex Mono'",fontSize:15,outline:"none"}}/>
@@ -668,7 +668,7 @@ function TradingViewCharts() {
       ) : (
         <div style={{textAlign:"center",padding:"60px 32px",background:C.card,border:`1px dashed ${C.border}`,borderRadius:12}}>
           <div style={{fontSize:48,marginBottom:16}}>??</div>
-          <p style={{fontFamily:"'IBM Plex Mono'",fontSize:13,color:C.muted,lineHeight:1.8}}>Escribe el símbolo arriba y presiona <strong style={{color:C.gold}}>Ver Chart</strong></p>
+          <p style={{fontFamily:"'IBM Plex Mono'",fontSize:13,color:C.muted,lineHeight:1.8}}>Escribe el sï¿½mbolo arriba y presiona <strong style={{color:C.gold}}>Ver Chart</strong></p>
           <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:20,flexWrap:"wrap"}}>
             {["SPY","QQQ","AAPL","NVDA","TSLA","BTC","GLD"].map(s=>(<button key={s} onClick={()=>{setInput(s);loadChart(s);}} style={{background:C.goldBg,border:`1px solid ${C.gold}40`,color:C.gold,padding:"6px 14px",borderRadius:6,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:12,fontWeight:600}}>{s}</button>))}
           </div>
@@ -696,10 +696,10 @@ function SnapshotCard({ stocks }) {
     ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
     ctx.fillStyle=gold; ctx.fillRect(0,0,W,6);
     ctx.fillStyle=gold; ctx.font="bold 72px Georgia,serif"; ctx.fillText("FinanzaDR",60,100);
-    ctx.fillStyle=subCol; ctx.font="28px 'Courier New',monospace"; ctx.fillText("MARKET SNAPSHOT · "+date.toUpperCase(),60,145);
+    ctx.fillStyle=subCol; ctx.font="28px 'Courier New',monospace"; ctx.fillText("MARKET SNAPSHOT ï¿½ "+date.toUpperCase(),60,145);
     ctx.fillStyle=border; ctx.fillRect(60,165,W-120,2);
     ctx.fillStyle=pct>=70?green:pct>=40?gold:red; ctx.font="bold 52px Georgia,serif"; ctx.fillText(sentiment,60,250);
-    ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText(`${gainers} de ${stocks.length} activos en verde — ${pct}% positivo`,60,295);
+    ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText(`${gainers} de ${stocks.length} activos en verde ï¿½ ${pct}% positivo`,60,295);
     ctx.fillStyle=border; ctx.fillRect(60,320,W-120,2);
     const cols=4,cellW=(W-120)/cols,startY=350;
     stocks.forEach((st,i)=>{
@@ -715,7 +715,7 @@ function SnapshotCard({ stocks }) {
     const tmY=startY+Math.ceil(stocks.length/cols)*160+20;
     ctx.fillStyle=border; ctx.fillRect(60,tmY,W-120,2);
     ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText("TOP MOVER:",60,tmY+46);
-    ctx.fillStyle=gold; ctx.font="bold 48px Georgia,serif"; ctx.fillText(`${topMover.s} — ${topMover.c>=0?"?":"?"} ${Math.abs(topMover.c)}%`,60,tmY+105);
+    ctx.fillStyle=gold; ctx.font="bold 48px Georgia,serif"; ctx.fillText(`${topMover.s} ï¿½ ${topMover.c>=0?"?":"?"} ${Math.abs(topMover.c)}%`,60,tmY+105);
     ctx.fillStyle=border; ctx.fillRect(60,H-90,W-120,2);
     ctx.fillStyle=gold; ctx.font="bold 32px 'Courier New',monospace"; ctx.fillText("finanzadr.com",60,H-45);
     ctx.fillStyle=subCol; ctx.font="22px 'Courier New',monospace"; ctx.textAlign="right"; ctx.fillText("Wall Street en tu idioma",W-60,H-45); ctx.textAlign="left";
@@ -734,7 +734,7 @@ function SnapshotCard({ stocks }) {
       </div>
       <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
         <button onClick={downloadImage} style={{background:C.gold,color:"#000",border:"none",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>?? Descargar PNG</button>
-        <button onClick={copyImage} style={{background:copied?C.green:"none",color:copied?"#000":C.gold,border:`1px solid ${copied?C.green:C.gold}`,padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>{copied?"? ¡Copiado!":"?? Copiar Imagen"}</button>
+        <button onClick={copyImage} style={{background:copied?C.green:"none",color:copied?"#000":C.gold,border:`1px solid ${copied?C.green:C.gold}`,padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>{copied?"? ï¿½Copiado!":"?? Copiar Imagen"}</button>
         <button onClick={shareOnX} style={{background:"#000",color:"#fff",border:"1px solid #333",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>?? Compartir en X</button>
       </div>
     </div>
