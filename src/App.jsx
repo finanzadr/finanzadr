@@ -438,7 +438,14 @@ let C = { ...DARK };export default function FinanzasDR() {
         )}
       </main>
       <footer style={{ borderTop:`1px solid ${C.border}`, padding:"20px 32px", textAlign:"center", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginTop:40 }}>
-        FinanzaDR © 2026 · Educación financiera para latinos · No constituye asesoría de inversión
+       FinanzaDR © 2026 · Todos los derechos reservados · No constituye asesoría de inversión
+      </footer>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#050609",borderTop:"1px solid #1a1e35",padding:"12px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,zIndex:99}}>
+        <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:"#484e72"}}>FinanzaDR © 2026 · Wall Street en tu idioma · 🇩🇴</div>
+        <div style={{display:"flex",gap:16}}>
+          {[["🔒 Privacidad","privacidad"],["📋 Términos","terminos"],["⚠️ Aviso","aviso"]].map(([l,t],i)=>(<span key={i} onClick={()=>setTab(t)} style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:"#c8a84b",cursor:"pointer"}}>{l}</span>))}
+        </div>
+      </div>
       </footer>
     </div>
   );
