@@ -202,7 +202,8 @@ let C = { ...DARK };export default function FinanzasDR() {
                   </h1>
                   <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, letterSpacing:2, marginBottom:16 }}>INSTITUTIONAL-GRADE MARKET INTELLIGENCE</p>
                   <p style={{ fontSize:15, color:C.sub, lineHeight:1.8, marginBottom:28, maxWidth:460 }}>Precios en tiempo real, charts profesionales y educación financiera para latinos que quieren invertir en Wall Street.</p>
-                  <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}><button onClick={() => window.open("https://app.finanzadr.com", "_blank")} style={{ background:"#00d68f", color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, marginBottom:10, width:"100%" }}>🚀 Entrar a la App →</button>
+                  <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}> 
+                    <button onClick={() => window.open("https://app.finanzadr.com", "_blank")} style={{ background:"#00d68f", color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, marginBottom:10, width:"100%" }}>🚀 Entrar a la App →</button>
                     <button onClick={() => setTab("mercados")} style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800 }}>📊 Explorar Mercados</button>
                     <button onClick={() => setTab("charts")} style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700 }}>📈 Charts en Vivo</button>
                   </div>
