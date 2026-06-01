@@ -403,7 +403,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                   <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
                   <p style={{ fontSize:14, color:C.sub, lineHeight:1.75, whiteSpace:"pre-line" }}>{expanded===i?post.contenido:post.extracto}</p>
                   <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
-                    {expanded===i?"{'<'} Ver menos":"Leer guía completa 🚀 Entrar a la App {'>'}"}
+                   {expanded===i?"Ver menos":"Leer guia completa"}
                   </button>
                 </div>
               ))}
