@@ -656,7 +656,7 @@ function TradingViewCharts() {
         <div style={{display:"flex",gap:10,maxWidth:500,margin:"0 auto",flexWrap:"wrap"}}>
           <input type="text" placeholder="Ej: AAPL, TSLA, BTC, GLD..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&loadChart(input)}
             style={{flex:1,minWidth:200,background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 18px",color:C.text,fontFamily:"'IBM Plex Mono'",fontSize:15,outline:"none"}}/>
-          <button onClick={()=>loadChart(input)} style={{background:C.gold,color:"#000",border:"none",padding:"14px 28px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>Ver Chart 🚀 Entrar a la App {'>'}</button>
+         <button onClick={()=>loadChart(input)} style={{background:C.gold,color:"#000",border:"none",padding:"14px 28px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>Ver Chart {'>'}</button>
         </div>
       </div>
       {activeSymbol ? (
