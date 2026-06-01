@@ -378,7 +378,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                         <span style={{ background:C.goldBg, color:C.gold, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{item.categoria}</span>
                         <span style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'" }}>{item.tiempo} · {item.fuente}</span>
                       </div>
-                      {item.url && <span style={{ fontSize:11, color:C.gold, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>↗</span>}
+                      {item.url && <span style={{ fontSize:11, color:C.gold, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{'>'}</span>}
                     </div>
                     <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:C.text, marginBottom:8, lineHeight:1.4 }}>{item.titulo}</h3>
                     <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{item.resumen}</p>
