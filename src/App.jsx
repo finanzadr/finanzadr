@@ -403,7 +403,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                   <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
                   <p style={{ fontSize:14, color:C.sub, lineHeight:1.75, whiteSpace:"pre-line" }}>{expanded===i?post.contenido:post.extracto}</p>
                   <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
-                    {expanded===i?"← Ver menos":"Leer guía completa →"}
+                    {expanded===i?"← Ver menos":"Leer guía completa 🚀 Entrar a la App {'>'}"}
                   </button>
                 </div>
               ))}
@@ -499,7 +499,7 @@ function NewsletterForm() {
         <input type="email" placeholder="tu@email.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSubmit()}
           style={{ flex:1, minWidth:200, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", color:C.text, fontFamily:"'Inter',sans-serif", fontSize:15, outline:"none" }} />
         <button onClick={handleSubmit} disabled={status==="loading"} style={{ background:C.gold, color:"#000", border:"none", padding:"14px 24px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700 }}>
-          {status==="loading"?"⏳ Enviando...":"Suscribirse →"}
+          {status==="loading"?"⏳ Enviando...":"Suscribirse 🚀 Entrar a la App {'>'}"}
         </button>
       </div>
       {status==="error" && <p style={{ fontSize:12, color:C.red }}>⚠️ Ingresa un email válido</p>}
@@ -656,7 +656,7 @@ function TradingViewCharts() {
         <div style={{display:"flex",gap:10,maxWidth:500,margin:"0 auto",flexWrap:"wrap"}}>
           <input type="text" placeholder="Ej: AAPL, TSLA, BTC, GLD..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&loadChart(input)}
             style={{flex:1,minWidth:200,background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 18px",color:C.text,fontFamily:"'IBM Plex Mono'",fontSize:15,outline:"none"}}/>
-          <button onClick={()=>loadChart(input)} style={{background:C.gold,color:"#000",border:"none",padding:"14px 28px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>Ver Chart →</button>
+          <button onClick={()=>loadChart(input)} style={{background:C.gold,color:"#000",border:"none",padding:"14px 28px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>Ver Chart 🚀 Entrar a la App {'>'}</button>
         </div>
       </div>
       {activeSymbol ? (
