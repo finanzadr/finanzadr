@@ -137,7 +137,7 @@ let C = { ...DARK };export default function FinanzasDR() {
       <div style={{ background:"#050609", borderBottom:"1px solid #1a1e35", overflowX:"auto" }} className="nav-scroll">
         <div style={{ display:"flex", alignItems:"stretch", minWidth:"max-content" }}>
           <div style={{ background:C.gold, color:"#000", fontFamily:"'IBM Plex Mono'", fontSize:10, fontWeight:800, padding:"0 16px", display:"flex", alignItems:"center", gap:6, flexShrink:0, letterSpacing:1 }}>
-            <span className="live-dot" style={{ width:6, height:6, borderRadius:"50%", background:"#000", display:"inline-block" }} />
+            
             LIVE
           </div>
           {stocks.map((st,i) => (
@@ -195,7 +195,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                 <div style={{ maxWidth:540 }} className="hero-text">
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
                     <span className="live-dot" style={{ width:8, height:8, borderRadius:"50%", background:"#00d68f", display:"inline-block" }} />
-                    <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#00d68f", letterSpacing:3, fontWeight:700 }}>MERCADOS EN VIVO</span>
+                    <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#00d68f", letterSpacing:3, fontWeight:700 }}>FINANZADR</span>
                   </div>
                   <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:44, fontWeight:800, color:C.text, marginBottom:8, lineHeight:1.15 }}>
                     Wall Street.<br/><span style={{ color:C.gold }}>En tu idioma.</span>
