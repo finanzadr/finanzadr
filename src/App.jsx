@@ -129,7 +129,6 @@ let C = { ...DARK };export default function FinanzasDR() {
         .toggle-text { display:none !important; }
         .nav-scroll { overflow-x:auto !important; scrollbar-width:none !important; }
         .nav-scroll::-webkit-scrollbar { display:none !important; }
-        .pulse-grid { grid-template-columns:repeat(2,1fr) !important; }
         .summary-grid { grid-template-columns:1fr !important; }
         .calc-grid { grid-template-columns:1fr !important; }
         .sentiment-grid { grid-template-columns:1fr !important; }
@@ -259,27 +258,6 @@ let C = { ...DARK };export default function FinanzasDR() {
                     Soy dominicano y vivo en Massachusetts. Cuando empecé a invertir en Wall Street, nadie me explicaba nada en español — todo estaba en inglés, lleno de jerga, y me tomó años entender lo básico a punta de prueba y error. Construí FinanzaDR para que ningún latino tenga que pasar por lo mismo: precios reales, herramientas claras y educación financiera, todo en nuestro idioma.
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* MARKET PULSE */}
-            <div style={{ marginBottom:24 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-                <Label style={{ margin:0 }}>── MARKET PULSE · EN VIVO</Label>
-                {lastUpdate && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green }}>✓ {lastUpdate}</span>}
-              </div>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:10 }} className="pulse-grid">
-                {stocks.map(st => (
-                  <div key={st.s} className="card-hover" onClick={() => setTab("charts")}
-                    style={{ background:C.card, border:`1px solid ${st.c>=0?C.green+"33":C.red+"33"}`, borderLeft:`3px solid ${clr(st.c)}`, borderRadius:8, padding:"12px 14px", cursor:"pointer" }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                      <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.gold }}>{st.s}</span>
-                      <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:clr(st.c) }}>{arr(st.c)}{Math.abs(st.c)}%</span>
-                    </div>
-                    <div style={{ fontSize:11, color:C.muted, marginBottom:6 }}>{st.n}</div>
-                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:17, fontWeight:700, color:C.text }}>{fmt(st.p)}</div>
-                  </div>
-                ))}
               </div>
             </div>
 
