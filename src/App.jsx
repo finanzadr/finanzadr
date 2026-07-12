@@ -56,6 +56,7 @@ const LIGHT = { bg: "#f4f5f8", card: "#ffffff", border: "#e0e4ef", gold: "#b8860
 
 let C = { ...DARK };export default function FinanzasDR() {
   const [tab, setTab] = useState("inicio");
+  const [mercadosView, setMercadosView] = useState("cards");
   const [stocks, setStocks] = useState(WS_STOCKS);
   const [expanded, setExpanded] = useState(null);
   const [dark, setDark] = useState(true);
@@ -141,9 +142,8 @@ let C = { ...DARK };export default function FinanzasDR() {
   }, []);
 
   const tabs = [
-    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["charts","📈 Charts en Vivo"],["heatmap","🔲 Heat Map"],["sentimiento","😊 Sentimiento"],
+    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["heatmap","🔲 Heat Map"],["sentimiento","😊 Sentimiento"],
     ["ws","📰 Noticias"],["blog","📚 Aprende"],["brokers","💳 Brokers"],["calc","🧮 Calculadora"],
-    ["snapshot","📸 Compartir"],["newsletter","📧 Newsletter"],
   ];
 
   return (
@@ -219,7 +219,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                   <p style={{ fontSize:15, color:C.sub, lineHeight:1.8, marginBottom:28, maxWidth:460 }}>Precios en tiempo real, charts profesionales y educación financiera para latinos que quieren invertir en Wall Street.</p>
                   <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}> 
                     <button onClick={() => setTab("mercados")} style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800 }}>📊 Explorar Mercados</button>
-                    <button onClick={() => setTab("charts")} style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700 }}>📈 Charts en Vivo</button>
+                    <button onClick={() => { setTab("mercados"); setMercadosView("charts"); }} style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700 }}>📈 Charts en Vivo</button>
                   </div>
                   <div style={{ display:"flex", gap:24, marginTop:28, paddingTop:24, borderTop:`1px solid ${C.border}`, flexWrap:"wrap" }}>
                     {[{n:"8",l:"Activos en Vivo"},{n:"∞",l:"Charts Disponibles"},{n:"24/7",l:"Datos en Tiempo Real"},{n:"$0",l:"Costo Total"}].map((s,i) => (
@@ -296,8 +296,8 @@ let C = { ...DARK };export default function FinanzasDR() {
               <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
                 <Label style={{ margin:"0 0 12px 0" }}>── ACCESO RÁPIDO</Label>
                 <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                  {[{icon:"📈",label:"Charts en Vivo",tab:"charts"},{icon:"📰",label:"Noticias Wall St.",tab:"ws"},{icon:"🧮",label:"Calculadora",tab:"calc"},{icon:"📧",label:"Newsletter Gratis",tab:"newsletter"}].map((a,i) => (
-                    <button key={i} onClick={() => setTab(a.tab)} style={{ background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:7, padding:"9px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:10 }}>
+                  {[{icon:"📈",label:"Charts en Vivo",tab:"mercados",view:"charts"},{icon:"📰",label:"Noticias Wall St.",tab:"ws"},{icon:"🧮",label:"Calculadora",tab:"calc"},{icon:"📧",label:"Newsletter Gratis",tab:"newsletter"}].map((a,i) => (
+                    <button key={i} onClick={() => { setTab(a.tab); if (a.view) setMercadosView(a.view); }} style={{ background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:7, padding:"9px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:10 }}>
                       <span style={{ fontSize:16 }}>{a.icon}</span>
                       <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, color:C.gold }}>{a.label}</span>
                     </button>
@@ -308,30 +308,48 @@ let C = { ...DARK };export default function FinanzasDR() {
           </div>
         )}{tab === "mercados" && (
           <div className="fade-in">
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8, flexWrap:"wrap", gap:12 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
               <SectionTitle>Mercados Wall Street</SectionTitle>
-              <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-                {lastUpdate && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green }}>✓ {lastUpdate}</span>}
-                <button onClick={fetchRealPrices} disabled={realLoading} style={{ background:realLoading?C.border:C.gold, color:realLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:realLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
-                  {realLoading?"⏳ Cargando...":"🔴 Actualizar Precios"}
-                </button>
-              </div>
-            </div>
-            <Label>── Precios en tiempo real · Powered by Finnhub</Label>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12, marginBottom:32 }}>
-              {stocks.map(st => <StockCard key={st.s} st={st} />)}
-            </div>
-            <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px" }}>
-              <Label>── ¿Qué es cada activo?</Label>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16 }}>
-                {[{s:"SPY",d:"ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU."},{s:"QQQ",d:"ETF del NASDAQ 100 — dominado por tecnología."},{s:"DIA",d:"ETF del Dow Jones — las 30 empresas más importantes de EE.UU."},{s:"IWM",d:"ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU."},{s:"TLT",d:"ETF de bonos del Tesoro a 20+ años."},{s:"XLU",d:"ETF del sector Utilities — estable en mercados volátiles."},{s:"GLD",d:"ETF del oro — activo refugio por excelencia."},{s:"BTC-USD",d:"Bitcoin — la criptomoneda más importante del mundo."}].map((x,i) => (
-                  <div key={i} style={{ borderLeft:`3px solid ${C.gold}`, paddingLeft:16 }}>
-                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>{x.s}</div>
-                    <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{x.d}</p>
-                  </div>
+              <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                {["cards","charts"].map(v => (
+                  <button key={v} onClick={() => setMercadosView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${mercadosView===v?C.gold:C.border}`, background:mercadosView===v?C.goldBg:"none", color:mercadosView===v?C.gold:C.muted, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+                    {v==="cards"?"📋 Ver Cards":"📈 Ver Charts"}
+                  </button>
                 ))}
               </div>
             </div>
+            {mercadosView === "cards" ? (
+              <div>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8, flexWrap:"wrap", gap:12 }}>
+                  <Label style={{ margin:0 }}>── Precios en tiempo real · Powered by Finnhub</Label>
+                  <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                    {lastUpdate && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green }}>✓ {lastUpdate}</span>}
+                    <button onClick={fetchRealPrices} disabled={realLoading} style={{ background:realLoading?C.border:C.gold, color:realLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:realLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
+                      {realLoading?"⏳ Cargando...":"🔴 Actualizar Precios"}
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12, marginBottom:32 }}>
+                  {stocks.map(st => <StockCard key={st.s} st={st} />)}
+                </div>
+                <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px" }}>
+                  <Label>── ¿Qué es cada activo?</Label>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16 }}>
+                    {[{s:"SPY",d:"ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU."},{s:"QQQ",d:"ETF del NASDAQ 100 — dominado por tecnología."},{s:"DIA",d:"ETF del Dow Jones — las 30 empresas más importantes de EE.UU."},{s:"IWM",d:"ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU."},{s:"TLT",d:"ETF de bonos del Tesoro a 20+ años."},{s:"XLU",d:"ETF del sector Utilities — estable en mercados volátiles."},{s:"GLD",d:"ETF del oro — activo refugio por excelencia."},{s:"BTC-USD",d:"Bitcoin — la criptomoneda más importante del mundo."}].map((x,i) => (
+                      <div key={i} style={{ borderLeft:`3px solid ${C.gold}`, paddingLeft:16 }}>
+                        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>{x.s}</div>
+                        <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{x.d}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p style={{ fontSize:13, color:C.sub, marginBottom:20 }}>Gráficas en tiempo real powered by TradingView</p>
+                <TradingViewCharts />
+              </div>
+            )}
           </div>
         )}
 
@@ -406,13 +424,6 @@ let C = { ...DARK };export default function FinanzasDR() {
           </div>
         )}
         {tab === "calc" && <div className="fade-in"><CompoundCalc /></div>}
-        {tab === "charts" && (
-          <div className="fade-in">
-            <SectionTitle>Charts en Vivo</SectionTitle>
-            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Gráficas en tiempo real powered by TradingView</p>
-            <TradingViewCharts />
-          </div>
-        )}
         {tab === "heatmap" && (
           <div className="fade-in">
             <SectionTitle>Heat Map del Mercado</SectionTitle>
@@ -446,8 +457,18 @@ let C = { ...DARK };export default function FinanzasDR() {
           </div>
         )}
       </main>
-    <footer  style={{ borderTop:`1px solid ${C.border}`, padding:"20px 32px", textAlign:"center", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginTop:40 }}>
-  FinanzaDR &copy; 2026 &middot; Todos los derechos reservados &middot; No constituye asesoria de inversion
+    <footer style={{ borderTop:`1px solid ${C.border}`, padding:"32px", textAlign:"center", marginTop:40 }}>
+      <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
+        {[["📸","Compartir Snapshot","snapshot"],["📧","Newsletter Gratis","newsletter"]].map(([icon,label,t],i) => (
+          <button key={i} onClick={() => { setTab(t); window.scrollTo({ top:0, behavior:"smooth" }); }}
+            style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8 }}>
+            <span>{icon}</span>{label}
+          </button>
+        ))}
+      </div>
+      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted }}>
+        FinanzaDR &copy; 2026 &middot; Todos los derechos reservados &middot; No constituye asesoria de inversion
+      </div>
       </footer>
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#050609",borderTop:"1px solid #1a1e35",padding:"12px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,zIndex:99}}>
         <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:"#484e72"}}>FinanzaDR © 2026 · Wall Street en tu idioma · RD</div>
