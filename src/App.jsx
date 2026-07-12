@@ -126,6 +126,8 @@ let C = { ...DARK };export default function FinanzasDR() {
         .pulse-grid { grid-template-columns:repeat(2,1fr) !important; }
         .summary-grid { grid-template-columns:1fr !important; }
         .calc-grid { grid-template-columns:1fr !important; }
+        .sentiment-grid { grid-template-columns:1fr !important; }
+        .sentiment-indicators { grid-template-columns:repeat(2,1fr) !important; }
         .hero-text h1 { font-size:26px !important; }
       }
     `;
@@ -538,17 +540,20 @@ function SentimientoMercado() {
     return { emoji: "😱", label: "MIEDO EXTREMO", color: "#ff4466" };
   };
 
-  const getSentimentFromNews = (headlines) => {
+  const scoreHeadline = (headline) => {
     const positive = ["surge", "gain", "rise", "up", "high", "bull", "record", "growth", "profit"];
     const negative = ["fall", "drop", "crash", "down", "loss", "bear", "risk", "fear", "decline"];
+    const text = (headline || "").toLowerCase();
     let score = 0;
-    headlines.forEach(n => {
-      const text = (n.headline || "").toLowerCase();
-      positive.forEach(w => { if (text.includes(w)) score++; });
-      negative.forEach(w => { if (text.includes(w)) score--; });
-    });
+    positive.forEach(w => { if (text.includes(w)) score++; });
+    negative.forEach(w => { if (text.includes(w)) score--; });
     return score;
   };
+
+  const getNewsSentiment = (score) =>
+    score > 0 ? { label: "Positivo", color: "#00d68f", bg: "#00d68f15" }
+    : score < 0 ? { label: "Negativo", color: "#ff4466", bg: "#ff446615" }
+    : { label: "Neutral", color: "#8890b5", bg: "#8890b515" };
 
   if (loading) return (
     <div style={{ textAlign: "center", padding: "60px", color: C.muted }}>
@@ -560,7 +565,7 @@ function SentimientoMercado() {
   const current = data?.[0];
   const val = current ? parseInt(current.value) : 50;
   const { emoji, label, color } = getEmoji(val);
-  const newsScore = getSentimentFromNews(news);
+  const newsScore = news.reduce((acc, n) => acc + scoreHeadline(n.headline), 0);
 
   return (
     <div>
@@ -569,7 +574,7 @@ function SentimientoMercado() {
         Fear & Greed Index en tiempo real · Powered by Alternative.me
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+      <div className="sentiment-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
 
         {/* FEAR & GREED PRINCIPAL */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, textAlign: "center" }}>
@@ -585,12 +590,15 @@ function SentimientoMercado() {
             <span>😐 Neutral</span>
             <span>🤑 Codicia</span>
           </div>
-          <div style={{ marginTop: 16, padding: 12, background: C.bg, borderRadius: 10, fontSize: 12, color: C.sub, lineHeight: 1.6 }}>
-            {val < 25 && "⚠️ Mercado en pánico. Históricamente un buen momento para comprar."}
-            {val >= 25 && val < 45 && "😨 Inversores con miedo. Considera acumular posiciones gradualmente."}
-            {val >= 45 && val < 55 && "😐 Mercado neutral. Mantén tu estrategia de largo plazo."}
-            {val >= 55 && val < 75 && "😊 Optimismo en el mercado. Cuidado con comprar en máximos."}
-            {val >= 75 && "🚨 Codicia extrema. Alto riesgo de corrección. Considera tomar ganancias."}
+          <div style={{ marginTop: 16, padding: "14px 16px", background: C.goldBg, borderRadius: 10, borderLeft: `3px solid ${C.gold}`, textAlign: "left" }}>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, fontWeight: 700, marginBottom: 6 }}>── CONSEJO FINANZADR</div>
+            <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
+              {val < 25 && "⚠️ Mercado en pánico. Históricamente un buen momento para acumular a precios bajos."}
+              {val >= 25 && val < 45 && "😨 Inversores con miedo. Considera acumular posiciones gradualmente (DCA)."}
+              {val >= 45 && val < 55 && "😐 Mercado neutral. Mantén tu estrategia de largo plazo sin cambios bruscos."}
+              {val >= 55 && val < 75 && "😊 Optimismo en el mercado. Ten cautela con comprar en máximos."}
+              {val >= 75 && "🚨 Codicia extrema. Alto riesgo de corrección. Considera tomar ganancias parciales."}
+            </div>
           </div>
         </div>
 
@@ -617,7 +625,7 @@ function SentimientoMercado() {
       </div>
 
       {/* INDICADORES */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+      <div className="sentiment-indicators" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
         {[
           { label: "Momentum", valor: val > 50 ? "Positivo" : "Negativo", icon: "📈", color: val > 50 ? "#00d68f" : "#ff4466" },
           { label: "Volumen", valor: "Alto", icon: "📊", color: "#ffd60a" },
@@ -637,20 +645,16 @@ function SentimientoMercado() {
         <Label>── NOTICIAS CON ANÁLISIS DE SENTIMIENTO IA</Label>
         <div style={{ display: "grid", gap: 12 }}>
           {news.map((n, i) => {
-            const text = (n.headline || "").toLowerCase();
-            const positive = ["surge", "gain", "rise", "up", "high", "bull", "record", "growth", "profit"];
-            const negative = ["fall", "drop", "crash", "down", "loss", "bear", "risk", "fear", "decline"];
-            let score = 0;
-            positive.forEach(w => { if (text.includes(w)) score++; });
-            negative.forEach(w => { if (text.includes(w)) score--; });
-            const sentiment = score > 0 ? { label: "Positivo", color: "#00d68f", bg: "#00d68f15" } : score < 0 ? { label: "Negativo", color: "#ff4466", bg: "#ff446615" } : { label: "Neutral", color: "#8890b5", bg: "#8890b515" };
+            const score = scoreHeadline(n.headline);
+            const sentiment = getNewsSentiment(score);
+            const sentimentIcon = score > 0 ? "📈" : score < 0 ? "📉" : "➖";
             const mins = Math.floor((Date.now() / 1000 - n.datetime) / 60);
             const timeAgo = mins < 60 ? `Hace ${mins}m` : `Hace ${Math.floor(mins / 60)}h`;
             return (
               <div key={i} onClick={() => n.url && window.open(n.url, "_blank")}
                 style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: 14, background: C.bg, borderRadius: 10, border: `1px solid ${C.border}`, cursor: n.url ? "pointer" : "default" }}>
-                <div style={{ background: sentiment.bg, border: `1px solid ${sentiment.color}33`, borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, color: sentiment.color, whiteSpace: "nowrap", flexShrink: 0 }}>
-                  {sentiment.label}
+                <div style={{ background: sentiment.bg, border: `1px solid ${sentiment.color}33`, borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, color: sentiment.color, whiteSpace: "nowrap", flexShrink: 0, display: "flex", alignItems: "center", gap: 5 }}>
+                  <span>{sentimentIcon}</span>{sentiment.label}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, color: C.text, fontWeight: 600, lineHeight: 1.4, marginBottom: 4 }}>{n.headline}</div>
