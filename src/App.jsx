@@ -134,7 +134,7 @@ let C = { ...DARK };export default function FinanzasDR() {
   }, []);
 
   const tabs = [
-    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["charts","📈 Charts en Vivo"],["sentimiento","😊 Sentimiento"],
+    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["charts","📈 Charts en Vivo"],["heatmap","🔲 Heat Map"],["sentimiento","😊 Sentimiento"],
     ["ws","📰 Noticias"],["blog","📚 Aprende"],["brokers","💳 Brokers"],["calc","🧮 Calculadora"],
     ["snapshot","📸 Compartir"],["newsletter","📧 Newsletter"],
   ];
@@ -426,6 +426,15 @@ let C = { ...DARK };export default function FinanzasDR() {
             <SectionTitle>Charts en Vivo</SectionTitle>
             <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Gráficas en tiempo real powered by TradingView</p>
             <TradingViewCharts />
+          </div>
+        )}
+        {tab === "heatmap" && (
+          <div className="fade-in">
+            <SectionTitle>Heat Map del Mercado</SectionTitle>
+            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Desempeño del S&P 500 por sector, en vivo · Powered by TradingView</p>
+            <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, overflow:"hidden", padding:8 }}>
+              <HeatmapWidget />
+            </div>
           </div>
         )}
         {tab === "snapshot" && (
@@ -867,6 +876,42 @@ function TradingViewCharts() {
       )}
     </div>
   );
+}
+
+function HeatmapWidget() {
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    containerRef.current.innerHTML = "";
+    const widget = document.createElement("div");
+    widget.className = "tradingview-widget-container__widget";
+    widget.style.width = "100%";
+    widget.style.height = "600px";
+    containerRef.current.appendChild(widget);
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      exchanges: [],
+      dataSource: "SPX500",
+      grouping: "sector",
+      blockSize: "market_cap_basic",
+      blockColor: "change",
+      locale: "es",
+      symbolUrl: "",
+      colorTheme: "dark",
+      hasTopBar: true,
+      isDataSetEnabled: false,
+      isZoomEnabled: true,
+      hasSymbolTooltip: true,
+      isMonoSize: false,
+      width: "100%",
+      height: 600,
+    });
+    containerRef.current.appendChild(script);
+  }, []);
+  return <div ref={containerRef} className="tradingview-widget-container" style={{ width:"100%", minHeight:600, height:600 }} />;
 }
 
 function SnapshotCard({ stocks }) {
