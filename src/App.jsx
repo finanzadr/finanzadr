@@ -74,7 +74,7 @@ let C = { ...DARK };export default function FinanzasDR() {
       const data = await res.json();
       if (data && data.length > 0) {
         const cats = { "earnings":"Ganancias","ipo":"IPO","merger":"Fusiones","crypto":"Cripto","forex":"Divisas","economy":"Economía","general":"Mercados" };
-        setNoticias(data.filter(n => isSafeHeadline(n.headline)).slice(0,10).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} días`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
+        setNoticias(data.filter(n => isSafeHeadline(n.headline)).slice(0,15).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} días`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
       }
     } catch(e) {}
     setNoticiasLoading(false);
@@ -533,7 +533,7 @@ function SentimientoMercado() {
 
     fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`)
       .then(r => r.json())
-      .then(d => setNews(d.filter(n => isSafeHeadline(n.headline)).slice(0, 6)))
+      .then(d => setNews(d.filter(n => isSafeHeadline(n.headline)).slice(0, 4)))
       .catch(() => {});
   }, []);
 
