@@ -32,6 +32,15 @@ const CONSEJOS = [
   { icono: "🏦", nivel: "Principiante", consejo: "Abre una cuenta en Fidelity o Interactive Brokers", detalle: "Ambas plataformas aceptan clientes de Latinoamérica sin comisiones." },
 ];
 
+const BROKERS = [
+  { name: "Robinhood", initial: "R", nivel: "Principiante", desc: "Sin comisiones y la app más simple para abrir tu primera cuenta de inversión en EE.UU.", cta: "Abrir cuenta", url: "https://robinhood.com" },
+  { name: "Webull", initial: "W", nivel: "Principiante", desc: "Sin comisiones, gráficas profesionales y datos en tiempo real gratis desde el día uno.", cta: "Abrir cuenta", url: "https://webull.com" },
+  { name: "Tastytrade", initial: "T", nivel: "Intermedio", desc: "La plataforma preferida para operar opciones y futuros, con herramientas de análisis avanzadas.", cta: "Abrir cuenta", url: "https://tastytrade.com" },
+  { name: "Interactive Brokers", initial: "IB", nivel: "Avanzado", desc: "Acceso a mercados globales y acepta clientes de República Dominicana y toda Latinoamérica.", cta: "Abrir cuenta", url: "https://interactivebrokers.com" },
+  { name: "Wise", initial: "W", nivel: "Remesas", desc: "Envía dinero a Latinoamérica con tasas de cambio reales y comisiones bajas y transparentes.", cta: "Enviar remesa", url: "https://wise.com" },
+  { name: "Remitly", initial: "R", nivel: "Remesas", desc: "Remesas rápidas y seguras a República Dominicana y toda Latinoamérica, con tu primer envío gratis.", cta: "Enviar remesa", url: "https://remitly.com" },
+];
+
 const fmt = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const clr = (c) => c >= 0 ? "#00d68f" : "#ff4466";
 const arr = (c) => c >= 0 ? "▲" : "▼";
@@ -126,7 +135,7 @@ let C = { ...DARK };export default function FinanzasDR() {
 
   const tabs = [
     ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["charts","📈 Charts en Vivo"],["sentimiento","😊 Sentimiento"],
-    ["ws","📰 Noticias"],["blog","📚 Aprende"],["calc","🧮 Calculadora"],
+    ["ws","📰 Noticias"],["blog","📚 Aprende"],["brokers","💳 Brokers"],["calc","🧮 Calculadora"],
     ["snapshot","📸 Compartir"],["newsletter","📧 Newsletter"],
   ];
 
@@ -425,6 +434,15 @@ let C = { ...DARK };export default function FinanzasDR() {
           </div>
         )}
 
+        {tab === "brokers" && (
+          <div className="fade-in">
+            <SectionTitle>Brokers y Remesas para Latinos</SectionTitle>
+            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Las plataformas recomendadas para invertir en Wall Street y enviar dinero a Latinoamérica</p>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:16 }}>
+              {BROKERS.map((b,i) => <BrokerCard key={i} b={b} />)}
+            </div>
+          </div>
+        )}
         {tab === "calc" && <div className="fade-in"><CompoundCalc /></div>}
         {tab === "charts" && (
           <div className="fade-in">
@@ -487,6 +505,22 @@ function StockCard({ st }) {
       </div>
       <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{st.n}</div>
       <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:20, fontWeight:600, color:C.text }}>{fmt(st.p)}</div>
+    </div>
+  );
+}
+
+function BrokerCard({ b }) {
+  return (
+    <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"22px 20px", display:"flex", flexDirection:"column", gap:14 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+        <div style={{ width:48, height:48, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:800, color:C.gold }}>{b.initial}</div>
+        <div>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:14, fontWeight:700, color:C.text }}>{b.name}</div>
+          <div style={{ background:C.goldBg, color:C.gold, display:"inline-block", padding:"2px 8px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600, marginTop:4 }}>{b.nivel}</div>
+        </div>
+      </div>
+      <p style={{ fontSize:13, color:C.sub, lineHeight:1.7, flex:1 }}>{b.desc}</p>
+      <button onClick={() => window.open(b.url,"_blank")} style={{ background:C.gold, color:"#000", border:"none", padding:"11px 18px", borderRadius:7, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, width:"100%" }}>{b.cta} →</button>
     </div>
   );
 }
