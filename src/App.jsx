@@ -41,6 +41,12 @@ const BROKERS = [
   { name: "Remitly", initial: "R", nivel: "Remesas", desc: "Remesas rápidas y seguras a República Dominicana y toda Latinoamérica, con tu primer envío gratis.", cta: "Enviar remesa", url: "https://remitly.com" },
 ];
 
+const BLOCKED_HEADLINE_WORDS = ["war", "strike", "missile", "election", "died", "dies"];
+const isSafeHeadline = (headline) => {
+  const text = (headline || "").toLowerCase();
+  return !BLOCKED_HEADLINE_WORDS.some(w => text.includes(w));
+};
+
 const fmt = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const clr = (c) => c >= 0 ? "#00d68f" : "#ff4466";
 const arr = (c) => c >= 0 ? "▲" : "▼";
@@ -68,7 +74,7 @@ let C = { ...DARK };export default function FinanzasDR() {
       const data = await res.json();
       if (data && data.length > 0) {
         const cats = { "earnings":"Ganancias","ipo":"IPO","merger":"Fusiones","crypto":"Cripto","forex":"Divisas","economy":"Economía","general":"Mercados" };
-        setNoticias(data.slice(0,10).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} días`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
+        setNoticias(data.filter(n => isSafeHeadline(n.headline)).slice(0,10).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} días`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
       }
     } catch(e) {}
     setNoticiasLoading(false);
@@ -527,7 +533,7 @@ function SentimientoMercado() {
 
     fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`)
       .then(r => r.json())
-      .then(d => setNews(d.slice(0, 6)))
+      .then(d => setNews(d.filter(n => isSafeHeadline(n.headline)).slice(0, 6)))
       .catch(() => {});
   }, []);
 
