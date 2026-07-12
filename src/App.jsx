@@ -320,29 +320,6 @@ let C = { ...DARK };export default function FinanzasDR() {
                 </div>
               </div>
             </div>
-
-            <SectionTitle>¿Dónde abrir tu cuenta?</SectionTitle>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:12, marginTop:16, marginBottom:28 }}>
-              {[{name:"Robinhood",emoji:"🟢",nivel:"Principiante",detalle:"Sin comisiones, muy fácil de usar."},{name:"Webull",emoji:"🔵",nivel:"Principiante",detalle:"Sin comisiones, más herramientas."},{name:"Moomoo",emoji:"🟠",nivel:"Intermedio",detalle:"Datos en tiempo real profesionales."},{name:"Tastytrade",emoji:"🟣",nivel:"Intermedio",detalle:"Especializado en opciones y futuros."},{name:"Interactive Brokers",emoji:"🌐",nivel:"Avanzado",detalle:"Acepta clientes de RD y Latinoamérica."}].map((b,i) => (
-                <div key={i} className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"16px 14px" }}>
-                  <div style={{ fontSize:24, marginBottom:8 }}>{b.emoji}</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{b.name}</div>
-                  <div style={{ background:C.goldBg, color:C.gold, display:"inline-block", padding:"2px 8px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", marginBottom:8 }}>{b.nivel}</div>
-                  <p style={{ fontSize:11, color:C.sub, lineHeight:1.6 }}>{b.detalle}</p>
-                </div>
-              ))}
-            </div>
-
-            <SectionTitle>Tu camino en 4 pasos</SectionTitle>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:14, marginTop:16 }}>
-              {[{n:"01",t:"Elige una plataforma",d:"Robinhood o Webull si eres principiante. Interactive Brokers si vives fuera de EE.UU."},{n:"02",t:"Abre tu cuenta",d:"Necesitas pasaporte, dirección y un método de pago. 100% online."},{n:"03",t:"Empieza con ETFs",d:"El S&P 500 (VOO o SPY) es el mejor inicio. 500 empresas, un solo producto."},{n:"04",t:"Invierte consistente",d:"$50/mes durante 20 años supera $10,000 de golpe."}].map((s,i) => (
-                <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 18px" }}>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:`${C.gold}40`, marginBottom:10 }}>{s.n}</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold, marginBottom:8 }}>{s.t}</div>
-                  <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{s.d}</p>
-                </div>
-              ))}
-            </div>
           </div>
         )}{tab === "mercados" && (
           <div className="fade-in">
