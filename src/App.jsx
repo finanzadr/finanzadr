@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { BrowserRouter, Routes, Route, Link, NavLink, Outlet, useOutletContext, useSearchParams, useLocation } from "react-router-dom";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
@@ -54,11 +55,45 @@ const arr = (c) => c >= 0 ? "▲" : "▼";
 const DARK = { bg: "#07080f", card: "#0d0f1e", border: "#1a1e35", gold: "#c8a84b", goldBg: "#c8a84b18", green: "#00d68f", red: "#ff4466", text: "#dde1f5", muted: "#484e72", sub: "#8890b5", navBg: "#09091a", tickerBg: "#0a0b16" };
 const LIGHT = { bg: "#f4f5f8", card: "#ffffff", border: "#e0e4ef", gold: "#b8860b", goldBg: "#b8860b15", green: "#00875a", red: "#d93025", text: "#1a1d2e", muted: "#8891a8", sub: "#555e7a", navBg: "#ffffff", tickerBg: "#1a1d2e" };
 
-let C = { ...DARK };export default function FinanzasDR() {
-  const [tab, setTab] = useState("inicio");
-  const [mercadosView, setMercadosView] = useState("cards");
+const NAV_ITEMS = [
+  ["/", "🚀 Empieza Aquí"], ["/mercados", "📊 Mercados"], ["/heatmap", "🔲 Heat Map"], ["/sentimiento", "🪙 Sentimiento Cripto"],
+  ["/noticias", "📰 Noticias"], ["/aprende", "📚 Aprende"], ["/brokers", "💳 Brokers"], ["/calculadora", "🧮 Calculadora"],
+];
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
+export default function FinanzasDR() {
+  return (
+    <BrowserRouter>
+      <ScrollToTop />
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<InicioPage />} />
+          <Route path="mercados" element={<MercadosPage />} />
+          <Route path="heatmap" element={<HeatmapPage />} />
+          <Route path="sentimiento" element={<SentimientoPage />} />
+          <Route path="noticias" element={<NoticiasPage />} />
+          <Route path="aprende" element={<AprendePage />} />
+          <Route path="brokers" element={<BrokersPage />} />
+          <Route path="calculadora" element={<CalculadoraPage />} />
+          <Route path="compartir" element={<CompartirPage />} />
+          <Route path="newsletter" element={<NewsletterPage />} />
+          <Route path="privacidad" element={<PrivacidadPage />} />
+          <Route path="terminos" element={<TerminosPage />} />
+          <Route path="aviso" element={<AvisoPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function Layout() {
   const [stocks, setStocks] = useState(WS_STOCKS);
-  const [expanded, setExpanded] = useState(null);
   const [dark, setDark] = useState(true);
   const [realLoading, setRealLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -66,7 +101,7 @@ let C = { ...DARK };export default function FinanzasDR() {
   const [noticias, setNoticias] = useState(NOTICIAS);
   const [noticiasLoading, setNoticiasLoading] = useState(false);
 
-  C = dark ? DARK : LIGHT;
+  const C = dark ? DARK : LIGHT;
 
   const fetchNoticias = async () => {
     setNoticiasLoading(true);
@@ -140,10 +175,7 @@ let C = { ...DARK };export default function FinanzasDR() {
     return () => { document.head.removeChild(link); document.head.removeChild(style); };
   }, []);
 
-  const tabs = [
-    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["heatmap","🔲 Heat Map"],["sentimiento","🪙 Sentimiento Cripto"],
-    ["ws","📰 Noticias"],["blog","📚 Aprende"],["brokers","💳 Brokers"],["calc","🧮 Calculadora"],
-  ];
+  const outletCtx = { stocks, C, dark, setDark, lastUpdate, realLoading, fetchRealPrices, noticias, noticiasLoading, fetchNoticias };
 
   return (
     <div style={{ minHeight:"100vh", width:"100vw", maxWidth:"100%", background:C.bg, color:C.text, fontFamily:"'Inter',sans-serif", overflowX:"hidden" }}>
@@ -152,12 +184,11 @@ let C = { ...DARK };export default function FinanzasDR() {
       <div style={{ background:"#050609", borderBottom:"1px solid #1a1e35", overflowX:"auto" }} className="nav-scroll">
         <div style={{ display:"flex", alignItems:"stretch", minWidth:"max-content" }}>
           <div style={{ background:C.gold, color:"#000", fontFamily:"'IBM Plex Mono'", fontSize:10, fontWeight:800, padding:"0 16px", display:"flex", alignItems:"center", gap:6, flexShrink:0, letterSpacing:1 }}>
-            
             LIVE
           </div>
           {stocks.map((st,i) => (
-            <div key={i} className="market-item" onClick={() => setTab("mercados")}
-              style={{ padding:"8px 18px", display:"flex", alignItems:"center", cursor:"pointer", borderRight:"1px solid #1a1e3530" }}>
+            <Link key={i} to="/mercados" className="market-item"
+              style={{ padding:"8px 18px", display:"flex", alignItems:"center", cursor:"pointer", borderRight:"1px solid #1a1e3530", textDecoration:"none", color:"inherit" }}>
               <div>
                 <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                   <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.gold }}>{st.s}</span>
@@ -172,7 +203,7 @@ let C = { ...DARK };export default function FinanzasDR() {
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
           <div style={{ padding:"0 16px", display:"flex", alignItems:"center", marginLeft:"auto", flexShrink:0 }}>
             <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#484e72" }}>{lastUpdate ? `✓ ${lastUpdate}` : "NYSE · NASDAQ"}</span>
@@ -198,295 +229,404 @@ let C = { ...DARK };export default function FinanzasDR() {
 
       {/* NAV */}
       <nav className="nav-scroll" style={{ borderBottom:`1px solid ${C.border}`, display:"flex", padding:"0 32px", background:C.navBg, overflowX:"auto" }}>
-        {tabs.map(([id,label]) => (
-          <button key={id} className="nav-btn" onClick={() => setTab(id)} style={{ padding:"14px 18px", border:"none", background:"none", cursor:"pointer", fontFamily:"'Inter',sans-serif", fontSize:13, fontWeight:500, whiteSpace:"nowrap", color:tab===id?C.gold:C.muted, borderBottom:tab===id?`2px solid ${C.gold}`:"2px solid transparent" }}>{label}</button>
+        {NAV_ITEMS.map(([path,label]) => (
+          <NavLink key={path} to={path} end={path==="/"} className="nav-btn"
+            style={({isActive}) => ({ padding:"14px 18px", border:"none", background:"none", cursor:"pointer", fontFamily:"'Inter',sans-serif", fontSize:13, fontWeight:500, whiteSpace:"nowrap", color:isActive?C.gold:C.muted, borderBottom:isActive?`2px solid ${C.gold}`:"2px solid transparent", textDecoration:"none", display:"inline-block" })}>
+            {label}
+          </NavLink>
         ))}
       </nav>
 
-      <main style={{ padding:"32px", maxWidth:"100%", margin:"0 auto" }} className="main-padding">{tab === "inicio" && (
-          <div className="fade-in">
-            <div style={{ background:dark?"linear-gradient(135deg,#07080f 0%,#0d0f1e 40%,#0f1228 100%)":"linear-gradient(135deg,#eef0f8 0%,#e8eaf5 100%)", border:`1px solid ${C.gold}25`, borderRadius:20, padding:"48px 40px 40px", marginBottom:24, borderTop:`3px solid ${C.gold}` }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:32 }} className="hero-grid">
-                <div style={{ maxWidth:540 }} className="hero-text">
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
-                    <span className="live-dot" style={{ width:8, height:8, borderRadius:"50%", background:"#00d68f", display:"inline-block" }} />
-                    <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#00d68f", letterSpacing:3, fontWeight:700 }}>FINANZADR</span>
-                  </div>
-                  <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:44, fontWeight:800, color:C.text, marginBottom:8, lineHeight:1.15 }}>
-                    Wall Street.<br/><span style={{ color:C.gold }}>En tu idioma.</span>
-                  </h1>
-                  <p style={{ fontSize:15, color:C.sub, lineHeight:1.8, marginBottom:28, maxWidth:460 }}>Precios en tiempo real, charts profesionales y educación financiera para latinos que quieren invertir en Wall Street.</p>
-                  <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}> 
-                    <button onClick={() => setTab("mercados")} style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800 }}>📊 Explorar Mercados</button>
-                    <button onClick={() => { setTab("mercados"); setMercadosView("charts"); }} style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700 }}>📈 Charts en Vivo</button>
-                  </div>
-                  <div style={{ display:"flex", gap:24, marginTop:28, paddingTop:24, borderTop:`1px solid ${C.border}`, flexWrap:"wrap" }}>
-                    {[{n:"8",l:"Activos en Vivo"},{n:"∞",l:"Charts Disponibles"},{n:"24/7",l:"Datos en Tiempo Real"},{n:"$0",l:"Costo Total"}].map((s,i) => (
-                      <div key={i}>
-                        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, color:C.gold }}>{s.n}</div>
-                        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, letterSpacing:1, marginTop:2 }}>{s.l}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, minWidth:280 }} className="hero-stocks">
-                  {stocks.slice(0,4).map(st => (
-                    <div key={st.s} className="market-item" onClick={() => setTab("mercados")}
-                      style={{ background:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)", borderRadius:10, padding:"14px 16px", border:`1px solid ${st.c>=0?"#00d68f22":"#ff446622"}`, cursor:"pointer", borderLeft:`3px solid ${st.c>=0?"#00d68f":"#ff4466"}` }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                        <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:800, color:C.gold }}>{st.s}</span>
-                        <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:st.c>=0?"#00d68f":"#ff4466", fontWeight:700 }}>{st.c>=0?"▲":"▼"}{Math.abs(st.c)}%</span>
-                      </div>
-                      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, marginBottom:6 }}>{st.n}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:18, fontWeight:800, color:C.text }}>{st.p>=1000?st.p.toLocaleString("en-US",{maximumFractionDigits:0}):st.p.toFixed(2)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* QUIÉN SOY */}
-            <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"32px 36px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
-              <Label style={{ marginBottom:16 }}>── QUIÉN SOY</Label>
-              <div style={{ display:"flex", gap:28, flexWrap:"wrap", alignItems:"flex-start" }}>
-                <div style={{ width:72, height:72, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:"'Playfair Display',serif", fontSize:30, fontWeight:800, color:C.gold }}>J</div>
-                <div style={{ flex:1, minWidth:260 }}>
-                  <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:24, fontWeight:800, color:C.text, marginBottom:4 }}>Julio</h2>
-                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, letterSpacing:1, marginBottom:14 }}>DOMINICANO · VIVIENDO EN MASSACHUSETTS</div>
-                  <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, maxWidth:640 }}>
-                    Soy dominicano y vivo en Massachusetts. Cuando empecé a invertir en Wall Street, nadie me explicaba nada en español — todo estaba en inglés, lleno de jerga, y me tomó años entender lo básico a punta de prueba y error. Construí FinanzaDR para que ningún latino tenga que pasar por lo mismo: precios reales, herramientas claras y educación financiera, todo en nuestro idioma.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* SUMMARY CARDS */}
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:16, marginBottom:28 }} className="summary-grid">
-              <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
-                <Label style={{ margin:"0 0 12px 0" }}>── SENTIMIENTO HOY</Label>
-                {(() => {
-                  const gainers = stocks.filter(s=>s.c>0).length;
-                  const pct = Math.round(gainers/stocks.length*100);
-                  const sentiment = pct>=70?"Alcista 🟢":pct>=40?"Neutral ⚪":"Bajista 🔴";
-                  const color = pct>=70?C.green:pct>=40?C.gold:C.red;
-                  return (<div>
-                    <div style={{ fontFamily:"'Playfair Display',serif", fontSize:28, fontWeight:800, color, marginBottom:8 }}>{sentiment}</div>
-                    <div style={{ background:C.border, borderRadius:99, height:6, marginBottom:8 }}>
-                      <div style={{ background:color, borderRadius:99, height:6, width:`${pct}%`, transition:"width 0.5s" }} />
-                    </div>
-                    <p style={{ fontSize:12, color:C.sub }}>{gainers} de {stocks.length} activos en verde — {pct}% positivo</p>
-                  </div>);
-                })()}
-              </div>
-              <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
-                <Label style={{ margin:"0 0 12px 0" }}>── TOP MOVER</Label>
-                {(() => {
-                  const top = [...stocks].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0];
-                  return (<div>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-                      <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:22, fontWeight:800, color:C.gold }}>{top.s}</span>
-                      <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:20, fontWeight:700, color:clr(top.c) }}>{arr(top.c)}{Math.abs(top.c)}%</span>
-                    </div>
-                    <div style={{ fontSize:13, color:C.sub, marginBottom:6 }}>{top.n}</div>
-                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:16, color:C.text, fontWeight:700 }}>{fmt(top.p)}</div>
-                  </div>);
-                })()}
-              </div>
-              <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
-                <Label style={{ margin:"0 0 12px 0" }}>── ACCESO RÁPIDO</Label>
-                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                  {[{icon:"📈",label:"Charts en Vivo",tab:"mercados",view:"charts"},{icon:"📰",label:"Noticias Wall St.",tab:"ws"},{icon:"🧮",label:"Calculadora",tab:"calc"},{icon:"📧",label:"Newsletter Gratis",tab:"newsletter"}].map((a,i) => (
-                    <button key={i} onClick={() => { setTab(a.tab); if (a.view) setMercadosView(a.view); }} style={{ background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:7, padding:"9px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:10 }}>
-                      <span style={{ fontSize:16 }}>{a.icon}</span>
-                      <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, color:C.gold }}>{a.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}{tab === "mercados" && (
-          <div className="fade-in">
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
-              <SectionTitle>Mercados Wall Street</SectionTitle>
-              <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-                {["cards","charts"].map(v => (
-                  <button key={v} onClick={() => setMercadosView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${mercadosView===v?C.gold:C.border}`, background:mercadosView===v?C.goldBg:"none", color:mercadosView===v?C.gold:C.muted, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, cursor:"pointer" }}>
-                    {v==="cards"?"📋 Ver Cards":"📈 Ver Charts"}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {mercadosView === "cards" ? (
-              <div>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8, flexWrap:"wrap", gap:12 }}>
-                  <Label style={{ margin:0 }}>── Precios en tiempo real · Powered by Finnhub</Label>
-                  <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-                    {lastUpdate && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green }}>✓ {lastUpdate}</span>}
-                    <button onClick={fetchRealPrices} disabled={realLoading} style={{ background:realLoading?C.border:C.gold, color:realLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:realLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
-                      {realLoading?"⏳ Cargando...":"🔴 Actualizar Precios"}
-                    </button>
-                  </div>
-                </div>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12, marginBottom:32 }}>
-                  {stocks.map(st => <StockCard key={st.s} st={st} />)}
-                </div>
-                <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px" }}>
-                  <Label>── ¿Qué es cada activo?</Label>
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16 }}>
-                    {[{s:"SPY",d:"ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU."},{s:"QQQ",d:"ETF del NASDAQ 100 — dominado por tecnología."},{s:"DIA",d:"ETF del Dow Jones — las 30 empresas más importantes de EE.UU."},{s:"IWM",d:"ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU."},{s:"TLT",d:"ETF de bonos del Tesoro a 20+ años."},{s:"XLU",d:"ETF del sector Utilities — estable en mercados volátiles."},{s:"GLD",d:"ETF del oro — activo refugio por excelencia."},{s:"BTC-USD",d:"Bitcoin — la criptomoneda más importante del mundo."}].map((x,i) => (
-                      <div key={i} style={{ borderLeft:`3px solid ${C.gold}`, paddingLeft:16 }}>
-                        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>{x.s}</div>
-                        <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{x.d}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <p style={{ fontSize:13, color:C.sub, marginBottom:20 }}>Gráficas en tiempo real powered by TradingView</p>
-                <TradingViewCharts />
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === "ws" && (
-          <div className="fade-in">
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
-              <div>
-                <SectionTitle>Noticias Wall Street</SectionTitle>
-                <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>{noticiasLoading?"Cargando noticias...":"Noticias reales de hoy · Powered by Finnhub"}</p>
-              </div>
-              <button onClick={fetchNoticias} disabled={noticiasLoading} style={{ background:noticiasLoading?C.border:C.gold, color:noticiasLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
-                {noticiasLoading?"⏳ Cargando...":"🔄 Actualizar"}
-              </button>
-            </div>
-            {noticiasLoading ? (
-              <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-                <div style={{ fontSize:36, marginBottom:14 }}>⚙️</div>
-                <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Cargando noticias...</div>
-              </div>
-            ) : (
-              <div style={{ display:"grid", gap:14 }}>
-                {noticias.map((item,i) => (
-                  <div key={i} onClick={() => item.url && window.open(item.url,"_blank")}
-                    style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 24px", cursor:item.url?"pointer":"default", transition:"border-color 0.2s" }}
-                    onMouseEnter={e => { if(item.url) e.currentTarget.style.borderColor=C.gold+"66"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
-                      <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-                        <span style={{ background:C.goldBg, color:C.gold, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{item.categoria}</span>
-                        <span style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'" }}>{item.tiempo} · {item.fuente}</span>
-                      </div>
-                      {item.url && <span style={{ fontSize:11, color:C.gold, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{'>'}</span>}
-                    </div>
-                    <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:C.text, marginBottom:8, lineHeight:1.4 }}>{item.titulo}</h3>
-                    <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{item.resumen}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === "blog" && (
-          <div className="fade-in">
-            <SectionTitle>Aprende a Invertir</SectionTitle>
-            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Guías completas para inversores principiantes e intermedios</p>
-            <div style={{ display:"grid", gap:24 }}>
-              {GUIAS.map((post,i) => (
-                <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
-                  <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
-                    {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
-                  </div>
-                  <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.titulo}</h3>
-                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
-                  <p style={{ fontSize:14, color:C.sub, lineHeight:1.75, whiteSpace:"pre-line" }}>{expanded===i?post.contenido:post.extracto}</p>
-                  <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
-                   {expanded===i?"Ver menos":"Leer guia completa"}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {tab === "brokers" && (
-          <div className="fade-in">
-            <SectionTitle>Brokers y Remesas para Latinos</SectionTitle>
-            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Las plataformas recomendadas para invertir en Wall Street y enviar dinero a Latinoamérica</p>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:16 }}>
-              {BROKERS.map((b,i) => <BrokerCard key={i} b={b} />)}
-            </div>
-          </div>
-        )}
-        {tab === "calc" && <div className="fade-in"><CompoundCalc /></div>}
-        {tab === "heatmap" && (
-          <div className="fade-in">
-            <SectionTitle>Heat Map del Mercado</SectionTitle>
-            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Desempeño del S&P 500 por sector, en vivo · Powered by TradingView</p>
-            <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, overflow:"hidden", padding:8 }}>
-              <HeatmapWidget />
-            </div>
-          </div>
-        )}
-        {tab === "snapshot" && (
-          <div className="fade-in">
-            <SectionTitle>📸 Market Snapshot</SectionTitle>
-            <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Genera una card visual del mercado lista para compartir.</p>
-            <SnapshotCard stocks={stocks} />
-          </div>
-        )}
-        {tab === "sentimiento" && (
-          <div className="fade-in">
-            <SentimientoMercado />
-          </div>
-        )}
-        {tab === "newsletter" && (
-          <div className="fade-in">
-            <div style={{ background:dark?"linear-gradient(135deg,#0f1228,#130f2a)":"linear-gradient(135deg,#eef0f8,#e8eaf5)", border:`1px solid ${C.gold}30`, borderRadius:16, padding:"40px", marginBottom:32, textAlign:"center" }}>
-              <div style={{ fontSize:48, marginBottom:16 }}>📈</div>
-              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, letterSpacing:3, marginBottom:12 }}>GRATIS · CADA SEMANA</div>
-              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:14, lineHeight:1.3 }}>Lo más importante de<br/><span style={{ color:C.gold }}>Wall Street en tu idioma</span></h1>
-              <p style={{ fontSize:15, color:C.sub, maxWidth:480, margin:"0 auto 32px", lineHeight:1.8 }}>Cada semana te enviamos un resumen claro de lo que pasó en los mercados.</p>
-              <div style={{ maxWidth:480, margin:"0 auto" }}><NewsletterForm /></div>
-            </div>
-          </div>
-        )}
+      <main style={{ padding:"32px", maxWidth:"100%", margin:"0 auto" }} className="main-padding">
+        <Outlet context={outletCtx} />
       </main>
-    <footer style={{ borderTop:`1px solid ${C.border}`, padding:"32px", textAlign:"center", marginTop:40 }}>
-      <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
-        {[["📸","Compartir Snapshot","snapshot"],["📧","Newsletter Gratis","newsletter"]].map(([icon,label,t],i) => (
-          <button key={i} onClick={() => { setTab(t); window.scrollTo({ top:0, behavior:"smooth" }); }}
-            style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8 }}>
-            <span>{icon}</span>{label}
-          </button>
-        ))}
-      </div>
-      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted }}>
-        FinanzaDR &copy; 2026 &middot; Todos los derechos reservados &middot; No constituye asesoria de inversion
-      </div>
+
+      <footer style={{ borderTop:`1px solid ${C.border}`, padding:"32px", textAlign:"center", marginTop:40 }}>
+        <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
+          {[["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
+            <Link key={i} to={to}
+              style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
+              <span>{icon}</span>{label}
+            </Link>
+          ))}
+        </div>
+        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted }}>
+          FinanzaDR &copy; 2026 &middot; Todos los derechos reservados &middot; No constituye asesoria de inversion
+        </div>
       </footer>
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#050609",borderTop:"1px solid #1a1e35",padding:"12px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,zIndex:99}}>
         <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:"#484e72"}}>FinanzaDR © 2026 · Wall Street en tu idioma · RD</div>
         <div style={{display:"flex",gap:16}}>
-          {[["🔒 Privacidad","privacidad"],["📋 Términos","terminos"],["⚠️ Aviso","aviso"]].map(([l,t],i)=>(<span key={i} onClick={()=>setTab(t)} style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:"#c8a84b",cursor:"pointer"}}>{l}</span>))}
+          {[["🔒 Privacidad","/privacidad"],["📋 Términos","/terminos"],["⚠️ Aviso","/aviso"]].map(([l,to],i)=>(<Link key={i} to={to} style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:"#c8a84b",cursor:"pointer",textDecoration:"none"}}>{l}</Link>))}
         </div>
       </div>
-     
+
     </div>
   );
-}function SectionTitle({ children }) {
+}
+
+function InicioPage() {
+  const { stocks, C, dark } = useOutletContext();
+  return (
+    <div className="fade-in">
+      <div style={{ background:dark?"linear-gradient(135deg,#07080f 0%,#0d0f1e 40%,#0f1228 100%)":"linear-gradient(135deg,#eef0f8 0%,#e8eaf5 100%)", border:`1px solid ${C.gold}25`, borderRadius:20, padding:"48px 40px 40px", marginBottom:24, borderTop:`3px solid ${C.gold}` }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:32 }} className="hero-grid">
+          <div style={{ maxWidth:540 }} className="hero-text">
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
+              <span className="live-dot" style={{ width:8, height:8, borderRadius:"50%", background:"#00d68f", display:"inline-block" }} />
+              <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#00d68f", letterSpacing:3, fontWeight:700 }}>FINANZADR</span>
+            </div>
+            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:44, fontWeight:800, color:C.text, marginBottom:8, lineHeight:1.15 }}>
+              Wall Street.<br/><span style={{ color:C.gold }}>En tu idioma.</span>
+            </h1>
+            <p style={{ fontSize:15, color:C.sub, lineHeight:1.8, marginBottom:28, maxWidth:460 }}>Precios en tiempo real, charts profesionales y educación financiera para latinos que quieren invertir en Wall Street.</p>
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+              <Link to="/mercados" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>📊 Explorar Mercados</Link>
+              <Link to="/mercados?view=charts" style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, textDecoration:"none", display:"inline-block" }}>📈 Charts en Vivo</Link>
+            </div>
+            <div style={{ display:"flex", gap:24, marginTop:28, paddingTop:24, borderTop:`1px solid ${C.border}`, flexWrap:"wrap" }}>
+              {[{n:"8",l:"Activos en Vivo"},{n:"∞",l:"Charts Disponibles"},{n:"24/7",l:"Datos en Tiempo Real"},{n:"$0",l:"Costo Total"}].map((s,i) => (
+                <div key={i}>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, color:C.gold }}>{s.n}</div>
+                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, letterSpacing:1, marginTop:2 }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, minWidth:280 }} className="hero-stocks">
+            {stocks.slice(0,4).map(st => (
+              <Link key={st.s} to="/mercados" className="market-item"
+                style={{ background:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)", borderRadius:10, padding:"14px 16px", border:`1px solid ${st.c>=0?"#00d68f22":"#ff446622"}`, cursor:"pointer", borderLeft:`3px solid ${st.c>=0?"#00d68f":"#ff4466"}`, textDecoration:"none", color:"inherit", display:"block" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:800, color:C.gold }}>{st.s}</span>
+                  <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:st.c>=0?"#00d68f":"#ff4466", fontWeight:700 }}>{st.c>=0?"▲":"▼"}{Math.abs(st.c)}%</span>
+                </div>
+                <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, marginBottom:6 }}>{st.n}</div>
+                <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:18, fontWeight:800, color:C.text }}>{st.p>=1000?st.p.toLocaleString("en-US",{maximumFractionDigits:0}):st.p.toFixed(2)}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* QUIÉN SOY */}
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"32px 36px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
+        <Label style={{ marginBottom:16 }}>── QUIÉN SOY</Label>
+        <div style={{ display:"flex", gap:28, flexWrap:"wrap", alignItems:"flex-start" }}>
+          <div style={{ width:72, height:72, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:"'Playfair Display',serif", fontSize:30, fontWeight:800, color:C.gold }}>J</div>
+          <div style={{ flex:1, minWidth:260 }}>
+            <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:24, fontWeight:800, color:C.text, marginBottom:4 }}>Julio</h2>
+            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, letterSpacing:1, marginBottom:14 }}>DOMINICANO · VIVIENDO EN MASSACHUSETTS</div>
+            <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, maxWidth:640 }}>
+              Soy dominicano y vivo en Massachusetts. Cuando empecé a invertir en Wall Street, nadie me explicaba nada en español — todo estaba en inglés, lleno de jerga, y me tomó años entender lo básico a punta de prueba y error. Construí FinanzaDR para que ningún latino tenga que pasar por lo mismo: precios reales, herramientas claras y educación financiera, todo en nuestro idioma.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* SUMMARY CARDS */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:16, marginBottom:28 }} className="summary-grid">
+        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
+          <Label style={{ margin:"0 0 12px 0" }}>── SENTIMIENTO HOY</Label>
+          {(() => {
+            const gainers = stocks.filter(s=>s.c>0).length;
+            const pct = Math.round(gainers/stocks.length*100);
+            const sentiment = pct>=70?"Alcista 🟢":pct>=40?"Neutral ⚪":"Bajista 🔴";
+            const color = pct>=70?C.green:pct>=40?C.gold:C.red;
+            return (<div>
+              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:28, fontWeight:800, color, marginBottom:8 }}>{sentiment}</div>
+              <div style={{ background:C.border, borderRadius:99, height:6, marginBottom:8 }}>
+                <div style={{ background:color, borderRadius:99, height:6, width:`${pct}%`, transition:"width 0.5s" }} />
+              </div>
+              <p style={{ fontSize:12, color:C.sub }}>{gainers} de {stocks.length} activos en verde — {pct}% positivo</p>
+            </div>);
+          })()}
+        </div>
+        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
+          <Label style={{ margin:"0 0 12px 0" }}>── TOP MOVER</Label>
+          {(() => {
+            const top = [...stocks].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0];
+            return (<div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:22, fontWeight:800, color:C.gold }}>{top.s}</span>
+                <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:20, fontWeight:700, color:clr(top.c) }}>{arr(top.c)}{Math.abs(top.c)}%</span>
+              </div>
+              <div style={{ fontSize:13, color:C.sub, marginBottom:6 }}>{top.n}</div>
+              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:16, color:C.text, fontWeight:700 }}>{fmt(top.p)}</div>
+            </div>);
+          })()}
+        </div>
+        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
+          <Label style={{ margin:"0 0 12px 0" }}>── ACCESO RÁPIDO</Label>
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            {[{icon:"📈",label:"Charts en Vivo",to:"/mercados?view=charts"},{icon:"📰",label:"Noticias Wall St.",to:"/noticias"},{icon:"🧮",label:"Calculadora",to:"/calculadora"},{icon:"📧",label:"Newsletter Gratis",to:"/newsletter"}].map((a,i) => (
+              <Link key={i} to={a.to} style={{ background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:7, padding:"9px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:10, textDecoration:"none" }}>
+                <span style={{ fontSize:16 }}>{a.icon}</span>
+                <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, color:C.gold }}>{a.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MercadosPage() {
+  const { stocks, C, lastUpdate, realLoading, fetchRealPrices } = useOutletContext();
+  const [searchParams] = useSearchParams();
+  const [mercadosView, setMercadosView] = useState(searchParams.get("view") === "charts" ? "charts" : "cards");
+
+  return (
+    <div className="fade-in">
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
+        <SectionTitle>Mercados Wall Street</SectionTitle>
+        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+          {["cards","charts"].map(v => (
+            <button key={v} onClick={() => setMercadosView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${mercadosView===v?C.gold:C.border}`, background:mercadosView===v?C.goldBg:"none", color:mercadosView===v?C.gold:C.muted, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+              {v==="cards"?"📋 Ver Cards":"📈 Ver Charts"}
+            </button>
+          ))}
+        </div>
+      </div>
+      {mercadosView === "cards" ? (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8, flexWrap:"wrap", gap:12 }}>
+            <Label style={{ margin:0 }}>── Precios en tiempo real · Powered by Finnhub</Label>
+            <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+              {lastUpdate && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green }}>✓ {lastUpdate}</span>}
+              <button onClick={fetchRealPrices} disabled={realLoading} style={{ background:realLoading?C.border:C.gold, color:realLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:realLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
+                {realLoading?"⏳ Cargando...":"🔴 Actualizar Precios"}
+              </button>
+            </div>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12, marginBottom:32 }}>
+            {stocks.map(st => <StockCard key={st.s} st={st} />)}
+          </div>
+          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px" }}>
+            <Label>── ¿Qué es cada activo?</Label>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16 }}>
+              {[{s:"SPY",d:"ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU."},{s:"QQQ",d:"ETF del NASDAQ 100 — dominado por tecnología."},{s:"DIA",d:"ETF del Dow Jones — las 30 empresas más importantes de EE.UU."},{s:"IWM",d:"ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU."},{s:"TLT",d:"ETF de bonos del Tesoro a 20+ años."},{s:"XLU",d:"ETF del sector Utilities — estable en mercados volátiles."},{s:"GLD",d:"ETF del oro — activo refugio por excelencia."},{s:"BTC-USD",d:"Bitcoin — la criptomoneda más importante del mundo."}].map((x,i) => (
+                <div key={i} style={{ borderLeft:`3px solid ${C.gold}`, paddingLeft:16 }}>
+                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>{x.s}</div>
+                  <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{x.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p style={{ fontSize:13, color:C.sub, marginBottom:20 }}>Gráficas en tiempo real powered by TradingView</p>
+          <TradingViewCharts />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NoticiasPage() {
+  const { noticias, noticiasLoading, fetchNoticias, C } = useOutletContext();
+  return (
+    <div className="fade-in">
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+        <div>
+          <SectionTitle>Noticias Wall Street</SectionTitle>
+          <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>{noticiasLoading?"Cargando noticias...":"Noticias reales de hoy · Powered by Finnhub"}</p>
+        </div>
+        <button onClick={fetchNoticias} disabled={noticiasLoading} style={{ background:noticiasLoading?C.border:C.gold, color:noticiasLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
+          {noticiasLoading?"⏳ Cargando...":"🔄 Actualizar"}
+        </button>
+      </div>
+      {noticiasLoading ? (
+        <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
+          <div style={{ fontSize:36, marginBottom:14 }}>⚙️</div>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Cargando noticias...</div>
+        </div>
+      ) : (
+        <div style={{ display:"grid", gap:14 }}>
+          {noticias.map((item,i) => (
+            <div key={i} onClick={() => item.url && window.open(item.url,"_blank")}
+              style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 24px", cursor:item.url?"pointer":"default", transition:"border-color 0.2s" }}
+              onMouseEnter={e => { if(item.url) e.currentTarget.style.borderColor=C.gold+"66"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
+                <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+                  <span style={{ background:C.goldBg, color:C.gold, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{item.categoria}</span>
+                  <span style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'" }}>{item.tiempo} · {item.fuente}</span>
+                </div>
+                {item.url && <span style={{ fontSize:11, color:C.gold, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{'>'}</span>}
+              </div>
+              <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:C.text, marginBottom:8, lineHeight:1.4 }}>{item.titulo}</h3>
+              <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{item.resumen}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AprendePage() {
+  const { C } = useOutletContext();
+  const [expanded, setExpanded] = useState(null);
+  return (
+    <div className="fade-in">
+      <SectionTitle>Aprende a Invertir</SectionTitle>
+      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Guías completas para inversores principiantes e intermedios</p>
+      <div style={{ display:"grid", gap:24 }}>
+        {GUIAS.map((post,i) => (
+          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
+            <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
+              {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
+            </div>
+            <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.titulo}</h3>
+            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
+            <p style={{ fontSize:14, color:C.sub, lineHeight:1.75, whiteSpace:"pre-line" }}>{expanded===i?post.contenido:post.extracto}</p>
+            <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
+             {expanded===i?"Ver menos":"Leer guia completa"}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BrokersPage() {
+  const { C } = useOutletContext();
+  return (
+    <div className="fade-in">
+      <SectionTitle>Brokers y Remesas para Latinos</SectionTitle>
+      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Las plataformas recomendadas para invertir en Wall Street y enviar dinero a Latinoamérica</p>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:16 }}>
+        {BROKERS.map((b,i) => <BrokerCard key={i} b={b} />)}
+      </div>
+    </div>
+  );
+}
+
+function CalculadoraPage() {
+  return <div className="fade-in"><CompoundCalc /></div>;
+}
+
+function HeatmapPage() {
+  const { C } = useOutletContext();
+  return (
+    <div className="fade-in">
+      <SectionTitle>Heat Map del Mercado</SectionTitle>
+      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Desempeño del S&P 500 por sector, en vivo · Powered by TradingView</p>
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, overflow:"hidden", padding:8 }}>
+        <HeatmapWidget />
+      </div>
+    </div>
+  );
+}
+
+function CompartirPage() {
+  const { stocks, C } = useOutletContext();
+  return (
+    <div className="fade-in">
+      <SectionTitle>📸 Market Snapshot</SectionTitle>
+      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Genera una card visual del mercado lista para compartir.</p>
+      <SnapshotCard stocks={stocks} />
+    </div>
+  );
+}
+
+function SentimientoPage() {
+  return (
+    <div className="fade-in">
+      <SentimientoMercado />
+    </div>
+  );
+}
+
+function NewsletterPage() {
+  const { C, dark } = useOutletContext();
+  return (
+    <div className="fade-in">
+      <div style={{ background:dark?"linear-gradient(135deg,#0f1228,#130f2a)":"linear-gradient(135deg,#eef0f8,#e8eaf5)", border:`1px solid ${C.gold}30`, borderRadius:16, padding:"40px", marginBottom:32, textAlign:"center" }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>📈</div>
+        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, letterSpacing:3, marginBottom:12 }}>GRATIS · CADA SEMANA</div>
+        <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:14, lineHeight:1.3 }}>Lo más importante de<br/><span style={{ color:C.gold }}>Wall Street en tu idioma</span></h1>
+        <p style={{ fontSize:15, color:C.sub, maxWidth:480, margin:"0 auto 32px", lineHeight:1.8 }}>Cada semana te enviamos un resumen claro de lo que pasó en los mercados.</p>
+        <div style={{ maxWidth:480, margin:"0 auto" }}><NewsletterForm /></div>
+      </div>
+    </div>
+  );
+}
+
+function LegalPage({ title, updated, children }) {
+  const { C } = useOutletContext();
+  return (
+    <div className="fade-in">
+      <SectionTitle>{title}</SectionTitle>
+      <p style={{ fontSize:12, color:C.muted, marginTop:4, marginBottom:24, fontFamily:"'IBM Plex Mono'" }}>Última actualización: {updated}</p>
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", display:"grid", gap:18 }}>
+        {children.map((p,i) => <p key={i} style={{ fontSize:14, color:C.sub, lineHeight:1.8 }}>{p}</p>)}
+      </div>
+    </div>
+  );
+}
+
+function PrivacidadPage() {
+  return (
+    <LegalPage title="Política de Privacidad" updated="Julio 2026" children={[
+      "FinanzaDR no vende ni comparte tus datos personales con terceros. No recopilamos información personal identificable salvo la que tú decidas darnos voluntariamente, como tu correo al suscribirte al newsletter (gestionado a través de MailerLite).",
+      "Usamos Vercel Analytics para medir visitas de forma agregada y anónima, sin cookies de seguimiento individual, únicamente para entender qué contenido es útil y mejorar el sitio.",
+      "El sitio integra servicios de terceros para mostrarte datos de mercado en tiempo real: Finnhub (precios y noticias), TradingView (charts y heat map) y Alternative.me (índice de sentimiento cripto). Cada uno de estos servicios tiene su propia política de privacidad independiente sobre los datos que procesan en tu navegador.",
+      "Si tienes preguntas sobre esta política, puedes escribirnos a través de los canales de contacto listados en el sitio.",
+    ]} />
+  );
+}
+
+function TerminosPage() {
+  return (
+    <LegalPage title="Términos de Uso" updated="Julio 2026" children={[
+      "Al usar FinanzaDR aceptas que el contenido del sitio (precios, noticias, guías, calculadoras y análisis) se ofrece exclusivamente con fines educativos e informativos.",
+      "FinanzaDR no es un broker, asesor de inversión registrado ni intermediario financiero. No ejecutamos operaciones ni gestionamos dinero de los usuarios — únicamente enlazamos a plataformas de terceros (brokers, servicios de remesas) bajo tu propia responsabilidad.",
+      "El uso de las herramientas del sitio, incluyendo la calculadora de interés compuesto y los widgets de TradingView, es bajo tu propio riesgo. No garantizamos que los resultados proyectados se cumplan en la realidad.",
+      "Podemos actualizar estos términos en cualquier momento; el uso continuado del sitio después de un cambio implica tu aceptación de los nuevos términos.",
+    ]} />
+  );
+}
+
+function AvisoPage() {
+  return (
+    <LegalPage title="Aviso Legal" updated="Julio 2026" children={[
+      "FinanzaDR no constituye asesoría de inversión. Nada en este sitio debe interpretarse como una recomendación para comprar, vender o mantener ningún activo financiero.",
+      "Los datos de mercado provienen de proveedores externos (Finnhub, TradingView, Alternative.me) y pueden tener retrasos, errores o interrupciones. No garantizamos su exactitud, integridad ni disponibilidad continua.",
+      "Invertir en acciones, ETFs y criptomonedas conlleva riesgo de pérdida, incluyendo la pérdida total del capital invertido. Los rendimientos pasados no garantizan resultados futuros.",
+      "Antes de tomar decisiones financieras importantes, consulta con un asesor financiero, contable o legal calificado en tu jurisdicción.",
+    ]} />
+  );
+}
+
+function NotFoundPage() {
+  const { C } = useOutletContext();
+  return (
+    <div className="fade-in" style={{ textAlign:"center", padding:"80px 20px" }}>
+      <div style={{ fontSize:64, marginBottom:16 }}>🧭</div>
+      <SectionTitle>Página no encontrada</SectionTitle>
+      <p style={{ fontSize:14, color:C.sub, margin:"12px 0 28px" }}>La página que buscas no existe o fue movida.</p>
+      <Link to="/" style={{ background:C.gold, color:"#000", padding:"12px 24px", borderRadius:8, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>Volver al inicio</Link>
+    </div>
+  );
+}
+
+function SectionTitle({ children }) {
+  const { C } = useOutletContext();
   return <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:26, fontWeight:800, color:C.text, marginBottom:4 }}>{children}</h2>;
 }
 
 function Label({ children, style: s }) {
+  const { C } = useOutletContext();
   return <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.gold, letterSpacing:2, textTransform:"uppercase", marginBottom:14, ...s }}>{children}</div>;
 }
 
 function StockCard({ st }) {
+  const { C } = useOutletContext();
   const pos = st.c >= 0;
   return (
     <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${pos?C.green:C.red}` }}>
@@ -501,6 +641,7 @@ function StockCard({ st }) {
 }
 
 function BrokerCard({ b }) {
+  const { C } = useOutletContext();
   return (
     <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"22px 20px", display:"flex", flexDirection:"column", gap:14 }}>
       <div style={{ display:"flex", alignItems:"center", gap:14 }}>
@@ -516,6 +657,7 @@ function BrokerCard({ b }) {
   );
 }
 function SentimientoMercado() {
+  const { C } = useOutletContext();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [news, setNews] = useState([]);
@@ -670,6 +812,7 @@ function SentimientoMercado() {
   );
 }
 function NewsletterForm() {
+  const { C } = useOutletContext();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(null);
   const handleSubmit = async () => {
@@ -705,6 +848,7 @@ function NewsletterForm() {
 }
 
 function CompoundCalc() {
+  const { C } = useOutletContext();
   const [capital, setCapital] = useState(10000);
   const [aporte, setAporte] = useState(200);
   const [tasa, setTasa] = useState(10);
@@ -825,6 +969,7 @@ function CompoundCalc() {
 }
 
 function TradingViewCharts() {
+  const { C } = useOutletContext();
   const [input, setInput] = useState("");
   const [activeSymbol, setActiveSymbol] = useState("");
   const [activeInterval, setActiveInterval] = useState("D");
@@ -920,6 +1065,7 @@ function HeatmapWidget() {
 }
 
 function SnapshotCard({ stocks }) {
+  const { C } = useOutletContext();
   const canvasRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [cardTheme, setCardTheme] = useState("dark");
@@ -981,24 +1127,3 @@ function SnapshotCard({ stocks }) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
