@@ -232,6 +232,21 @@ let C = { ...DARK };export default function FinanzasDR() {
               </div>
             </div>
 
+            {/* QUIÉN SOY */}
+            <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"32px 36px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
+              <Label style={{ marginBottom:16 }}>── QUIÉN SOY</Label>
+              <div style={{ display:"flex", gap:28, flexWrap:"wrap", alignItems:"flex-start" }}>
+                <div style={{ width:72, height:72, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:"'Playfair Display',serif", fontSize:30, fontWeight:800, color:C.gold }}>J</div>
+                <div style={{ flex:1, minWidth:260 }}>
+                  <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:24, fontWeight:800, color:C.text, marginBottom:4 }}>Julio</h2>
+                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, letterSpacing:1, marginBottom:14 }}>DOMINICANO · VIVIENDO EN MASSACHUSETTS</div>
+                  <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, maxWidth:640 }}>
+                    Soy dominicano y vivo en Massachusetts. Cuando empecé a invertir en Wall Street, nadie me explicaba nada en español — todo estaba en inglés, lleno de jerga, y me tomó años entender lo básico a punta de prueba y error. Construí FinanzaDR para que ningún latino tenga que pasar por lo mismo: precios reales, herramientas claras y educación financiera, todo en nuestro idioma.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* MARKET PULSE */}
             <div style={{ marginBottom:24 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
