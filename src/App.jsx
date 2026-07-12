@@ -142,7 +142,7 @@ let C = { ...DARK };export default function FinanzasDR() {
   }, []);
 
   const tabs = [
-    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["heatmap","🔲 Heat Map"],["sentimiento","😊 Sentimiento"],
+    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["heatmap","🔲 Heat Map"],["sentimiento","🪙 Sentimiento Cripto"],
     ["ws","📰 Noticias"],["blog","📚 Aprende"],["brokers","💳 Brokers"],["calc","🧮 Calculadora"],
   ];
 
@@ -573,16 +573,16 @@ function SentimientoMercado() {
 
   return (
     <div>
-      <SectionTitle>Sentimiento del Mercado</SectionTitle>
+      <SectionTitle>Sentimiento Cripto (Bitcoin)</SectionTitle>
       <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 24 }}>
-        Fear & Greed Index en tiempo real · Powered by Alternative.me
+        Fear & Greed Index del mercado de <strong style={{ color: C.text }}>criptomonedas</strong> en tiempo real — no representa al mercado de acciones tradicional · Powered by Alternative.me
       </p>
 
       <div className="sentiment-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
 
         {/* FEAR & GREED PRINCIPAL */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, textAlign: "center" }}>
-          <Label>── FEAR & GREED INDEX · HOY</Label>
+          <Label>── FEAR & GREED INDEX CRIPTO · HOY</Label>
           <div style={{ fontSize: 72, marginBottom: 8 }}>{emoji}</div>
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 64, fontWeight: 900, color, lineHeight: 1, marginBottom: 8 }}>{val}</div>
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 16, fontWeight: 800, color, marginBottom: 20, letterSpacing: 2 }}>{label}</div>
