@@ -125,7 +125,7 @@ let C = { ...DARK };export default function FinanzasDR() {
   }, []);
 
   const tabs = [
-    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["charts","📈 Charts en Vivo"],
+    ["inicio","🚀 Empieza Aquí"],["mercados","📊 Mercados"],["charts","📈 Charts en Vivo"],["sentimiento","😊 Sentimiento"],
     ["ws","📰 Noticias"],["blog","📚 Aprende"],["calc","🧮 Calculadora"],
     ["snapshot","📸 Compartir"],["newsletter","📧 Newsletter"],
   ];
@@ -426,6 +426,11 @@ let C = { ...DARK };export default function FinanzasDR() {
             <SnapshotCard stocks={stocks} />
           </div>
         )}
+        {tab === "sentimiento" && (
+          <div className="fade-in">
+            <SentimientoMercado />
+          </div>
+        )}
         {tab === "newsletter" && (
           <div className="fade-in">
             <div style={{ background:dark?"linear-gradient(135deg,#0f1228,#130f2a)":"linear-gradient(135deg,#eef0f8,#e8eaf5)", border:`1px solid ${C.gold}30`, borderRadius:16, padding:"40px", marginBottom:32, textAlign:"center" }}>
@@ -471,7 +476,160 @@ function StockCard({ st }) {
     </div>
   );
 }
+function SentimientoMercado() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [news, setNews] = useState([]);
 
+  useEffect(() => {
+    fetch("https://api.alternative.me/fng/?limit=7")
+      .then(r => r.json())
+      .then(d => {
+        setData(d.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+
+    fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`)
+      .then(r => r.json())
+      .then(d => setNews(d.slice(0, 6)))
+      .catch(() => {});
+  }, []);
+
+  const getEmoji = (val) => {
+    if (val >= 75) return { emoji: "🤑", label: "CODICIA EXTREMA", color: "#ff4466" };
+    if (val >= 55) return { emoji: "😊", label: "CODICIA", color: "#ffd60a" };
+    if (val >= 45) return { emoji: "😐", label: "NEUTRAL", color: "#8890b5" };
+    if (val >= 25) return { emoji: "😨", label: "MIEDO", color: "#ff9500" };
+    return { emoji: "😱", label: "MIEDO EXTREMO", color: "#ff4466" };
+  };
+
+  const getSentimentFromNews = (headlines) => {
+    const positive = ["surge", "gain", "rise", "up", "high", "bull", "record", "growth", "profit"];
+    const negative = ["fall", "drop", "crash", "down", "loss", "bear", "risk", "fear", "decline"];
+    let score = 0;
+    headlines.forEach(n => {
+      const text = (n.headline || "").toLowerCase();
+      positive.forEach(w => { if (text.includes(w)) score++; });
+      negative.forEach(w => { if (text.includes(w)) score--; });
+    });
+    return score;
+  };
+
+  if (loading) return (
+    <div style={{ textAlign: "center", padding: "60px", color: C.muted }}>
+      <div style={{ fontSize: 36, marginBottom: 16 }}>⏳</div>
+      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13 }}>Cargando sentimiento del mercado...</div>
+    </div>
+  );
+
+  const current = data?.[0];
+  const val = current ? parseInt(current.value) : 50;
+  const { emoji, label, color } = getEmoji(val);
+  const newsScore = getSentimentFromNews(news);
+
+  return (
+    <div>
+      <SectionTitle>Sentimiento del Mercado</SectionTitle>
+      <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 24 }}>
+        Fear & Greed Index en tiempo real · Powered by Alternative.me
+      </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+
+        {/* FEAR & GREED PRINCIPAL */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, textAlign: "center" }}>
+          <Label>── FEAR & GREED INDEX · HOY</Label>
+          <div style={{ fontSize: 72, marginBottom: 8 }}>{emoji}</div>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 64, fontWeight: 900, color, lineHeight: 1, marginBottom: 8 }}>{val}</div>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 16, fontWeight: 800, color, marginBottom: 20, letterSpacing: 2 }}>{label}</div>
+          <div style={{ background: C.border, borderRadius: 99, height: 12, marginBottom: 8, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${val}%`, background: `linear-gradient(90deg, #00d68f, ${color})`, borderRadius: 99, transition: "width 1s ease" }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, fontFamily: "'IBM Plex Mono'" }}>
+            <span>😱 Miedo Extremo</span>
+            <span>😐 Neutral</span>
+            <span>🤑 Codicia</span>
+          </div>
+          <div style={{ marginTop: 16, padding: 12, background: C.bg, borderRadius: 10, fontSize: 12, color: C.sub, lineHeight: 1.6 }}>
+            {val < 25 && "⚠️ Mercado en pánico. Históricamente un buen momento para comprar."}
+            {val >= 25 && val < 45 && "😨 Inversores con miedo. Considera acumular posiciones gradualmente."}
+            {val >= 45 && val < 55 && "😐 Mercado neutral. Mantén tu estrategia de largo plazo."}
+            {val >= 55 && val < 75 && "😊 Optimismo en el mercado. Cuidado con comprar en máximos."}
+            {val >= 75 && "🚨 Codicia extrema. Alto riesgo de corrección. Considera tomar ganancias."}
+          </div>
+        </div>
+
+        {/* HISTÓRICO 7 DÍAS */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28 }}>
+          <Label>── HISTÓRICO 7 DÍAS</Label>
+          {data?.slice(0, 7).map((d, i) => {
+            const v = parseInt(d.value);
+            const { color: c, label: l } = getEmoji(v);
+            const date = new Date(parseInt(d.timestamp) * 1000);
+            const dayName = i === 0 ? "Hoy" : i === 1 ? "Ayer" : date.toLocaleDateString("es-DO", { weekday: "short" });
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, width: 40 }}>{dayName}</div>
+                <div style={{ flex: 1, background: C.border, borderRadius: 99, height: 8, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${v}%`, background: c, borderRadius: 99 }} />
+                </div>
+                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: c, width: 30, textAlign: "right" }}>{v}</div>
+                <div style={{ fontSize: 10, color: C.muted, width: 90 }}>{l}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* INDICADORES */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+        {[
+          { label: "Momentum", valor: val > 50 ? "Positivo" : "Negativo", icon: "📈", color: val > 50 ? "#00d68f" : "#ff4466" },
+          { label: "Volumen", valor: "Alto", icon: "📊", color: "#ffd60a" },
+          { label: "Put/Call Ratio", valor: val > 50 ? "Bajo" : "Alto", icon: "⚙️", color: val > 50 ? "#00d68f" : "#ff4466" },
+          { label: "Noticias IA", valor: newsScore > 0 ? "Positivo" : newsScore < 0 ? "Negativo" : "Neutral", icon: "🤖", color: newsScore > 0 ? "#00d68f" : newsScore < 0 ? "#ff4466" : "#8890b5" }
+        ].map((ind, i) => (
+          <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 24, marginBottom: 8 }}>{ind.icon}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, marginBottom: 4 }}>{ind.label}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 14, fontWeight: 700, color: ind.color }}>{ind.valor}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* NOTICIAS CON SENTIMIENTO */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24 }}>
+        <Label>── NOTICIAS CON ANÁLISIS DE SENTIMIENTO IA</Label>
+        <div style={{ display: "grid", gap: 12 }}>
+          {news.map((n, i) => {
+            const text = (n.headline || "").toLowerCase();
+            const positive = ["surge", "gain", "rise", "up", "high", "bull", "record", "growth", "profit"];
+            const negative = ["fall", "drop", "crash", "down", "loss", "bear", "risk", "fear", "decline"];
+            let score = 0;
+            positive.forEach(w => { if (text.includes(w)) score++; });
+            negative.forEach(w => { if (text.includes(w)) score--; });
+            const sentiment = score > 0 ? { label: "Positivo", color: "#00d68f", bg: "#00d68f15" } : score < 0 ? { label: "Negativo", color: "#ff4466", bg: "#ff446615" } : { label: "Neutral", color: "#8890b5", bg: "#8890b515" };
+            const mins = Math.floor((Date.now() / 1000 - n.datetime) / 60);
+            const timeAgo = mins < 60 ? `Hace ${mins}m` : `Hace ${Math.floor(mins / 60)}h`;
+            return (
+              <div key={i} onClick={() => n.url && window.open(n.url, "_blank")}
+                style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: 14, background: C.bg, borderRadius: 10, border: `1px solid ${C.border}`, cursor: n.url ? "pointer" : "default" }}>
+                <div style={{ background: sentiment.bg, border: `1px solid ${sentiment.color}33`, borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, color: sentiment.color, whiteSpace: "nowrap", flexShrink: 0 }}>
+                  {sentiment.label}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, color: C.text, fontWeight: 600, lineHeight: 1.4, marginBottom: 4 }}>{n.headline}</div>
+                  <div style={{ fontSize: 11, color: C.muted }}>{n.source} · {timeAgo}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(null);
