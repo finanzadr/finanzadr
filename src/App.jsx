@@ -133,7 +133,6 @@ let C = { ...DARK };export default function FinanzasDR() {
         .summary-grid { grid-template-columns:1fr !important; }
         .calc-grid { grid-template-columns:1fr !important; }
         .sentiment-grid { grid-template-columns:1fr !important; }
-        .sentiment-indicators { grid-template-columns:repeat(2,1fr) !important; }
         .hero-text h1 { font-size:26px !important; }
       }
     `;
@@ -629,12 +628,10 @@ function SentimientoMercado() {
       </div>
 
       {/* INDICADORES */}
-      <div className="sentiment-indicators" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
         {[
-          { label: "Momentum", valor: val > 50 ? "Positivo" : "Negativo", icon: "📈", color: val > 50 ? "#00d68f" : "#ff4466" },
-          { label: "Volumen", valor: "Alto", icon: "📊", color: "#ffd60a" },
-          { label: "Put/Call Ratio", valor: val > 50 ? "Bajo" : "Alto", icon: "⚙️", color: val > 50 ? "#00d68f" : "#ff4466" },
-          { label: "Noticias IA", valor: newsScore > 0 ? "Positivo" : newsScore < 0 ? "Negativo" : "Neutral", icon: "🤖", color: newsScore > 0 ? "#00d68f" : newsScore < 0 ? "#ff4466" : "#8890b5" }
+          { label: "Nivel del Índice", valor: val > 50 ? "Positivo" : "Negativo", icon: "📈", color: val > 50 ? "#00d68f" : "#ff4466" },
+          { label: "Sentimiento Noticias", valor: newsScore > 0 ? "Positivo" : newsScore < 0 ? "Negativo" : "Neutral", icon: "🤖", color: newsScore > 0 ? "#00d68f" : newsScore < 0 ? "#ff4466" : "#8890b5" }
         ].map((ind, i) => (
           <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, textAlign: "center" }}>
             <div style={{ fontSize: 24, marginBottom: 8 }}>{ind.icon}</div>
