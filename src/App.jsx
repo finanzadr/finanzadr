@@ -51,6 +51,14 @@ const isSafeHeadline = (headline) => {
 const fmt = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const clr = (c) => c >= 0 ? "#00d68f" : "#ff4466";
 const arr = (c) => c >= 0 ? "▲" : "▼";
+const formatHora = (iso) => {
+  const d = new Date(iso);
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+};
 
 const DARK = { bg: "#07080f", card: "#0d0f1e", border: "#1a1e35", gold: "#c8a84b", goldBg: "#c8a84b18", green: "#00d68f", red: "#ff4466", text: "#dde1f5", muted: "#484e72", sub: "#8890b5", navBg: "#09091a", tickerBg: "#0a0b16" };
 const LIGHT = { bg: "#f4f5f8", card: "#ffffff", border: "#e0e4ef", gold: "#b8860b", goldBg: "#b8860b15", green: "#00875a", red: "#d93025", text: "#1a1d2e", muted: "#8891a8", sub: "#555e7a", navBg: "#ffffff", tickerBg: "#1a1d2e" };
@@ -77,6 +85,7 @@ export default function FinanzasDR() {
           <Route path="heatmap" element={<HeatmapPage />} />
           <Route path="sentimiento" element={<SentimientoPage />} />
           <Route path="noticias" element={<NoticiasPage />} />
+          <Route path="briefing" element={<BriefingPage />} />
           <Route path="aprende" element={<AprendePage />} />
           <Route path="brokers" element={<BrokersPage />} />
           <Route path="calculadora" element={<CalculadoraPage />} />
@@ -243,7 +252,7 @@ function Layout() {
 
       <footer style={{ borderTop:`1px solid ${C.border}`, padding:"32px", textAlign:"center", marginTop:40 }}>
         <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
-          {[["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
+          {[["🤖","Briefing IA","/briefing"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
             <Link key={i} to={to}
               style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
               <span>{icon}</span>{label}
@@ -467,6 +476,68 @@ function NoticiasPage() {
   );
 }
 
+function BriefingPage() {
+  const { C } = useOutletContext();
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/agente-mercados")
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body?.error || "No se pudo generar el briefing.");
+        return body;
+      })
+      .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
+      .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (status === "loading") {
+    return (
+      <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
+        <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
+        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el briefing del mercado...</div>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="fade-in">
+        <SectionTitle>🤖 Briefing del Mercado</SectionTitle>
+        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el briefing en este momento. {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const parrafos = (data.resumen || "").split(/\n+/).map(p => p.trim()).filter(Boolean);
+
+  return (
+    <div className="fade-in">
+      <SectionTitle>🤖 Briefing del Mercado</SectionTitle>
+      <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:24 }}>
+        ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
+      </p>
+
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", marginBottom:32 }}>
+        {parrafos.map((p, i) => (
+          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === parrafos.length - 1 ? 0 : 18 }}>{p}</p>
+        ))}
+      </div>
+
+      <Label>── Precios del día · Generado por Agente 1</Label>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12 }}>
+        {data.precios.map((p) => <BriefingStockCard key={p.simbolo} p={p} />)}
+      </div>
+    </div>
+  );
+}
+
 function AprendePage() {
   const { C } = useOutletContext();
   const [expanded, setExpanded] = useState(null);
@@ -636,6 +707,22 @@ function StockCard({ st }) {
       </div>
       <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{st.n}</div>
       <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:20, fontWeight:600, color:C.text }}>{fmt(st.p)}</div>
+    </div>
+  );
+}
+
+function BriefingStockCard({ p }) {
+  const { C } = useOutletContext();
+  const disponible = p.precio != null;
+  const pos = (p.cambioPct ?? 0) >= 0;
+  return (
+    <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${disponible ? (pos?C.green:C.red) : C.muted}` }}>
+      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
+        <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, color:C.gold }}>{p.simbolo}</span>
+        {disponible && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:clr(p.cambioPct) }}>{arr(p.cambioPct)} {Math.abs(p.cambioPct)}%</span>}
+      </div>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{p.nombre}</div>
+      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:20, fontWeight:600, color:C.text }}>{disponible ? fmt(p.precio) : "N/D"}</div>
     </div>
   );
 }
