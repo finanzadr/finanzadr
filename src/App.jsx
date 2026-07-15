@@ -292,6 +292,7 @@ function InicioPage() {
             <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
               <Link to="/mercados" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>📊 Explorar Mercados</Link>
               <Link to="/mercados?view=charts" style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, textDecoration:"none", display:"inline-block" }}>📈 Charts en Vivo</Link>
+              <Link to="/briefing" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>🤖 Análisis AI</Link>
             </div>
             <div style={{ display:"flex", gap:24, marginTop:28, paddingTop:24, borderTop:`1px solid ${C.border}`, flexWrap:"wrap" }}>
               {[{n:"8",l:"Activos en Vivo"},{n:"∞",l:"Charts Disponibles"},{n:"24/7",l:"Datos en Tiempo Real"},{n:"$0",l:"Costo Total"}].map((s,i) => (
