@@ -52,6 +52,41 @@ async function fetchNoticias() {
   }
 }
 
+const DIAS_SEMANA = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+const MESES = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+
+function formatearFechaLarga(fechaUTC) {
+  const dia = DIAS_SEMANA[fechaUTC.getUTCDay()];
+  const mes = MESES[fechaUTC.getUTCMonth()];
+  return `${dia} ${fechaUTC.getUTCDate()} de ${mes} de ${fechaUTC.getUTCFullYear()}`;
+}
+
+// El cron corre a las 7am ET, antes de la apertura (9:30am ET), así que los precios
+// de Finnhub reflejan el cierre del día de trading anterior, no el de "hoy".
+function getContextoTemporal(now = new Date()) {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const { year, month, day } = Object.fromEntries(partes.map((p) => [p.type, p.value]));
+  const hoyUTC = new Date(Date.UTC(+year, +month - 1, +day));
+
+  const diaSemana = hoyUTC.getUTCDay(); // 0=domingo ... 6=sábado
+  const diasAtras = diaSemana === 1 ? 3 : diaSemana === 0 ? 2 : diaSemana === 6 ? 1 : 1;
+  const diaAnteriorUTC = new Date(hoyUTC.getTime() - diasAtras * 86400000);
+
+  return {
+    fechaActualTexto: formatearFechaLarga(hoyUTC),
+    diaAnteriorTexto: formatearFechaLarga(diaAnteriorUTC),
+    nombreDiaAnterior: DIAS_SEMANA[diaAnteriorUTC.getUTCDay()],
+  };
+}
+
 function buildPrompt(precios, noticias) {
   const preciosTexto = precios
     .map((p) =>
@@ -65,11 +100,18 @@ function buildPrompt(precios, noticias) {
     ? noticias.map((n) => `- ${n.titulo}${n.resumen ? `: ${n.resumen}` : ""}`).join("\n")
     : "No hay noticias disponibles en este momento.";
 
+  const { fechaActualTexto, diaAnteriorTexto, nombreDiaAnterior } = getContextoTemporal();
+
   return `Eres un analista financiero que escribe para FinanzaDR, un medio que explica Wall Street a una audiencia latinoamericana que recién empieza a invertir.
 
-Con los siguientes datos de mercado del día, escribe un resumen del mercado en español.
+CONTEXTO DE TIEMPO IMPORTANTE:
+- Hoy es ${fechaActualTexto}. Este resumen se genera a las 7:00am hora del Este (ET), ANTES de que abra el mercado de valores de EE.UU. (que abre a las 9:30am ET).
+- Por lo tanto, los precios y variaciones porcentuales que ves abajo son del CIERRE del día de trading anterior (${diaAnteriorTexto}), no de hoy. El mercado de hoy todavía no ha abierto cuando escribes esto.
+- Nunca digas que el mercado "cerró hoy", "hoy subió/bajó" ni nada que implique que el día de trading de hoy ya ocurrió. Refiérete a esos movimientos como "ayer" (si corresponde) o nombrando explícitamente el día, por ejemplo "el ${nombreDiaAnterior}".
 
-PRECIOS ACTUALES:
+Con los siguientes datos de mercado del cierre de ${diaAnteriorTexto}, escribe un resumen del mercado en español.
+
+PRECIOS DEL CIERRE DE ${diaAnteriorTexto.toUpperCase()}:
 ${preciosTexto}
 
 NOTICIAS RECIENTES:
@@ -78,7 +120,7 @@ ${noticiasTexto}
 Instrucciones:
 - Tono profesional pero cercano, como si le explicaras a un amigo que está aprendiendo a invertir.
 - Exactamente 3 párrafos cortos (2-4 oraciones cada uno).
-- Menciona los movimientos más importantes del día (los activos con mayor cambio, al alza o a la baja).
+- Menciona los movimientos más importantes del cierre anterior (los activos con mayor cambio, al alza o a la baja), dejando claro que son del día de trading pasado y no de hoy.
 - Conecta los movimientos de precios con las noticias relevantes cuando tenga sentido.
 - No inventes datos que no estén en la información proporcionada.
 - No uses títulos ni encabezados, solo los 3 párrafos de texto corrido.`;
