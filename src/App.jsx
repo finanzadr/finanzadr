@@ -20,10 +20,14 @@ const WS_STOCKS = [
   { titulo: "Bitcoin consolida por encima de los $90,000 con creciente adopción institucional", resumen: "Bitcoin mantiene su posición por encima de los $90,000 respaldado por compras institucionales y la aprobación de nuevos ETFs en mercados europeos y asiáticos.", fuente: "CNBC", tiempo: "Hace 7 horas", categoria: "Cripto" },
   { titulo: "Los bonos del Tesoro a 10 años suben ante señales de desaceleración económica", resumen: "El rendimiento del bono del Tesoro a 10 años cayó al 4.2% mientras los inversores buscan activos más seguros. Los datos de manufactura mostraron una contracción por segundo mes consecutivo.", fuente: "Financial Times", tiempo: "Hace 9 horas", categoria: "Bonos" },
   { titulo: "Dow Jones supera los 42,000 puntos impulsado por sector financiero y salud", resumen: "El Dow Jones Industrial Average superó los 42,000 puntos esta semana, liderado por fuertes ganancias en el sector financiero y de salud.", fuente: "MarketWatch", tiempo: "Hace 11 horas", categoria: "Mercados" },
-];const GUIAS = [
-  { titulo: "Cómo abrir tu primera cuenta de inversión desde Latinoamérica", extracto: "Guía paso a paso para abrir una cuenta en Fidelity o Interactive Brokers desde cualquier país de América Latina.", contenido: "Invertir en Wall Street desde Latinoamérica es más fácil de lo que piensas.\n\nPASO 1: ELIGE TU PLATAFORMA\nPara principiantes recomendamos Fidelity o Interactive Brokers. Ambas aceptan clientes internacionales y no cobran comisiones.\n\nPASO 2: DOCUMENTOS NECESARIOS\nNecesitas tu pasaporte vigente, comprobante de domicilio y un número de teléfono. Todo el proceso es 100% online.\n\nPASO 3: ABRE LA CUENTA\nEntra a fidelity.com o interactivebrokers.com, selecciona Open an Account y elige Individual Brokerage Account.\n\nPASO 4: DEPOSITA TU PRIMER DINERO\nPuedes depositar desde $1 dólar usando transferencia bancaria o servicios como Wise o Remitly.\n\nPASO 5: COMPRA TU PRIMER ETF\nPara empezar, compra VOO (Vanguard S&P 500 ETF). Con un solo producto tienes exposición a las 500 empresas más grandes de EE.UU.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["principiantes", "brokers", "ETF"] },
-  { titulo: "¿Qué es el S&P 500 y por qué es la mejor inversión para principiantes?", extracto: "El S&P 500 ha generado un retorno promedio del 10% anual durante los últimos 50 años.", contenido: "El S&P 500 es el índice bursátil más importante del mundo. Incluye las 500 empresas más grandes de Estados Unidos.\n\nEn los últimos 50 años, el S&P 500 ha generado un retorno promedio del 10% anual.\n\nLos ETFs más populares son:\n- VOO (Vanguard): costo de solo 0.03% anual\n- SPY (SPDR): el más antiguo y líquido\n- IVV (iShares): otra excelente opción\n\nLA ESTRATEGIA GANADORA: DCA\nInvertir una cantidad fija cada mes sin importar si el mercado sube o baja.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["S&P 500", "ETF", "estrategia"] },
-  { titulo: "Los 5 errores más comunes al invertir por primera vez", extracto: "El 80% de los inversores principiantes cometen estos errores.", contenido: "ERROR 1: ESPERAR EL MOMENTO PERFECTO\nNo existe el momento perfecto. El tiempo en el mercado siempre supera al timing.\n\nERROR 2: PONER TODO EN UNA SOLA ACCIÓN\nLos ETFs como el S&P 500 te dan diversificación automática.\n\nERROR 3: VENDER CUANDO EL MERCADO CAE\nEl mercado siempre ha subido a largo plazo.\n\nERROR 4: INVERTIR DINERO QUE PUEDES NECESITAR\nSolo invierte dinero que no vas a necesitar en los próximos 5 años.\n\nERROR 5: NO EMPEZAR POR MIEDO\nEl dinero que no inviertes pierde valor cada año por la inflación.", autor: "Equipo FinanzaDR", fecha: "Mayo 2026", tags: ["errores", "principiantes", "estrategia"] },
+];const ARTICULOS = [
+  { titulo: "Cómo abrir tu primera cuenta de inversión en EE.UU. siendo inmigrante", extracto: "No necesitas ser ciudadano ni tener SSN para invertir en Wall Street. Con un ITIN y tu pasaporte puedes abrir tu cuenta esta misma semana.", intro: "Uno de los mitos más grandes que detiene a los inmigrantes latinos es pensar que hay que ser ciudadano o residente legal permanente para invertir en la bolsa de EE.UU. No es cierto. No necesitas un Social Security Number (SSN) — con un ITIN (Individual Taxpayer Identification Number) y tu pasaporte puedes abrir una cuenta de inversión legalmente, sin importar tu estatus migratorio.", pasos: [
+      { titulo: "Consigue tu ITIN si no tienes SSN", texto: "Si no calificas para un SSN, solicita un ITIN con el formulario W-7 del IRS. Es un número de identificación fiscal que te permite invertir y declarar impuestos sin ser ciudadano. Puedes tramitarlo tú mismo o con ayuda de un Acceptance Agent certificado por el IRS." },
+      { titulo: "Elige tu broker según tu experiencia", texto: "Si eres principiante, Robinhood o Webull tienen las apps más simples y sin comisiones para abrir tu primera cuenta. Si vives fuera de EE.UU. y buscas más flexibilidad, Interactive Brokers acepta clientes internacionales y da acceso a mercados globales." },
+      { titulo: "Verifica tu identidad", texto: "Todos los brokers te van a pedir tu pasaporte vigente y un comprobante de dirección (recibo de servicios, estado de cuenta bancario o contrato de renta) para cumplir con las regulaciones KYC (Know Your Customer)." },
+      { titulo: "Conecta tu cuenta bancaria en EE.UU.", texto: "Necesitas una cuenta bancaria en Estados Unidos para transferir fondos. Si aún no tienes una, bancos como Chase o Bank of America, o cuentas digitales como Chime, aceptan ITIN para abrir una cuenta básica." },
+      { titulo: "Haz tu primer depósito y compra tu primer ETF", texto: "Con $1 dólar ya puedes empezar. Deposita desde tu cuenta bancaria y compra tu primer ETF, como VOO (S&P 500), para tener exposición diversificada a las 500 empresas más grandes de EE.UU. desde el primer día." },
+    ], cierre: "No dejes que la falta de papeles perfectos te detenga. Miles de inmigrantes ya invierten legalmente en Wall Street con un ITIN y un pasaporte — el sistema está diseñado para que puedas participar, solo falta que des el primer paso.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["inmigrantes", "ITIN", "primeros pasos"] },
 ];
 
 const CONSEJOS = [
@@ -541,25 +545,54 @@ function BriefingPage() {
 
 function AprendePage() {
   const { C } = useOutletContext();
-  const [expanded, setExpanded] = useState(null);
+  const [expanded, setExpanded] = useState(0);
   return (
     <div className="fade-in">
       <SectionTitle>Aprende a Invertir</SectionTitle>
       <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Guías completas para inversores principiantes e intermedios</p>
       <div style={{ display:"grid", gap:24 }}>
-        {GUIAS.map((post,i) => (
+        {ARTICULOS.map((post,i) => (
           <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
             <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
               {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
             </div>
             <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.titulo}</h3>
             <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
-            <p style={{ fontSize:14, color:C.sub, lineHeight:1.75, whiteSpace:"pre-line" }}>{expanded===i?post.contenido:post.extracto}</p>
+            {expanded===i ? (
+              <ArticuloPasos post={post} />
+            ) : (
+              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
+            )}
             <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
              {expanded===i?"Ver menos":"Leer guia completa"}
             </button>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ArticuloPasos({ post }) {
+  const { C } = useOutletContext();
+  return (
+    <div>
+      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <div style={{ display:"grid", gap:18, marginBottom:24 }}>
+        {post.pasos.map((paso,i) => (
+          <div key={i} style={{ display:"flex", gap:18, alignItems:"flex-start" }}>
+            <div style={{ width:44, height:44, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:800, color:C.gold }}>
+              {String(i+1).padStart(2,"0")}
+            </div>
+            <div style={{ paddingTop:4 }}>
+              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.text, letterSpacing:0.5, marginBottom:6, textTransform:"uppercase" }}>{paso.titulo}</div>
+              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{paso.texto}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
+        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
     </div>
   );
