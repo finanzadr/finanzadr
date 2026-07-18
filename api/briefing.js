@@ -2,19 +2,15 @@ import { get } from "@vercel/blob";
 import { generarBriefing, BLOB_PATHNAME } from "./agente-mercados.js";
 
 async function leerBriefingGuardado() {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return { data: null, error: "BLOB_READ_WRITE_TOKEN no está definido en este entorno" };
-  }
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
   try {
     const resultado = await get(BLOB_PATHNAME, { access: "private" });
-    if (!resultado || !resultado.stream) {
-      return { data: null, error: `no se encontró un blob guardado en "${BLOB_PATHNAME}"` };
-    }
+    if (!resultado || !resultado.stream) return null;
     const texto = await new Response(resultado.stream).text();
-    return { data: JSON.parse(texto), error: null };
+    return JSON.parse(texto);
   } catch (err) {
     console.error("No se pudo leer el briefing guardado en Blob:", err);
-    return { data: null, error: err.message };
+    return null;
   }
 }
 
@@ -25,9 +21,9 @@ async function leerBriefingGuardado() {
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
-  const { data: guardado, error: blobError } = await leerBriefingGuardado();
+  const guardado = await leerBriefingGuardado();
   if (guardado) {
-    res.status(200).json({ ...guardado, _fuente: "blob" });
+    res.status(200).json(guardado);
     return;
   }
 
@@ -38,9 +34,7 @@ export default async function handler(req, res) {
 
   try {
     const body = await generarBriefing();
-    // Diagnóstico temporal (_blob*) para ver en producción por qué no se
-    // pudo leer el blob guardado, sin depender de los logs del dashboard.
-    res.status(200).json({ ...body, _fuente: "generado", _blobReadError: blobError });
+    res.status(200).json(body);
   } catch (err) {
     console.error("Error en /api/briefing (respaldo sin caché):", err);
     res.status(500).json({ error: "No se pudo generar el resumen del mercado." });

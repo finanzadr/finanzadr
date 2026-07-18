@@ -321,13 +321,7 @@ export default async function handler(req, res) {
   try {
     const body = await generarBriefing();
 
-    // Diagnóstico temporal (_blob*) para confirmar en producción que el
-    // guardado funciona, sin depender de los logs del dashboard de Vercel.
-    let _blobGuardado = false;
-    let _blobError = null;
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      _blobError = "BLOB_READ_WRITE_TOKEN no está definido en este entorno";
-    } else {
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
       try {
         await put(BLOB_PATHNAME, JSON.stringify(body), {
           access: "private",
@@ -335,14 +329,12 @@ export default async function handler(req, res) {
           addRandomSuffix: false,
           allowOverwrite: true,
         });
-        _blobGuardado = true;
       } catch (err) {
-        _blobError = err.message;
         console.error("No se pudo guardar el briefing en Blob:", err);
       }
     }
 
-    res.status(200).json({ ...body, _blobGuardado, _blobError });
+    res.status(200).json(body);
   } catch (err) {
     console.error("Error en agente-mercados:", err);
     res.status(500).json({ error: "No se pudo generar el resumen del mercado." });
