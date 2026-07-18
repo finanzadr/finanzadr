@@ -485,7 +485,7 @@ function BriefingPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/agente-mercados")
+    fetch("/api/briefing")
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok) throw new Error(body?.error || "No se pudo generar el briefing.");
