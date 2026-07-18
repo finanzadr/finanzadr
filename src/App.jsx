@@ -52,6 +52,17 @@ const WS_STOCKS = [
       { titulo: "ETFs", ventaja: { titulo: "Diversificación instantánea, bajo costo y fácil de comprar", texto: "Con una sola compra tienes exposición a cientos de empresas, con comisiones mínimas (algunas de 0.03% anual), y se compran igual que una acción, en cualquier momento del día de mercado." }, desventaja: { titulo: "No hay ganancias explosivas de una sola empresa", texto: "Como tu dinero está repartido entre muchas compañías, ninguna por sí sola puede disparar el valor de tu inversión de la noche a la mañana." } },
       { titulo: "Fondos Mutuos", texto: "Son parecidos a los ETFs — también diversifican tu dinero entre muchas empresas — pero se compran directo con la empresa administradora del fondo (no en tu app de broker), su precio se actualiza solo una vez al final del día de mercado, y generalmente cobran comisiones más altas que un ETF equivalente." },
     ], cierre: "Para principiantes, los ETFs son la mejor opción: diversificación, bajo costo y simplicidad. Las acciones individuales tienen sentido cuando ya tengas más experiencia y puedas investigar empresas a fondo. Y los fondos mutuos, generalmente, solo valen la pena si tu empleador los ofrece dentro de un plan 401(k) — ahí la elección ya está hecha por ti.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["acciones", "ETFs", "fondos mutuos"] },
+  { tipo: "herramientas", titulo: "Cómo leer el Heat Map y el Sentimiento del Mercado", extracto: "Dos herramientas gratis que ya tienes en FinanzaDR te dicen en segundos cómo está el mercado hoy — aquí cómo interpretarlas.", intro: "No hace falta pagar por un terminal de Bloomberg para saber cómo está el mercado hoy. En FinanzaDR ya tienes dos herramientas gratuitas, disponibles ahora mismo en el menú, que leídas juntas te dan una foto rápida y clara del estado general de Wall Street: el Heat Map y el índice de Sentimiento.", herramientas: [
+      { icono: "🔲", nombre: "Heat Map", ruta: "/heatmap", cta: "Ver Heat Map en vivo", descripcion: "El Heat Map muestra el S&P 500 completo como un mosaico de bloques de colores, actualizado en vivo.", puntos: [
+          { titulo: "El tamaño del bloque = importancia", texto: "Cada bloque representa una empresa. Mientras más grande es el bloque, mayor es su capitalización de mercado (market cap) — por eso Apple o Microsoft ocupan mucho más espacio que una empresa pequeña." },
+          { titulo: "El color = si sube o baja", texto: "Verde significa que la acción subió hoy, rojo significa que bajó. No hay ambigüedad: el color te dice la dirección de un vistazo." },
+          { titulo: "La intensidad del color = magnitud del movimiento", texto: "Un verde brillante o un rojo intenso indica un movimiento fuerte de varios puntos porcentuales; un tono pálido indica un movimiento pequeño." },
+        ], tip: "Cómo leerlo: fíjate primero en los bloques más grandes. Si los gigantes como Apple, Microsoft o Nvidia están en rojo intenso, es probable que todo el mercado esté teniendo un mal día, sin importar lo que hagan las empresas pequeñas." },
+      { icono: "🪙", nombre: "Sentimiento del Mercado", ruta: "/sentimiento", cta: "Ver Sentimiento en vivo", descripcion: "El índice de Sentimiento resume en un solo número, de 0 a 100, el estado emocional del mercado.", puntos: [
+          { titulo: "Número bajo = miedo", texto: "Cuando el índice cae hacia 0, significa que los inversores están vendiendo por pánico. Históricamente, estos momentos de miedo extremo han sido algunas de las mejores oportunidades de compra a largo plazo." },
+          { titulo: "Número alto = codicia", texto: "Cuando el índice sube hacia 100, significa que todos quieren comprar y el optimismo está por las nubes. Es momento de tener más cautela, no de perseguir subidas con dinero que no puedes permitirte perder." },
+        ], tip: "Como dice el dicho de Warren Buffett: sé temeroso cuando otros son codiciosos, y codicioso cuando otros son temerosos. El índice de Sentimiento te dice exactamente en cuál de los dos extremos está el mercado hoy." },
+    ], cierre: "Usadas juntas, estas dos herramientas te dan el pulso del mercado en menos de un minuto: el Heat Map te muestra qué está pasando ahora mismo, empresa por empresa, y el Sentimiento te dice si esa reacción es miedo pasajero o codicia peligrosa. Revísalas antes de tomar cualquier decisión de compra o venta importante.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["heat map", "sentimiento", "herramientas"] },
 ];
 
 const CONSEJOS = [
@@ -585,6 +596,7 @@ function AprendePage() {
             {expanded===i ? (
               post.tipo==="stats" ? <ArticuloStats post={post} />
               : post.tipo==="tabla" ? <ArticuloTabla post={post} />
+              : post.tipo==="herramientas" ? <ArticuloHerramientas post={post} />
               : <ArticuloPasos post={post} />
             ) : (
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
@@ -706,6 +718,44 @@ function ArticuloTabla({ post }) {
             ) : (
               <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{e.texto}</p>
             )}
+          </div>
+        ))}
+      </div>
+      <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
+        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+      </div>
+    </div>
+  );
+}
+
+function ArticuloHerramientas({ post }) {
+  const { C } = useOutletContext();
+  return (
+    <div>
+      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <div style={{ display:"grid", gap:20, marginBottom:24 }}>
+        {post.herramientas.map((h,i) => (
+          <div key={i} style={{ border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 22px" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10, flexWrap:"wrap" }}>
+              <span style={{ fontSize:24 }}>{h.icono}</span>
+              <h4 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:800, color:C.text, flex:1 }}>{h.nombre}</h4>
+              <Link to={h.ruta} style={{ background:C.gold, color:"#000", padding:"8px 16px", borderRadius:6, fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:800, textDecoration:"none", whiteSpace:"nowrap" }}>{h.cta} →</Link>
+            </div>
+            <p style={{ fontSize:13, color:C.sub, lineHeight:1.7, marginBottom:16 }}>{h.descripcion}</p>
+            <div style={{ display:"grid", gap:12, marginBottom:14 }}>
+              {h.puntos.map((p,j) => (
+                <div key={j} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                  <span style={{ color:C.gold, fontSize:13, flexShrink:0, marginTop:2 }}>●</span>
+                  <div>
+                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:3 }}>{p.titulo}</div>
+                    <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{p.texto}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ background:C.goldBg, borderRadius:6, padding:"12px 16px" }}>
+              <p style={{ fontSize:12.5, color:C.text, lineHeight:1.65 }}>💡 {h.tip}</p>
+            </div>
           </div>
         ))}
       </div>
