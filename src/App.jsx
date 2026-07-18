@@ -37,6 +37,21 @@ const WS_STOCKS = [
       { titulo: "94 años de historial con 10% de retorno anual", texto: "Desde su creación en 1928, el S&P 500 ha entregado un retorno promedio del 10% anual, incluyendo guerras, recesiones y crisis financieras. El tiempo en el mercado importa más que el momento perfecto para entrar." },
       { titulo: "No necesitas ser un experto", texto: "No hace falta leer balances financieros ni seguir noticias de empresas todos los días. El índice se ajusta solo: las empresas que crecen ganan más peso, y las que caen salen del índice." },
     ], cierre: "La estrategia que mejor funciona con el S&P 500 se llama dollar-cost averaging (DCA): invertir una cantidad fija cada mes, sin importar si el mercado sube o baja. Así compras más acciones cuando los precios están bajos y menos cuando están altos, sin tener que adivinar el momento perfecto — y con el tiempo, esa disciplina simple suele superar a quienes intentan predecir el mercado.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["S&P 500", "ETF", "principiantes"] },
+  { tipo: "tabla", titulo: "Acciones vs ETFs vs Fondos Mutuos: cuál te conviene", extracto: "Los tres términos se confunden todo el tiempo, pero no son lo mismo. Aquí la diferencia explicada en una tabla, sin tecnicismos.", intro: "Es normal confundir estos tres términos cuando estás empezando: acciones individuales, ETFs y fondos mutuos son formas distintas de poner tu dinero en el mercado, cada una con sus propias reglas de juego. Entender la diferencia te ayuda a elegir la que mejor se ajusta a tu nivel de experiencia y tolerancia al riesgo.", tabla: {
+      columnas: ["Acciones Individuales", "ETFs", "Fondos Mutuos"],
+      filas: [
+        { label: "Diversificación instantánea", valores: [false, true, true] },
+        { label: "Comisiones bajas", valores: [true, true, false] },
+        { label: "Se compra en cualquier momento del día", valores: [true, true, false] },
+        { label: "Potencial de ganancia explosiva", valores: [true, false, false] },
+        { label: "Se compra directo por tu cuenta (sin intermediario)", valores: [true, true, false] },
+        { label: "Ideal para principiantes", valores: [false, true, false] },
+      ],
+    }, explicaciones: [
+      { titulo: "Acciones Individuales", ventaja: { titulo: "Ganancia explosiva posible", texto: "Si eliges bien y compras temprano, una sola acción puede multiplicar tu inversión varias veces — así se hicieron las grandes fortunas con Amazon, Apple o Nvidia." }, desventaja: { titulo: "Todo depende de una empresa", texto: "Si esa empresa quiebra o tiene un mal trimestre, tu inversión cae con ella. No hay red de seguridad." } },
+      { titulo: "ETFs", ventaja: { titulo: "Diversificación instantánea, bajo costo y fácil de comprar", texto: "Con una sola compra tienes exposición a cientos de empresas, con comisiones mínimas (algunas de 0.03% anual), y se compran igual que una acción, en cualquier momento del día de mercado." }, desventaja: { titulo: "No hay ganancias explosivas de una sola empresa", texto: "Como tu dinero está repartido entre muchas compañías, ninguna por sí sola puede disparar el valor de tu inversión de la noche a la mañana." } },
+      { titulo: "Fondos Mutuos", texto: "Son parecidos a los ETFs — también diversifican tu dinero entre muchas empresas — pero se compran directo con la empresa administradora del fondo (no en tu app de broker), su precio se actualiza solo una vez al final del día de mercado, y generalmente cobran comisiones más altas que un ETF equivalente." },
+    ], cierre: "Para principiantes, los ETFs son la mejor opción: diversificación, bajo costo y simplicidad. Las acciones individuales tienen sentido cuando ya tengas más experiencia y puedas investigar empresas a fondo. Y los fondos mutuos, generalmente, solo valen la pena si tu empleador los ofrece dentro de un plan 401(k) — ahí la elección ya está hecha por ti.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["acciones", "ETFs", "fondos mutuos"] },
 ];
 
 const CONSEJOS = [
@@ -568,7 +583,9 @@ function AprendePage() {
             <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.titulo}</h3>
             <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
             {expanded===i ? (
-              post.tipo==="stats" ? <ArticuloStats post={post} /> : <ArticuloPasos post={post} />
+              post.tipo==="stats" ? <ArticuloStats post={post} />
+              : post.tipo==="tabla" ? <ArticuloTabla post={post} />
+              : <ArticuloPasos post={post} />
             ) : (
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
             )}
@@ -628,6 +645,67 @@ function ArticuloStats({ post }) {
               <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{r.titulo}</div>
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{r.texto}</p>
             </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
+        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+      </div>
+    </div>
+  );
+}
+
+function ArticuloTabla({ post }) {
+  const { C } = useOutletContext();
+  return (
+    <div>
+      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <div style={{ overflowX:"auto", marginBottom:28, border:`1px solid ${C.border}`, borderRadius:8 }}>
+        <table style={{ width:"100%", borderCollapse:"collapse", minWidth:520 }}>
+          <thead>
+            <tr style={{ background:C.goldBg }}>
+              <th style={{ textAlign:"left", padding:"12px 16px", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.sub, fontWeight:600 }}></th>
+              {post.tabla.columnas.map((col,j) => (
+                <th key={j} style={{ textAlign:"center", padding:"12px 12px", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, fontWeight:700, letterSpacing:0.5 }}>{col}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {post.tabla.filas.map((fila,i) => (
+              <tr key={i} style={{ borderTop:`1px solid ${C.border}` }}>
+                <td style={{ padding:"12px 16px", fontSize:13, color:C.text }}>{fila.label}</td>
+                {fila.valores.map((v,j) => (
+                  <td key={j} style={{ textAlign:"center", padding:"12px 12px", fontSize:16, color:v?C.green:C.red }}>{v?"✓":"✗"}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ display:"grid", gap:18, marginBottom:24 }}>
+        {post.explicaciones.map((e,i) => (
+          <div key={i} style={{ background:C.goldBg, borderRadius:8, padding:"18px 20px" }}>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:800, color:C.text, marginBottom:12 }}>{e.titulo}</div>
+            {e.ventaja && e.desventaja ? (
+              <div style={{ display:"grid", gap:12 }}>
+                <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                  <span style={{ color:C.green, fontSize:15, flexShrink:0 }}>✓</span>
+                  <div>
+                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{e.ventaja.titulo}</div>
+                    <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{e.ventaja.texto}</p>
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                  <span style={{ color:C.red, fontSize:15, flexShrink:0 }}>✗</span>
+                  <div>
+                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{e.desventaja.titulo}</div>
+                    <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{e.desventaja.texto}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{e.texto}</p>
+            )}
           </div>
         ))}
       </div>
