@@ -330,7 +330,7 @@ export default async function handler(req, res) {
     } else {
       try {
         await put(BLOB_PATHNAME, JSON.stringify(body), {
-          access: "public",
+          access: "private",
           contentType: "application/json",
           addRandomSuffix: false,
           allowOverwrite: true,

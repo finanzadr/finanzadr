@@ -1,4 +1,4 @@
-import { list } from "@vercel/blob";
+import { get } from "@vercel/blob";
 import { generarBriefing, BLOB_PATHNAME } from "./agente-mercados.js";
 
 async function leerBriefingGuardado() {
@@ -6,12 +6,12 @@ async function leerBriefingGuardado() {
     return { data: null, error: "BLOB_READ_WRITE_TOKEN no está definido en este entorno" };
   }
   try {
-    const { blobs } = await list({ prefix: BLOB_PATHNAME });
-    const blob = blobs.find((b) => b.pathname === BLOB_PATHNAME);
-    if (!blob) return { data: null, error: `no se encontró un blob en "${BLOB_PATHNAME}" (${blobs.length} blobs con ese prefijo)` };
-    const res = await fetch(blob.url);
-    if (!res.ok) return { data: null, error: `fetch al blob devolvió HTTP ${res.status}` };
-    return { data: await res.json(), error: null };
+    const resultado = await get(BLOB_PATHNAME, { access: "private" });
+    if (!resultado || !resultado.stream) {
+      return { data: null, error: `no se encontró un blob guardado en "${BLOB_PATHNAME}"` };
+    }
+    const texto = await new Response(resultado.stream).text();
+    return { data: JSON.parse(texto), error: null };
   } catch (err) {
     console.error("No se pudo leer el briefing guardado en Blob:", err);
     return { data: null, error: err.message };
