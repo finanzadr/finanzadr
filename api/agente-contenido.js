@@ -22,6 +22,12 @@ ${resumenBriefing}
 
 Con base ÚNICAMENTE en ese resumen, genera 3 piezas de contenido para redes sociales. Cada una debe cerrar invitando explícitamente a visitar finanzadr.com para ver el análisis completo del día.
 
+USO DE EMOJIS (aplica a las 3 piezas):
+- En cada pieza, usa entre 3 y 5 emojis en total, elegidos ÚNICAMENTE de este set: 📈 📉 💰 💵 🏦 🥇 ₿ 🎯 🔍
+- Cada emoji debe conectar directamente con lo que se está diciendo en ese punto exacto del texto: 📈 cuando algo subió, 📉 cuando algo cayó, 🥇 al hablar del oro, ₿ al hablar de Bitcoin/cripto, 💰 o 💵 al hablar de dinero o ganancias, 🏦 al hablar de bancos/bonos/instituciones, 🎯 al dar la conclusión o lección clave, 🔍 al invitar a profundizar o analizar.
+- NUNCA uses emojis decorativos, de celebración o genéricos (nada de 🎉🚀🔥💯👏😱), ni emojis que no tengan relación directa con el dato o idea que acompañan en esa frase.
+- Los emojis acompañan el contenido, no lo reemplazan ni le agregan hype — el tono sigue siendo formal y educativo.
+
 1. GUION PARA TIKTOK/REELS (60 segundos):
 - Escrito para hablarse en voz alta, no para leerse: frases cortas, cotidianas, como si le explicaras esto a un amigo en persona. Evita listas, viñetas o construcciones de texto escrito.
 - Los primeros 3 segundos deben ser un hook que enganche antes de decir de qué trata el video (una pregunta directa, un dato que sorprenda, o una afirmación contraintuitiva).
@@ -29,14 +35,15 @@ Con base ÚNICAMENTE en ese resumen, genera 3 piezas de contenido para redes soc
 - Cierra invitando a visitar finanzadr.com.
 
 2. HILO DE X (3 a 4 tweets):
-- Cada tweet debe tener MENOS DE 280 caracteres, incluyendo la numeración.
+- Cada tweet debe tener MENOS DE 280 caracteres, incluyendo la numeración y cualquier emoji.
 - Numera cada tweet al inicio, ejemplo "1/4".
 - Construye una idea progresiva: hook inicial → contexto → dato clave del resumen → cierre.
 - El último tweet del hilo invita a visitar finanzadr.com.
+- Los 3-5 emojis del hilo se distribuyen entre los tweets (no los repitas todos en uno solo).
 
 3. CAPTION DE INSTAGRAM:
 - Gancho inicial en la primera línea, cuerpo breve con la idea central del día (2-4 líneas), cierre invitando a visitar finanzadr.com.
-- Tono de profesor, sin exceso de emojis.
+- Tono de profesor.
 - Entre 5 y 8 hashtags relevantes, mezclando finanzas/inversión (ej. #EducaciónFinanciera, #InversionesLatam) y comunidad latina (ej. #FinanzasParaLatinos, #LatinosInvirtiendo).
 
 Cada pieza debe poder entenderse de forma independiente — alguien que solo vea el Reel no necesita haber leído el hilo de X.
