@@ -98,7 +98,7 @@ const CONSEJOS = [
 const BROKERS = [
   { name: "Robinhood", initial: "R", nivel: "Principiante", desc: "Sin comisiones y la app más simple para abrir tu primera cuenta de inversión en EE.UU.", cta: "Abrir cuenta", url: "https://robinhood.com" },
   { name: "Webull", initial: "W", nivel: "Principiante", desc: "Sin comisiones, gráficas profesionales y datos en tiempo real gratis desde el día uno.", cta: "Abrir cuenta", url: "https://webull.com" },
-  { name: "Tastytrade", initial: "T", nivel: "Intermedio", desc: "La plataforma preferida para operar opciones y futuros, con herramientas de análisis avanzadas.", cta: "Abrir cuenta", url: "https://tastytrade.com" },
+  { name: "Tastytrade", initial: "T", nivel: "Intermedio", desc: "La plataforma preferida para operar opciones y futuros, con herramientas de análisis avanzadas.", cta: "Abrir cuenta", url: "https://open.tastytrade.com/signup/?referralCode=6TNXH2EVQ8" },
   { name: "Interactive Brokers", initial: "IB", nivel: "Avanzado", desc: "Acceso a mercados globales y acepta clientes de República Dominicana y toda Latinoamérica.", cta: "Abrir cuenta", url: "https://interactivebrokers.com" },
   { name: "Wise", initial: "W", nivel: "Remesas", desc: "Envía dinero a Latinoamérica con tasas de cambio reales y comisiones bajas y transparentes.", cta: "Enviar remesa", url: "https://wise.com" },
   { name: "Remitly", initial: "R", nivel: "Remesas", desc: "Remesas rápidas y seguras a República Dominicana y toda Latinoamérica, con tu primer envío gratis.", cta: "Enviar remesa", url: "https://remitly.com" },
@@ -1199,7 +1199,7 @@ function BrokerCard({ b }) {
         </div>
       </div>
       <p style={{ fontSize:13, color:C.sub, lineHeight:1.7, flex:1 }}>{b.desc}</p>
-      <button onClick={() => window.open(b.url,"_blank")} style={{ background:C.gold, color:"#000", border:"none", padding:"11px 18px", borderRadius:7, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, width:"100%" }}>{b.cta} →</button>
+      <button onClick={() => window.open(b.url,"_blank","noopener,noreferrer")} style={{ background:C.gold, color:"#000", border:"none", padding:"11px 18px", borderRadius:7, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, width:"100%" }}>{b.cta} →</button>
     </div>
   );
 }
