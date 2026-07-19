@@ -78,6 +78,14 @@ const WS_STOCKS = [
         { edad: "Empezando a los 35 años", aporte: "$200/mes", resultado: "~$452,000", detalle: "a los 65 años — menos de la mitad, por perder solo 10 años" },
       ],
     }, cierre: "Mueve los sliders del simulador de abajo y compruébalo tú mismo: entre más joven empieces, menos dinero necesitas aportar cada mes para llegar al mismo destino. El tiempo, no el monto, es el ingrediente más importante del interés compuesto.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["interés compuesto", "calculadora", "estrategia"] },
+  { tipo: "errores", titulo: "Errores comunes de principiantes al invertir (y cómo evitarlos)", extracto: "El 80% de los inversores primerizos repiten los mismos 6 errores. Identifícalos antes de que te cuesten dinero.", intro: "Invertir no es solo cuestión de elegir los activos correctos — la mayoría de las pérdidas de los principiantes no vienen de una mala elección de inversión, sino de errores de comportamiento que se repiten una y otra vez. Reconocerlos es el primer paso para evitarlos.", errores: [
+      { titulo: "Intentar adivinar cuándo comprar y vender (market timing)", texto: "Ni los profesionales que se dedican a esto de tiempo completo aciertan consistentemente el momento perfecto para entrar o salir del mercado. Intentarlo casi siempre te cuesta más de lo que ganas — la estrategia que funciona es invertir de forma constante, sin importar el momento." },
+      { titulo: "Invertir dinero que vas a necesitar pronto", texto: "El mercado sube y baja en el corto plazo. Solo invierte el dinero que no vas a necesitar en los próximos 3 a 5 años como mínimo, para no verte obligado a vender en un mal momento." },
+      { titulo: "No diversificar", texto: "Poner todo tu dinero en una sola acción, por muy sólida que parezca, es una apuesta. Ni las empresas más grandes están garantizadas — repartir tu inversión entre muchas empresas reduce el riesgo sin sacrificar el potencial de crecimiento." },
+      { titulo: "Vender en pánico cuando el mercado cae", texto: "Las caídas del mercado son temporales — históricamente, siempre se ha recuperado. Vender durante una caída convierte una pérdida temporal en una pérdida permanente." },
+      { titulo: "No empezar por miedo a no saber lo suficiente", texto: "Nadie empieza sabiéndolo todo. Empezar con poco dinero mientras aprendes es mucho mejor que esperar el momento en que te sientas \"listo\" — ese momento casi nunca llega, y mientras tanto pierdes años de crecimiento compuesto." },
+      { titulo: "Revisar tu portafolio obsesivamente", texto: "Ver tu cuenta todos los días aumenta la ansiedad y la tentación de reaccionar a movimientos que no importan a largo plazo. Para inversiones a largo plazo, revisar tu portafolio una vez al mes es más que suficiente." },
+    ], cierre: "Cometer uno de estos errores no te descalifica como inversionista — todos los grandes inversionistas empezaron sin saberlo todo. La diferencia entre quienes tienen éxito a largo plazo y quienes no está en reconocer estos patrones y corregirlos antes de que le cuesten caro a tu patrimonio.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["errores", "principiantes", "psicología"] },
 ];
 
 const CONSEJOS = [
@@ -613,6 +621,7 @@ function AprendePage() {
               : post.tipo==="tabla" ? <ArticuloTabla post={post} />
               : post.tipo==="herramientas" ? <ArticuloHerramientas post={post} />
               : post.tipo==="simulador" ? <ArticuloSimulador post={post} />
+              : post.tipo==="errores" ? <ArticuloErrores post={post} />
               : <ArticuloPasos post={post} />
             ) : (
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
@@ -891,6 +900,29 @@ function SimuladorInteres() {
             <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="Ganancia Generada" radius={[4,4,0,0]} />
           </ComposedChart>
         </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function ArticuloErrores({ post }) {
+  const { C } = useOutletContext();
+  return (
+    <div>
+      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <div style={{ display:"grid", gap:14, marginBottom:24 }}>
+        {post.errores.map((err,i) => (
+          <div key={i} style={{ display:"flex", gap:16, alignItems:"flex-start", background:`${C.red}12`, border:`1px solid ${C.red}30`, borderRadius:10, padding:"16px 20px" }}>
+            <div style={{ width:38, height:38, borderRadius:"50%", background:`${C.red}20`, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:17 }}>⚠️</div>
+            <div>
+              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{i+1}. {err.titulo}</div>
+              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{err.texto}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
+        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
     </div>
   );
