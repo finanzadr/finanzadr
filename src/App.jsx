@@ -63,6 +63,21 @@ const WS_STOCKS = [
           { titulo: "Número alto = codicia", texto: "Cuando el índice sube hacia 100, significa que todos quieren comprar y el optimismo está por las nubes. Es momento de tener más cautela, no de perseguir subidas con dinero que no puedes permitirte perder." },
         ], tip: "Como dice el dicho de Warren Buffett: sé temeroso cuando otros son codiciosos, y codicioso cuando otros son temerosos. El índice de Sentimiento te dice exactamente en cuál de los dos extremos está el mercado hoy." },
     ], cierre: "Usadas juntas, estas dos herramientas te dan el pulso del mercado en menos de un minuto: el Heat Map te muestra qué está pasando ahora mismo, empresa por empresa, y el Sentimiento te dice si esa reacción es miedo pasajero o codicia peligrosa. Revísalas antes de tomar cualquier decisión de compra o venta importante.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["heat map", "sentimiento", "herramientas"] },
+  { tipo: "simulador", titulo: "Interés compuesto explicado con ejemplos reales", extracto: "Einstein lo llamó la octava maravilla del mundo. Así es como $200 al mes pueden convertirse en más de un millón de dólares — o en menos de la mitad, dependiendo de cuándo empieces.", intro: "El interés compuesto es el motor detrás de casi cualquier fortuna construida a largo plazo. La idea es simple pero poderosa: no solo ganas intereses sobre tu dinero original, también ganas intereses sobre los intereses que ya generaste. Cada año, la base sobre la que creces es más grande — por eso el crecimiento se acelera con el tiempo, en vez de ser una línea recta.", ejemplo: {
+      titulo: "$1,000 invertidos al 10% anual, sin aportes adicionales:",
+      filas: [
+        { periodo: "Año 1", valor: "$1,100" },
+        { periodo: "Año 2", valor: "$1,210" },
+        { periodo: "Año 10", valor: "~$2,594" },
+        { periodo: "Año 30", valor: "~$17,449" },
+      ],
+    }, comparacion: {
+      titulo: "Por qué empezar joven importa más que cuánto inviertes",
+      casos: [
+        { edad: "Empezando a los 25 años", aporte: "$200/mes", resultado: "~$1,275,000", detalle: "a los 65 años, con 40 años de crecimiento compuesto" },
+        { edad: "Empezando a los 35 años", aporte: "$200/mes", resultado: "~$452,000", detalle: "a los 65 años — menos de la mitad, por perder solo 10 años" },
+      ],
+    }, cierre: "Mueve los sliders del simulador de abajo y compruébalo tú mismo: entre más joven empieces, menos dinero necesitas aportar cada mes para llegar al mismo destino. El tiempo, no el monto, es el ingrediente más importante del interés compuesto.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["interés compuesto", "calculadora", "estrategia"] },
 ];
 
 const CONSEJOS = [
@@ -597,6 +612,7 @@ function AprendePage() {
               post.tipo==="stats" ? <ArticuloStats post={post} />
               : post.tipo==="tabla" ? <ArticuloTabla post={post} />
               : post.tipo==="herramientas" ? <ArticuloHerramientas post={post} />
+              : post.tipo==="simulador" ? <ArticuloSimulador post={post} />
               : <ArticuloPasos post={post} />
             ) : (
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
@@ -761,6 +777,120 @@ function ArticuloHerramientas({ post }) {
       </div>
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
         <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+      </div>
+    </div>
+  );
+}
+
+function ArticuloSimulador({ post }) {
+  const { C } = useOutletContext();
+  return (
+    <div>
+      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+
+      <Label>{post.ejemplo.titulo}</Label>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:12, marginBottom:28 }}>
+        {post.ejemplo.filas.map((f,i) => (
+          <div key={i} style={{ background:C.goldBg, border:`1px solid ${C.gold}`, borderRadius:10, padding:"14px 10px", textAlign:"center" }}>
+            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.sub, marginBottom:6 }}>{f.periodo}</div>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:800, color:C.gold }}>{f.valor}</div>
+          </div>
+        ))}
+      </div>
+
+      <Label>{post.comparacion.titulo}</Label>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14, marginBottom:28 }}>
+        {post.comparacion.casos.map((c,i) => (
+          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"18px 20px" }}>
+            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{c.edad}</div>
+            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:10 }}>Aportando {c.aporte}</div>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:28, fontWeight:800, color:C.green, marginBottom:6 }}>{c.resultado}</div>
+            <div style={{ fontSize:12, color:C.sub, lineHeight:1.6 }}>{c.detalle}</div>
+          </div>
+        ))}
+      </div>
+
+      <Label>── Simulador interactivo</Label>
+      <SimuladorInteres />
+
+      <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px", marginTop:24 }}>
+        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+      </div>
+    </div>
+  );
+}
+
+function SimuladorInteres() {
+  const { C } = useOutletContext();
+  const [capital, setCapital] = useState(1000);
+  const [aporte, setAporte] = useState(200);
+  const [tasa, setTasa] = useState(10);
+  const [anos, setAnos] = useState(30);
+
+  const tasaMensual = Math.pow(1+tasa/100, 1/12)-1;
+  const filas = [];
+  let saldo = capital;
+  for (let y=1; y<=anos; y++) {
+    for (let m=0; m<12; m++) saldo = saldo*(1+tasaMensual)+aporte;
+    const aporteAcum = capital+aporte*12*y;
+    filas.push({ ano:y, aporteAcum, interesAcum: Math.max(0, saldo-aporteAcum) });
+  }
+  const finalVal = filas.length ? filas[filas.length-1].aporteAcum+filas[filas.length-1].interesAcum : capital;
+  const aporteTotal = capital+aporte*12*anos;
+  const gananciaTotal = Math.max(0, finalVal-aporteTotal);
+
+  const fmt$ = (n) => "$"+Math.round(n).toLocaleString("en-US");
+  const fmtK = (v) => v>=1e6 ? "$"+(v/1e6).toFixed(1)+"M" : v>=1000 ? "$"+(v/1000).toFixed(0)+"K" : "$"+Math.round(v);
+
+  const sliders = [
+    { label:"Inversión Inicial", val:capital, set:setCapital, min:0, max:50000, step:500, fmt:fmt$ },
+    { label:"Aporte Mensual", val:aporte, set:setAporte, min:0, max:2000, step:25, fmt:fmt$ },
+    { label:"Retorno Esperado Anual", val:tasa, set:setTasa, min:1, max:15, step:0.5, fmt:(v)=>`${v}%` },
+    { label:"Años de Crecimiento", val:anos, set:setAnos, min:1, max:40, step:1, fmt:(v)=>`${v} años` },
+  ];
+
+  return (
+    <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:24 }} className="calc-grid">
+        {sliders.map((s,i) => (
+          <div key={i}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+              <span style={{ fontSize:13, color:C.sub }}>{s.label}</span>
+              <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold }}>{s.fmt(s.val)}</span>
+            </div>
+            <input type="range" min={s.min} max={s.max} step={s.step} value={s.val} onChange={e=>s.set(+e.target.value)} style={{ width:"100%", accentColor:C.gold, cursor:"pointer" }} />
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background:`linear-gradient(135deg,${C.card},${C.bg})`, border:`2px solid ${C.gold}`, borderRadius:12, padding:"20px 24px", textAlign:"center", marginBottom:16 }}>
+        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.gold, letterSpacing:2, marginBottom:6 }}>VALOR FINAL EN {anos} AÑOS</div>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:34, fontWeight:800, color:C.gold }}>{fmt$(finalVal)}</div>
+      </div>
+
+      <div style={{ display:"flex", gap:12, marginBottom:24, flexWrap:"wrap" }}>
+        <div style={{ flex:1, minWidth:160, background:C.goldBg, borderRadius:8, padding:"12px 16px" }}>
+          <div style={{ fontSize:11, color:C.muted, marginBottom:4 }}>Total Invertido</div>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:16, fontWeight:700, color:C.text }}>{fmt$(aporteTotal)}</div>
+        </div>
+        <div style={{ flex:1, minWidth:160, background:C.goldBg, borderRadius:8, padding:"12px 16px" }}>
+          <div style={{ fontSize:11, color:C.muted, marginBottom:4 }}>Ganancia Generada</div>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:16, fontWeight:700, color:C.green }}>{fmt$(gananciaTotal)}</div>
+        </div>
+      </div>
+
+      <div style={{ width:"100%", height:280 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={filas} margin={{ top:10, right:10, left:0, bottom:0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+            <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily:"'IBM Plex Mono'", fontSize:10, fill:C.muted }} />
+            <YAxis stroke={C.muted} tick={{ fontFamily:"'IBM Plex Mono'", fontSize:9, fill:C.muted }} tickFormatter={fmtK} />
+            <Tooltip contentStyle={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:"'IBM Plex Mono'", fontSize:12 }} labelFormatter={v=>`Año ${v}`} formatter={(v,n)=>[fmt$(v), n==="aporteAcum"?"Capital Invertido":"Ganancia Generada"]} />
+            <Legend wrapperStyle={{ fontFamily:"'IBM Plex Mono'", fontSize:11, paddingTop:12 }} />
+            <Bar dataKey="aporteAcum" stackId="a" fill="#1e4a7a" name="Capital Invertido" />
+            <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="Ganancia Generada" radius={[4,4,0,0]} />
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
