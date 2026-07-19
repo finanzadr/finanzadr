@@ -96,7 +96,7 @@ const CONSEJOS = [
 ];
 
 const BROKERS = [
-  { name: "Robinhood", initial: "R", nivel: "Principiante", desc: "Sin comisiones y la app más simple para abrir tu primera cuenta de inversión en EE.UU.", cta: "Abrir cuenta", url: "https://robinhood.com" },
+  { name: "Robinhood", initial: "R", nivel: "Principiante", desc: "Sin comisiones y la app más simple para abrir tu primera cuenta de inversión en EE.UU.", cta: "Abrir cuenta", url: "https://join.robinhood.com/juliocr-f91f36" },
   { name: "Webull", initial: "W", nivel: "Principiante", desc: "Sin comisiones, gráficas profesionales y datos en tiempo real gratis desde el día uno.", cta: "Abrir cuenta", url: "https://webull.com" },
   { name: "Tastytrade", initial: "T", nivel: "Intermedio", desc: "La plataforma preferida para operar opciones y futuros, con herramientas de análisis avanzadas.", cta: "Abrir cuenta", url: "https://open.tastytrade.com/signup/?referralCode=6TNXH2EVQ8" },
   { name: "Interactive Brokers", initial: "IB", nivel: "Avanzado", desc: "Acceso a mercados globales y acepta clientes de República Dominicana y toda Latinoamérica.", cta: "Abrir cuenta", url: "https://interactivebrokers.com" },
