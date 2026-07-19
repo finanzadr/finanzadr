@@ -148,6 +148,7 @@ export default function FinanzasDR() {
           <Route path="sentimiento" element={<SentimientoPage />} />
           <Route path="noticias" element={<NoticiasPage />} />
           <Route path="briefing" element={<BriefingPage />} />
+          <Route path="contenido-diario" element={<ContenidoDiarioPage />} />
           <Route path="aprende" element={<AprendePage />} />
           <Route path="brokers" element={<BrokersPage />} />
           <Route path="calculadora" element={<CalculadoraPage />} />
@@ -314,7 +315,7 @@ function Layout() {
 
       <footer style={{ borderTop:`1px solid ${C.border}`, padding:"32px", textAlign:"center", marginTop:40 }}>
         <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
-          {[["🤖","Briefing IA","/briefing"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
+          {[["🤖","Briefing IA","/briefing"],["📱","Contenido Diario","/contenido-diario"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
             <Link key={i} to={to}
               style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
               <span>{icon}</span>{label}
@@ -596,6 +597,101 @@ function BriefingPage() {
       <Label>── Precios del día · Generado por Agente 1</Label>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12 }}>
         {data.precios.map((p) => <BriefingStockCard key={p.simbolo} p={p} />)}
+      </div>
+    </div>
+  );
+}
+
+function CopyButton({ texto }) {
+  const { C } = useOutletContext();
+  const [copiado, setCopiado] = useState(false);
+  const copiar = () => {
+    navigator.clipboard.writeText(texto).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    });
+  };
+  return (
+    <button onClick={copiar} style={{ background:copiado?C.green:"none", border:`1px solid ${copiado?C.green:C.gold}`, color:copiado?"#000":C.gold, padding:"7px 16px", borderRadius:6, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, whiteSpace:"nowrap", flexShrink:0 }}>
+      {copiado ? "Copiado ✓" : "📋 Copiar"}
+    </button>
+  );
+}
+
+function ContenidoDiarioPage() {
+  const { C } = useOutletContext();
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/contenido")
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body?.error || "No se pudo generar el contenido.");
+        return body;
+      })
+      .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
+      .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (status === "loading") {
+    return (
+      <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
+        <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
+        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el contenido del día...</div>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="fade-in">
+        <SectionTitle>📱 Contenido Diario</SectionTitle>
+        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el contenido en este momento. {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const hashtagsTexto = (data.instagram.hashtags || []).join(" ");
+  const instagramCompleto = `${data.instagram.caption}\n\n${hashtagsTexto}`;
+
+  return (
+    <div className="fade-in">
+      <SectionTitle>📱 Contenido Diario</SectionTitle>
+      <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:28 }}>
+        ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
+      </p>
+
+      <Label>── 🎬 TikTok / Reels (60 seg)</Label>
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
+        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom:20, whiteSpace:"pre-wrap" }}>{data.tiktok.guion}</p>
+        <CopyButton texto={data.tiktok.guion} />
+      </div>
+
+      <Label>── 🧵 Hilo de X</Label>
+      <div style={{ display:"grid", gap:12, marginBottom:32 }}>
+        {data.hiloX.map((tweet, i) => (
+          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"18px 22px", borderLeft:`3px solid ${C.gold}`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:14, lineHeight:1.7, color:C.text, flex:1, margin:0 }}>{tweet}</p>
+            <CopyButton texto={tweet} />
+          </div>
+        ))}
+      </div>
+
+      <Label>── 📸 Instagram</Label>
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
+        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom:16, whiteSpace:"pre-wrap" }}>{data.instagram.caption}</p>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20 }}>
+          {data.instagram.hashtags.map((h, i) => (
+            <span key={i} style={{ background:C.goldBg, color:C.gold, padding:"4px 12px", borderRadius:4, fontSize:12, fontFamily:"'IBM Plex Mono'" }}>{h}</span>
+          ))}
+        </div>
+        <CopyButton texto={instagramCompleto} />
       </div>
     </div>
   );
