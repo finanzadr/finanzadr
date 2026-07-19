@@ -32,6 +32,7 @@ USO DE EMOJIS (aplica a las 3 piezas):
 - Escrito para hablarse en voz alta, no para leerse: frases cortas, cotidianas, como si le explicaras esto a un amigo en persona. Evita listas, viñetas o construcciones de texto escrito.
 - Los primeros 3 segundos deben ser un hook que enganche antes de decir de qué trata el video (una pregunta directa, un dato que sorprenda, o una afirmación contraintuitiva).
 - Debe poder narrarse completo en aproximadamente 60 segundos hablando a ritmo normal (~150-160 palabras).
+- OBLIGATORIO: el guion debe incluir entre 3 y 5 emojis del set indicado arriba, insertados en el texto exactamente donde ocurre el dato que representan (el texto se muestra en pantalla mientras se narra, así que los emojis sí van escritos aunque el guion se hable en voz alta). Un guion sin emojis se considera incompleto.
 - Cierra invitando a visitar finanzadr.com.
 
 2. HILO DE X (3 a 4 tweets):
@@ -45,6 +46,7 @@ USO DE EMOJIS (aplica a las 3 piezas):
 - Gancho inicial en la primera línea, cuerpo breve con la idea central del día (2-4 líneas), cierre invitando a visitar finanzadr.com.
 - Tono de profesor.
 - Entre 5 y 8 hashtags relevantes, mezclando finanzas/inversión (ej. #EducaciónFinanciera, #InversionesLatam) y comunidad latina (ej. #FinanzasParaLatinos, #LatinosInvirtiendo).
+- Los hashtags NUNCA deben contener espacios: cada uno es una sola palabra, en CamelCase si combina varios términos. Correcto: "#InvertirDesdeCero". Incorrecto: "#Invertir Desde Cero" o "#invertir desde cero".
 
 Cada pieza debe poder entenderse de forma independiente — alguien que solo vea el Reel no necesita haber leído el hilo de X.
 
