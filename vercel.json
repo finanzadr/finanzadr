@@ -4,6 +4,6 @@
   ],
   "crons": [
     { "path": "/api/agente-mercados", "schedule": "0 11 * * *" },
-    { "path": "/api/agente-contenido", "schedule": "15 11 * * *" }
+    { "path": "/api/agente-contenido", "schedule": "0 12 * * *" }
   ]
 }
