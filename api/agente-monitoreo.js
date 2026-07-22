@@ -51,8 +51,11 @@ async function fetchVisitantesTotales() {
   return fetchVercelAnalytics("visits/count", {});
 }
 
+// "route" asume rutas de framework (Next.js); FinanzaDR usa Vite + React
+// Router del lado del cliente, así que "requestPath" es lo que refleja las
+// URLs reales visitadas (/briefing, /sentimiento, etc.).
 async function fetchPaginasMasVisitadas() {
-  return fetchVercelAnalytics("visits/aggregate", { by: "route" });
+  return fetchVercelAnalytics("visits/aggregate", { by: "requestPath" });
 }
 
 async function fetchFuentesDeTrafico() {
