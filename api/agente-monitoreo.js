@@ -56,7 +56,7 @@ async function fetchPaginasMasVisitadas() {
 }
 
 async function fetchFuentesDeTrafico() {
-  return fetchVercelAnalytics("visits/aggregate", { by: "referrer" });
+  return fetchVercelAnalytics("visits/aggregate", { by: "referrerHostname" });
 }
 
 function buildPrompt(visitantes, paginas, fuentes) {
