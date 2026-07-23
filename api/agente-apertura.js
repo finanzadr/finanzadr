@@ -111,12 +111,15 @@ export async function generarApertura() {
   });
 
   // La respuesta intercala bloques de texto con bloques de búsqueda
-  // (server_tool_use / web_search_tool_result) — el resumen final se arma
-  // concatenando todos los bloques de tipo "text" en el orden en que llegan.
+  // (server_tool_use / web_search_tool_result), y además Claude puede
+  // partir un mismo párrafo en varios bloques "text" consecutivos por las
+  // citas de las fuentes. Se concatenan directo, sin separador, para no
+  // romper oraciones a la mitad — los saltos de línea reales ya vienen
+  // dentro del propio texto que escribe Claude.
   const resumen = response.content
     .filter((b) => b.type === "text")
     .map((b) => b.text)
-    .join("\n\n")
+    .join("")
     .trim();
 
   return {
