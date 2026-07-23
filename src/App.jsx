@@ -694,13 +694,18 @@ function CopyButton({ texto }) {
 
 function ContenidoDiarioPage() {
   const { C } = useOutletContext();
+  const [searchParams] = useSearchParams();
+  const [fuenteView, setFuenteView] = useState(searchParams.get("fuente") === "apertura" ? "apertura" : "cierre");
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/contenido")
+    setStatus("loading");
+    setError(null);
+    const url = fuenteView === "apertura" ? "/api/contenido?fuente=apertura" : "/api/contenido";
+    fetch(url)
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok) throw new Error(body?.error || "No se pudo generar el contenido.");
@@ -709,64 +714,71 @@ function ContenidoDiarioPage() {
       .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
       .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
     return () => { cancelled = true; };
-  }, []);
+  }, [fuenteView]);
 
-  if (status === "loading") {
-    return (
-      <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-        <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el contenido del día...</div>
-      </div>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <div className="fade-in">
-        <SectionTitle>📱 Contenido Diario</SectionTitle>
-        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el contenido en este momento. {error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const hashtagsTexto = (data.instagram.hashtags || []).join(" ");
-  const instagramCompleto = `${data.instagram.caption}\n\n${hashtagsTexto}`;
+  const hashtagsTexto = status === "ready" ? (data.instagram.hashtags || []).join(" ") : "";
+  const instagramCompleto = status === "ready" ? `${data.instagram.caption}\n\n${hashtagsTexto}` : "";
 
   return (
     <div className="fade-in">
-      <SectionTitle>📱 Contenido Diario</SectionTitle>
-      <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:28 }}>
-        ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
-      </p>
-
-      <Label>── 🎬 TikTok / Reels (60 seg)</Label>
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
-        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom:20, whiteSpace:"pre-wrap" }}>{data.tiktok.guion}</p>
-        <CopyButton texto={data.tiktok.guion} />
-      </div>
-
-      <Label>── 🧵 Hilo de X</Label>
-      <div style={{ display:"grid", gap:12, marginBottom:32 }}>
-        {data.hiloX.map((tweet, i) => (
-          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"18px 22px", borderLeft:`3px solid ${C.gold}`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:14, lineHeight:1.7, color:C.text, flex:1, margin:0 }}>{tweet}</p>
-            <CopyButton texto={tweet} />
-          </div>
-        ))}
-      </div>
-
-      <Label>── 📸 Instagram</Label>
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
-        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom:16, whiteSpace:"pre-wrap" }}>{data.instagram.caption}</p>
-        <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20 }}>
-          {data.instagram.hashtags.map((h, i) => (
-            <span key={i} style={{ background:C.goldBg, color:C.gold, padding:"4px 12px", borderRadius:4, fontSize:12, fontFamily:"'IBM Plex Mono'" }}>{h}</span>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
+        <SectionTitle>📱 Contenido Diario</SectionTitle>
+        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+          {["cierre","apertura"].map(v => (
+            <button key={v} onClick={() => setFuenteView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${fuenteView===v?C.gold:C.border}`, background:fuenteView===v?C.goldBg:"none", color:fuenteView===v?C.gold:C.muted, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+              {v==="cierre"?"🌇 Cierre":"🌅 Apertura"}
+            </button>
           ))}
         </div>
-        <CopyButton texto={instagramCompleto} />
       </div>
+
+      {status === "loading" && (
+        <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
+          <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el contenido del día...</div>
+        </div>
+      )}
+
+      {status === "error" && (
+        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el contenido en este momento. {error}</p>
+        </div>
+      )}
+
+      {status === "ready" && (
+        <>
+          <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:28 }}>
+            ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
+          </p>
+
+          <Label>── 🎬 TikTok / Reels (60 seg)</Label>
+          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom:20, whiteSpace:"pre-wrap" }}>{data.tiktok.guion}</p>
+            <CopyButton texto={data.tiktok.guion} />
+          </div>
+
+          <Label>── 🧵 Hilo de X</Label>
+          <div style={{ display:"grid", gap:12, marginBottom:32 }}>
+            {data.hiloX.map((tweet, i) => (
+              <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"18px 22px", borderLeft:`3px solid ${C.gold}`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
+                <p style={{ fontFamily:"'Inter',sans-serif", fontSize:14, lineHeight:1.7, color:C.text, flex:1, margin:0 }}>{tweet}</p>
+                <CopyButton texto={tweet} />
+              </div>
+            ))}
+          </div>
+
+          <Label>── 📸 Instagram</Label>
+          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom:16, whiteSpace:"pre-wrap" }}>{data.instagram.caption}</p>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20 }}>
+              {data.instagram.hashtags.map((h, i) => (
+                <span key={i} style={{ background:C.goldBg, color:C.gold, padding:"4px 12px", borderRadius:4, fontSize:12, fontFamily:"'IBM Plex Mono'" }}>{h}</span>
+              ))}
+            </div>
+            <CopyButton texto={instagramCompleto} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
