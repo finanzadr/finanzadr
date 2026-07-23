@@ -627,7 +627,7 @@ function AperturaPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/agente-apertura")
+    fetch("/api/apertura")
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok) throw new Error(body?.error || "No se pudo generar el resumen de apertura.");

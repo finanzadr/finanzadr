@@ -1,10 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { put } from "@vercel/blob";
 import { leerBriefingGuardado } from "./briefing.js";
+import { leerAperturaGuardado } from "./apertura.js";
 
-// Pathname fijo (sin sufijo aleatorio) para poder ubicar el mismo blob en
-// cada lectura desde /api/contenido sin tener que guardar la URL en otro lado.
+// Pathnames fijos (sin sufijo aleatorio) para poder ubicar el mismo blob en
+// cada lectura desde /api/contenido sin tener que guardar la URL en otro
+// lado. Cada fuente ("cierre" o "apertura") tiene el suyo, para que las dos
+// corridas diarias de Agente 2 no se pisen entre sí.
 export const BLOB_PATHNAME = "contenido/latest.json";
+export const BLOB_PATHNAME_APERTURA = "contenido/apertura-latest.json";
 
 function limpiarBloqueJSON(texto) {
   return texto
@@ -58,11 +62,14 @@ Responde EXCLUSIVAMENTE con un objeto JSON válido (sin texto antes o después, 
 }`;
 }
 
-export async function generarContenido() {
-  const briefing = await leerBriefingGuardado();
-  if (!briefing || !briefing.resumen) {
+export async function generarContenido(fuente = "cierre") {
+  const origen = fuente === "apertura" ? await leerAperturaGuardado() : await leerBriefingGuardado();
+
+  if (!origen || !origen.resumen) {
     throw new Error(
-      "No hay un briefing guardado en Blob todavía — Agente 2 depende del resumen que genera Agente 1."
+      fuente === "apertura"
+        ? "No hay un resumen de apertura guardado en Blob todavía — Agente 2 depende del resumen que genera el Agente Apertura."
+        : "No hay un briefing guardado en Blob todavía — Agente 2 depende del resumen que genera Agente 1."
     );
   }
 
@@ -72,7 +79,7 @@ export async function generarContenido() {
     max_tokens: 2048,
     thinking: { type: "disabled" },
     output_config: { effort: "medium" },
-    messages: [{ role: "user", content: buildPrompt(briefing.resumen) }],
+    messages: [{ role: "user", content: buildPrompt(origen.resumen) }],
   });
 
   const textBlock = response.content.find((b) => b.type === "text");
@@ -81,14 +88,18 @@ export async function generarContenido() {
 
   return {
     generadoEn: new Date().toISOString(),
-    basadoEnBriefing: briefing.generadoEn,
+    fuente,
+    basadoEnBriefing: origen.generadoEn,
     ...piezas,
   };
 }
 
-// Genera las 3 piezas de contenido a partir del briefing ya guardado por
-// Agente 1 y las guarda en Blob para que /api/contenido las sirva sin
-// regenerar en cada visita. Se invoca manualmente por ahora (sin cron).
+// Genera las 3 piezas de contenido a partir del briefing (Agente Cierre) o
+// del resumen de apertura (Agente Apertura) ya guardados, y las guarda en
+// Blob para que /api/contenido las sirva sin regenerar en cada visita.
+// ?fuente=apertura usa el resumen de Apertura y guarda en su propio blob;
+// cualquier otro valor (incluido ausente) se comporta igual que siempre:
+// usa el briefing de Cierre y contenido/latest.json.
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -97,12 +108,15 @@ export default async function handler(req, res) {
     return;
   }
 
+  const fuente = req.query?.fuente === "apertura" ? "apertura" : "cierre";
+  const pathname = fuente === "apertura" ? BLOB_PATHNAME_APERTURA : BLOB_PATHNAME;
+
   try {
-    const body = await generarContenido();
+    const body = await generarContenido(fuente);
 
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       try {
-        await put(BLOB_PATHNAME, JSON.stringify(body), {
+        await put(pathname, JSON.stringify(body), {
           access: "private",
           contentType: "application/json",
           addRandomSuffix: false,
@@ -115,7 +129,7 @@ export default async function handler(req, res) {
 
     res.status(200).json(body);
   } catch (err) {
-    console.error("Error en agente-contenido:", err);
+    console.error(`Error en agente-contenido (fuente=${fuente}):`, err);
     res.status(500).json({ error: err.message || "No se pudo generar el contenido." });
   }
 }
