@@ -122,6 +122,17 @@ const formatHora = (iso) => {
   return `${h}:${m} ${ampm}`;
 };
 
+// Convierte Markdown básico (solo **negritas**) en nodos React, sin usar
+// dangerouslySetInnerHTML — el texto viene de una respuesta de Claude, así
+// que se parsea a elementos en vez de inyectar HTML crudo.
+const renderTextoConNegritas = (texto) => {
+  const partes = String(texto).split(/(\*\*[^*]+\*\*)/g);
+  return partes.map((parte, i) => {
+    const m = parte.match(/^\*\*([^*]+)\*\*$/);
+    return m ? <strong key={i}>{m[1]}</strong> : parte;
+  });
+};
+
 const DARK = { bg: "#07080f", card: "#0d0f1e", border: "#1a1e35", gold: "#c8a84b", goldBg: "#c8a84b18", green: "#00d68f", red: "#ff4466", text: "#dde1f5", muted: "#484e72", sub: "#8890b5", navBg: "#09091a", tickerBg: "#0a0b16" };
 const LIGHT = { bg: "#f4f5f8", card: "#ffffff", border: "#e0e4ef", gold: "#b8860b", goldBg: "#b8860b15", green: "#00875a", red: "#d93025", text: "#1a1d2e", muted: "#8891a8", sub: "#555e7a", navBg: "#ffffff", tickerBg: "#1a1d2e" };
 
@@ -704,6 +715,14 @@ function extraerFilas(datos) {
   return [];
 }
 
+// Celda vacía (string vacío, null o undefined) se muestra como "Directo" —
+// aplica sobre todo a referrerHostname (tráfico sin referrer = directo), pero
+// se hace genérico para cualquier columna en cualquier tabla.
+function formatCelda(valor) {
+  if (valor === null || valor === undefined || valor === "") return "Directo";
+  return String(valor);
+}
+
 function TablaSimple({ filas }) {
   const { C } = useOutletContext();
   if (!filas.length) return <p style={{ fontSize:13, color:C.sub }}>Sin datos disponibles.</p>;
@@ -722,7 +741,7 @@ function TablaSimple({ filas }) {
           {filas.map((fila, i) => (
             <tr key={i}>
               {columnas.map(col => (
-                <td key={col} style={{ padding:"10px 16px", fontSize:13, color:C.text, borderBottom: i===filas.length-1 ? "none" : `1px solid ${C.border}` }}>{String(fila[col])}</td>
+                <td key={col} style={{ padding:"10px 16px", fontSize:13, color:C.text, borderBottom: i===filas.length-1 ? "none" : `1px solid ${C.border}` }}>{formatCelda(fila[col])}</td>
               ))}
             </tr>
           ))}
@@ -782,7 +801,7 @@ function MonitoreoReporte() {
       </p>
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", marginBottom:32 }}>
-        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, margin:0, whiteSpace:"pre-wrap" }}>{data.resumen}</p>
+        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, margin:0, whiteSpace:"pre-wrap" }}>{renderTextoConNegritas(data.resumen)}</p>
       </div>
 
       <Label>── Páginas más visitadas</Label>
