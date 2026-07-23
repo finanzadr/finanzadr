@@ -1295,11 +1295,70 @@ function HeatmapPage() {
 
 function CompartirPage() {
   const { stocks, C } = useOutletContext();
+  const [searchParams] = useSearchParams();
+  const [vista, setVista] = useState(searchParams.get("vista") === "cierre" ? "cierre" : "vivo");
+  const [cierreStatus, setCierreStatus] = useState("loading");
+  const [cierreStocks, setCierreStocks] = useState(null);
+  const [cierreFecha, setCierreFecha] = useState(null);
+  const [cierreError, setCierreError] = useState(null);
+
+  useEffect(() => {
+    if (vista !== "cierre") return;
+    let cancelled = false;
+    setCierreStatus("loading");
+    setCierreError(null);
+    fetch("/api/briefing")
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body?.error || "No se pudo obtener el cierre del mercado.");
+        return body;
+      })
+      .then((body) => {
+        if (cancelled) return;
+        const indices = (body.precios || [])
+          .filter((p) => p.tipo === "Índices" && p.precio != null && p.cambioPct != null)
+          .map((p) => ({ s: p.simbolo, n: p.nombre, p: p.precio, c: p.cambioPct }));
+        if (indices.length === 0) throw new Error("No hay datos de índices disponibles en el cierre guardado.");
+        setCierreStocks(indices);
+        setCierreFecha(new Date(body.generadoEn));
+        setCierreStatus("ready");
+      })
+      .catch((err) => { if (!cancelled) { setCierreError(err.message); setCierreStatus("error"); } });
+    return () => { cancelled = true; };
+  }, [vista]);
+
   return (
     <div className="fade-in">
-      <SectionTitle>📸 Market Snapshot</SectionTitle>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
+        <SectionTitle>📸 Market Snapshot</SectionTitle>
+        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+          {["vivo","cierre"].map(v => (
+            <button key={v} onClick={() => setVista(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${vista===v?C.gold:C.border}`, background:vista===v?C.goldBg:"none", color:vista===v?C.gold:C.muted, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+              {v==="vivo"?"🔴 Vivo":"🌇 Cierre de Hoy"}
+            </button>
+          ))}
+        </div>
+      </div>
       <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Genera una card visual del mercado lista para compartir.</p>
-      <SnapshotCard stocks={stocks} />
+
+      {vista === "vivo" && <SnapshotCard stocks={stocks} />}
+
+      {vista === "cierre" && cierreStatus === "loading" && (
+        <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
+          <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Cargando el cierre del mercado...</div>
+        </div>
+      )}
+
+      {vista === "cierre" && cierreStatus === "error" && (
+        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px" }}>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo cargar el cierre del mercado. {cierreError}</p>
+        </div>
+      )}
+
+      {vista === "cierre" && cierreStatus === "ready" && (
+        <SnapshotCard stocks={cierreStocks} modo="cierre" fecha={cierreFecha} />
+      )}
     </div>
   );
 }
@@ -1850,7 +1909,7 @@ function HeatmapWidget() {
   return <div ref={containerRef} className="tradingview-widget-container" style={{ width:"100%", minHeight:600, height:600 }} />;
 }
 
-function SnapshotCard({ stocks }) {
+function SnapshotCard({ stocks, modo = "vivo", fecha }) {
   const { C } = useOutletContext();
   const canvasRef = useRef(null);
   const [copied, setCopied] = useState(false);
@@ -1859,22 +1918,30 @@ function SnapshotCard({ stocks }) {
   const pct = Math.round(gainers/stocks.length*100);
   const sentiment = pct>=70?"ALCISTA 🟢":pct>=40?"NEUTRAL ⚪":"BAJISTA 🔴";
   const topMover = [...stocks].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0];
-  const date = new Date().toLocaleDateString("es-DO",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const date = (fecha || new Date()).toLocaleDateString("es-DO",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const etiqueta = modo==="cierre" ? `CIERRE DEL ${date.toUpperCase()}` : "MARKET SNAPSHOT · "+date.toUpperCase();
   const generateCanvas = () => {
     const canvas=canvasRef.current; if(!canvas) return;
-    const ctx=canvas.getContext("2d"); const W=1080,H=1080;
+    const ctx=canvas.getContext("2d");
+    // El alto del canvas se calcula a partir de cuántas filas de activos hay
+    // (cols fijo en 4) — así una tarjeta con menos activos (ej. los 4 índices
+    // del Cierre, 1 fila) no deja un hueco vacío abajo como pasaría con un
+    // alto fijo pensado para 8 activos (2 filas).
+    const W=1080,cols=4,cellW=(W-120)/cols,startY=350;
+    const rows=Math.ceil(stocks.length/cols);
+    const tmY=startY+rows*160+20;
+    const H=tmY+390;
     canvas.width=W; canvas.height=H;
     const isDark=cardTheme==="dark";
     const bg=isDark?"#07080f":"#f4f5f8",card=isDark?"#0d0f1e":"#ffffff",border=isDark?"#1a1e35":"#e0e4ef",gold="#c8a84b",textCol=isDark?"#dde1f5":"#1a1d2e",subCol=isDark?"#8890b5":"#555e7a",green="#00d68f",red="#ff4466";
     ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
     ctx.fillStyle=gold; ctx.fillRect(0,0,W,6);
     ctx.fillStyle=gold; ctx.font="bold 72px Georgia,serif"; ctx.fillText("FinanzaDR",60,100);
-    ctx.fillStyle=subCol; ctx.font="28px 'Courier New',monospace"; ctx.fillText("MARKET SNAPSHOT · "+date.toUpperCase(),60,145);
+    ctx.fillStyle=subCol; ctx.font="28px 'Courier New',monospace"; ctx.fillText(etiqueta,60,145);
     ctx.fillStyle=border; ctx.fillRect(60,165,W-120,2);
     ctx.fillStyle=pct>=70?green:pct>=40?gold:red; ctx.font="bold 52px Georgia,serif"; ctx.fillText(sentiment,60,250);
     ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText(`${gainers} de ${stocks.length} activos en verde — ${pct}% positivo`,60,295);
     ctx.fillStyle=border; ctx.fillRect(60,320,W-120,2);
-    const cols=4,cellW=(W-120)/cols,startY=350;
     stocks.forEach((st,i)=>{
       const col=i%cols,row=Math.floor(i/cols),x=60+col*cellW,y=startY+row*160;
       ctx.fillStyle=card;
@@ -1885,7 +1952,6 @@ function SnapshotCard({ stocks }) {
       ctx.fillStyle=textCol; ctx.font="bold 30px 'Courier New',monospace"; ctx.fillText(st.p>=1000?Math.round(st.p).toLocaleString():st.p.toFixed(2),x+22,y+105);
       ctx.fillStyle=st.c>=0?green:red; ctx.font="bold 22px 'Courier New',monospace"; ctx.fillText(`${st.c>=0?"▲":"▼"} ${Math.abs(st.c)}%`,x+22,y+132);
     });
-    const tmY=startY+Math.ceil(stocks.length/cols)*160+20;
     ctx.fillStyle=border; ctx.fillRect(60,tmY,W-120,2);
     ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText("TOP MOVER:",60,tmY+46);
     ctx.fillStyle=gold; ctx.font="bold 48px Georgia,serif"; ctx.fillText(`${topMover.s} — ${topMover.c>=0?"▲":"▼"} ${Math.abs(topMover.c)}%`,60,tmY+105);
@@ -1893,7 +1959,7 @@ function SnapshotCard({ stocks }) {
     ctx.fillStyle=gold; ctx.font="bold 32px 'Courier New',monospace"; ctx.fillText("finanzadr.com",60,H-45);
     ctx.fillStyle=subCol; ctx.font="22px 'Courier New',monospace"; ctx.textAlign="right"; ctx.fillText("Wall Street en tu idioma",W-60,H-45); ctx.textAlign="left";
   };
-  useEffect(()=>{ generateCanvas(); },[stocks,cardTheme]);
+  useEffect(()=>{ generateCanvas(); },[stocks,cardTheme,modo,fecha]);
   const downloadImage=()=>{ const canvas=canvasRef.current,link=document.createElement("a"); link.download=`finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`; link.href=canvas.toDataURL("image/png"); link.click(); };
   const shareOnX=()=>{ const text=`📊 Market Snapshot\n\n${stocks.slice(0,4).map(s=>`${s.s}: ${s.c>=0?"▲":"▼"}${Math.abs(s.c)}%`).join(" | ")}\n\nSentimiento: ${sentiment} (${pct}%)\n\n#WallStreet #Inversiones #FinanzaDR\nfinanzadr.com`; window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,"_blank"); };
   const copyImage=async()=>{ const canvas=canvasRef.current; canvas.toBlob(async blob=>{ try{ await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]); setCopied(true); setTimeout(()=>setCopied(false),2000); }catch{ downloadImage(); } }); };
