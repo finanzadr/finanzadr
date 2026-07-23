@@ -122,14 +122,18 @@ const formatHora = (iso) => {
   return `${h}:${m} ${ampm}`;
 };
 
-// Convierte Markdown básico (solo **negritas**) en nodos React, sin usar
-// dangerouslySetInnerHTML — el texto viene de una respuesta de Claude, así
-// que se parsea a elementos en vez de inyectar HTML crudo.
+// Convierte Markdown básico (**negritas** y *itálica*) en nodos React, sin
+// usar dangerouslySetInnerHTML — el texto viene de una respuesta de Claude,
+// así que se parsea a elementos en vez de inyectar HTML crudo.
 const renderTextoConNegritas = (texto) => {
   const partes = String(texto).split(/(\*\*[^*]+\*\*)/g);
-  return partes.map((parte, i) => {
-    const m = parte.match(/^\*\*([^*]+)\*\*$/);
-    return m ? <strong key={i}>{m[1]}</strong> : parte;
+  return partes.flatMap((parte, i) => {
+    const mNegrita = parte.match(/^\*\*([^*]+)\*\*$/);
+    if (mNegrita) return [<strong key={`b${i}`}>{mNegrita[1]}</strong>];
+    return parte.split(/(\*[^*]+\*)/g).map((sub, j) => {
+      const mItalica = sub.match(/^\*([^*]+)\*$/);
+      return mItalica ? <em key={`i${i}-${j}`}>{mItalica[1]}</em> : sub;
+    });
   });
 };
 
