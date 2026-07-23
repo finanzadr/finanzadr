@@ -157,6 +157,7 @@ export default function FinanzasDR() {
           <Route path="privacidad" element={<PrivacidadPage />} />
           <Route path="terminos" element={<TerminosPage />} />
           <Route path="aviso" element={<AvisoPage />} />
+          <Route path="monitoreo" element={<MonitoreoPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
@@ -693,6 +694,151 @@ function ContenidoDiarioPage() {
         </div>
         <CopyButton texto={instagramCompleto} />
       </div>
+    </div>
+  );
+}
+
+function extraerFilas(datos) {
+  if (Array.isArray(datos)) return datos;
+  if (datos && Array.isArray(datos.data)) return datos.data;
+  return [];
+}
+
+function TablaSimple({ filas }) {
+  const { C } = useOutletContext();
+  if (!filas.length) return <p style={{ fontSize:13, color:C.sub }}>Sin datos disponibles.</p>;
+  const columnas = Object.keys(filas[0]);
+  return (
+    <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, overflow:"hidden" }}>
+      <table style={{ width:"100%", borderCollapse:"collapse" }}>
+        <thead>
+          <tr>
+            {columnas.map(col => (
+              <th key={col} style={{ textAlign:"left", padding:"10px 16px", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, borderBottom:`1px solid ${C.border}` }}>{col}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map((fila, i) => (
+            <tr key={i}>
+              {columnas.map(col => (
+                <td key={col} style={{ padding:"10px 16px", fontSize:13, color:C.text, borderBottom: i===filas.length-1 ? "none" : `1px solid ${C.border}` }}>{String(fila[col])}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function MonitoreoReporte() {
+  const { C } = useOutletContext();
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/agente-monitoreo")
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body?.error || "No se pudo generar el reporte de monitoreo.");
+        return body;
+      })
+      .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
+      .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (status === "loading") {
+    return (
+      <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
+        <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
+        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el reporte de monitoreo...</div>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="fade-in">
+        <SectionTitle>📊 Monitoreo</SectionTitle>
+        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el reporte en este momento. {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const filasPaginas = extraerFilas(data.datosCrudos?.paginas);
+  const filasFuentes = extraerFilas(data.datosCrudos?.fuentes);
+
+  return (
+    <div className="fade-in">
+      <SectionTitle>📊 Monitoreo</SectionTitle>
+      <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:24 }}>
+        ✓ Generado hoy a las {formatHora(data.generadoEn)}
+      </p>
+
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", marginBottom:32 }}>
+        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, margin:0, whiteSpace:"pre-wrap" }}>{data.resumen}</p>
+      </div>
+
+      <Label>── Páginas más visitadas</Label>
+      <div style={{ marginTop:10, marginBottom:32 }}><TablaSimple filas={filasPaginas} /></div>
+
+      <Label>── Fuentes de tráfico</Label>
+      <div style={{ marginTop:10 }}><TablaSimple filas={filasFuentes} /></div>
+    </div>
+  );
+}
+
+function MonitoreoPage() {
+  const { C } = useOutletContext();
+  const [autenticado, setAutenticado] = useState(false);
+  const [password, setPassword] = useState("");
+  const [verificando, setVerificando] = useState(false);
+  const [errorAuth, setErrorAuth] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!password || verificando) return;
+    setVerificando(true);
+    setErrorAuth(false);
+    try {
+      const res = await fetch("/api/verificar-monitoreo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const body = await res.json();
+      if (body.valido) setAutenticado(true);
+      else { setErrorAuth(true); setPassword(""); }
+    } catch (e) {
+      setErrorAuth(true);
+    } finally {
+      setVerificando(false);
+    }
+  };
+
+  if (autenticado) return <MonitoreoReporte />;
+
+  return (
+    <div className="fade-in" style={{ maxWidth:400, margin:"60px auto 0", textAlign:"center" }}>
+      <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
+      <SectionTitle>Monitoreo</SectionTitle>
+      <p style={{ fontSize:13, color:C.sub, margin:"8px 0 24px" }}>Esta sección es privada. Ingresa la contraseña para continuar.</p>
+      <div style={{ display:"flex", gap:10, marginBottom:12 }}>
+        <input type="password" placeholder="Contraseña" value={password}
+          onChange={e=>setPassword(e.target.value)}
+          onKeyDown={e=>e.key==="Enter"&&handleSubmit()}
+          style={{ flex:1, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", color:C.text, fontFamily:"'Inter',sans-serif", fontSize:15, outline:"none" }} />
+        <button onClick={handleSubmit} disabled={verificando || !password}
+          style={{ background:C.gold, color:"#000", border:"none", padding:"14px 24px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, opacity: verificando||!password?0.6:1 }}>
+          {verificando ? "⏳..." : "Entrar"}
+        </button>
+      </div>
+      {errorAuth && <p style={{ fontSize:12, color:C.red }}>⚠️ Contraseña incorrecta</p>}
     </div>
   );
 }
