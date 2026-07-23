@@ -114,7 +114,7 @@ export async function generarApertura() {
   // esto es solo material en bruto que se reescribe en el paso 2.
   const researchResponse = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 2048,
+    max_tokens: 4096,
     thinking: { type: "disabled" },
     output_config: { effort: "medium" },
     tools: [
