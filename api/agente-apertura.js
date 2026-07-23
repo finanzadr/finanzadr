@@ -72,30 +72,46 @@ personalizada. No lo repitas como disclaimer robótico en cada texto — que se
 sienta implícito en cómo está escrito (explicando panorama, no diciendo qué
 hacer), y sí inclúyelo explícitamente una vez al final en letra pequeña.`;
 
-function buildPrompt() {
-  return `${ESPECIFICACION_EDITORIAL}
+function buildResearchPrompt() {
+  return `Eres un investigador financiero. Tu única tarea es reunir información concreta y actual usando la herramienta de búsqueda web — otro paso posterior se encargará de redactar el artículo final con estos datos, así que no te preocupes por el estilo ni el formato aquí.
 
-TAREA DE HOY: Resumen de Apertura
-
-Antes de escribir, usa la herramienta de búsqueda web para investigar estos tres puntos (haz una búsqueda por cada uno, no asumas datos de memoria):
+Investiga estos tres puntos (haz una búsqueda por cada uno, no asumas datos de memoria):
 
 1. Cómo cerraron o se movieron durante la noche los mercados de Asia y Europa: Nikkei (Japón), Hang Seng (Hong Kong), FTSE 100 (Reino Unido) y DAX (Alemania). Necesitas la cifra de cierre y la variación porcentual de cada uno.
 2. Qué empresas grandes reportan earnings importantes HOY (antes o después del cierre de Wall Street).
 3. El sentimiento general de los futuros de EE.UU. antes de la apertura (futuros del S&P 500 y del Nasdaq) — si suben, bajan, y por qué.
 
-Con esa información ya confirmada, redacta el "Resumen de Apertura" de hoy siguiendo EXACTAMENTE la estructura "ESTRUCTURA — RESUMEN DE APERTURA" de la especificación editorial de arriba (a, b, c, d) y todas las reglas de escritura no negociables.
+Para cada punto, reporta las cifras y datos concretos que encuentres. Usa ÚNICAMENTE datos que hayas confirmado con la búsqueda web en este momento; si algún dato específico no lo encuentras, dilo explícitamente en vez de inventar una cifra. No hace falta que redactes un artículo terminado ni que sigas ningún estilo editorial — esto es solo el material de investigación en bruto.`;
+}
+
+function buildRewritePrompt(investigacion) {
+  return `${ESPECIFICACION_EDITORIAL}
+
+TAREA DE HOY: Resumen de Apertura
+
+MATERIAL DE INVESTIGACIÓN (ya recopilado con búsqueda web; puede venir fragmentado, con saltos de línea irregulares o menciones de fuentes — ignora ese formato, es solo la materia prima):
+"""
+${investigacion}
+"""
+
+Con base ÚNICAMENTE en los datos de ese material de investigación, redacta el "Resumen de Apertura" de hoy siguiendo EXACTAMENTE la estructura "ESTRUCTURA — RESUMEN DE APERTURA" de la especificación editorial de arriba (a, b, c, d) y todas las reglas de escritura no negociables.
 
 Instrucciones finales:
 - Escribe en español.
-- Usa ÚNICAMENTE datos que hayas confirmado con la búsqueda web en este momento. Si algún dato específico no lo encuentras, dilo explícitamente en el texto en vez de inventar una cifra.
+- No inventes datos que no estén en el material de investigación de arriba. Si algún dato específico no aparece ahí, dilo explícitamente en el texto en vez de inventar una cifra.
+- NO cites fuentes, NO menciones de dónde salió cada dato, NO dejes marcas de referencia — el material de investigación es solo insumo tuyo, el lector no debe ver ese proceso.
+- Escribe el resultado como un solo bloque de texto continuo y natural, sin fragmentación, tal como un artículo terminado — no un texto cortado en pedazos alrededor de cada cifra.
 - Sigue la longitud indicada (3-4 párrafos, 2-4 oraciones cada uno) y cierra con el recordatorio legal en letra pequeña, tal como indica la especificación.
-- Responde ÚNICAMENTE con el resumen final ya redactado. No incluyas tus notas de investigación, no expliques qué buscaste, no agregues encabezados de sección ni texto fuera del resumen.`;
+- Responde ÚNICAMENTE con el resumen final ya redactado. No incluyas notas, no expliques el proceso, no agregues encabezados de sección ni texto fuera del resumen.`;
 }
 
 export async function generarApertura() {
   const client = new Anthropic();
 
-  const response = await client.messages.create({
+  // Paso 1: investigación con web_search. Claude fragmenta el texto en
+  // varios bloques "text" alrededor de cada cita — no importa aquí, porque
+  // esto es solo material en bruto que se reescribe en el paso 2.
+  const researchResponse = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 2048,
     thinking: { type: "disabled" },
@@ -107,25 +123,34 @@ export async function generarApertura() {
         max_uses: 6,
       },
     ],
-    messages: [{ role: "user", content: buildPrompt() }],
+    messages: [{ role: "user", content: buildResearchPrompt() }],
   });
 
-  // La respuesta intercala bloques de texto con bloques de búsqueda
-  // (server_tool_use / web_search_tool_result), y además Claude puede
-  // partir un mismo párrafo en varios bloques "text" consecutivos por las
-  // citas de las fuentes. Se concatenan directo, sin separador, para no
-  // romper oraciones a la mitad — los saltos de línea reales ya vienen
-  // dentro del propio texto que escribe Claude.
-  const resumen = response.content
+  const investigacion = researchResponse.content
     .filter((b) => b.type === "text")
     .map((b) => b.text)
-    .join("")
+    .join(" ")
     .trim();
+
+  // Paso 2: reescritura editorial. Sin web_search — Claude solo toma el
+  // material del paso 1 y lo convierte en un único bloque de texto
+  // continuo siguiendo la especificación de FinanzaDR.
+  const rewriteResponse = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2048,
+    thinking: { type: "disabled" },
+    output_config: { effort: "medium" },
+    messages: [{ role: "user", content: buildRewritePrompt(investigacion) }],
+  });
+
+  const textBlock = rewriteResponse.content.find((b) => b.type === "text");
+  const resumen = textBlock ? textBlock.text.trim() : "";
 
   return {
     generadoEn: new Date().toISOString(),
     resumen,
-    stopReason: response.stop_reason,
+    stopReason: rewriteResponse.stop_reason,
+    investigacionStopReason: researchResponse.stop_reason,
   };
 }
 
