@@ -602,7 +602,7 @@ function BriefingPage() {
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", marginBottom:32 }}>
         {parrafos.map((p, i) => (
-          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === parrafos.length - 1 ? 0 : 18 }}>{p}</p>
+          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === parrafos.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
         ))}
       </div>
 
