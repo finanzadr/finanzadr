@@ -163,6 +163,7 @@ export default function FinanzasDR() {
           <Route path="sentimiento" element={<SentimientoPage />} />
           <Route path="noticias" element={<NoticiasPage />} />
           <Route path="briefing" element={<BriefingPage />} />
+          <Route path="apertura" element={<AperturaPage />} />
           <Route path="contenido-diario" element={<ContenidoDiarioPage />} />
           <Route path="aprende" element={<AprendePage />} />
           <Route path="brokers" element={<BrokersPage />} />
@@ -331,7 +332,7 @@ function Layout() {
 
       <footer style={{ borderTop:`1px solid ${C.border}`, padding:"32px", textAlign:"center", marginTop:40 }}>
         <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
-          {[["🤖","Briefing IA","/briefing"],["📱","Contenido Diario","/contenido-diario"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
+          {[["🌅","Apertura","/apertura"],["🤖","Briefing IA","/briefing"],["📱","Contenido Diario","/contenido-diario"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
             <Link key={i} to={to}
               style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
               <span>{icon}</span>{label}
@@ -613,6 +614,63 @@ function BriefingPage() {
       <Label>── Precios del día · Generado por Agente 1</Label>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12 }}>
         {data.precios.map((p) => <BriefingStockCard key={p.simbolo} p={p} />)}
+      </div>
+    </div>
+  );
+}
+
+function AperturaPage() {
+  const { C } = useOutletContext();
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/agente-apertura")
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body?.error || "No se pudo generar el resumen de apertura.");
+        return body;
+      })
+      .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
+      .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (status === "loading") {
+    return (
+      <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
+        <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
+        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el resumen de apertura...</div>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="fade-in">
+        <SectionTitle>🌅 Resumen de Apertura</SectionTitle>
+        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el resumen de apertura en este momento. {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const parrafos = (data.resumen || "").split(/\n+/).map(p => p.trim()).filter(Boolean);
+
+  return (
+    <div className="fade-in">
+      <SectionTitle>🌅 Resumen de Apertura</SectionTitle>
+      <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:24 }}>
+        ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
+      </p>
+
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px" }}>
+        {parrafos.map((p, i) => (
+          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === parrafos.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
+        ))}
       </div>
     </div>
   );
