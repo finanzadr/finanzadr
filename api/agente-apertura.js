@@ -102,6 +102,7 @@ Instrucciones finales:
 - NO cites fuentes, NO menciones de dónde salió cada dato, NO dejes marcas de referencia — el material de investigación es solo insumo tuyo, el lector no debe ver ese proceso.
 - Escribe el resultado como un solo bloque de texto continuo y natural, sin fragmentación, tal como un artículo terminado — no un texto cortado en pedazos alrededor de cada cifra.
 - Sigue la longitud indicada (3-4 párrafos, 2-4 oraciones cada uno) y cierra con el recordatorio legal en letra pequeña, tal como indica la especificación.
+- Empieza tu respuesta directamente con el título del resumen (formato **Día, fecha — Resumen de Apertura FinanzaDR**). No incluyas ninguna introducción, preámbulo, ni comentario sobre tu propio proceso antes del título — la primera línea de tu respuesta debe ser el título mismo.
 - Responde ÚNICAMENTE con el resumen final ya redactado. No incluyas notas, no expliques el proceso, no agregues encabezados de sección ni texto fuera del resumen.`;
 }
 
