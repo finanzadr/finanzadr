@@ -133,6 +133,25 @@ const ARTICULOS_OPCIONES = [
     ],
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Naked Put", "Avanzado", "Riesgo Alto"],
     nota: "Este contenido es educativo e informativo. El Naked Put es una estrategia de alto riesgo que puede generar pérdidas significativas y requiere aprobación de nivel avanzado de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
+  { tipo: "estrategia", id: "put-credit-spread", nombre: "Put Credit Spread (Spread de Crédito con Puts)", sesgo: "alcista", nivel: "intermedio",
+    extracto: "Una versión más controlada del Naked Put: vendes una Put y compras otra Put más barata como protección, limitando tu riesgo máximo desde el inicio.",
+    queEs: "Un Put Credit Spread combina dos opciones Put: vendes una Put con un strike más alto (cobrando una prima mayor) y compras simultáneamente otra Put con un strike más bajo (pagando una prima menor) como protección. La diferencia entre ambas primas es tu ganancia neta ('crédito') recibida de inmediato. A diferencia del Naked Put, tu pérdida máxima queda limitada y definida desde el momento en que abres la posición — ya sabes exactamente cuánto puedes perder en el peor escenario.",
+    legs: [
+      { accion: "venta", tipo: "put", nota: "Strike más alto (ej. $95) — la que genera la mayor prima cobrada" },
+      { accion: "compra", tipo: "put", nota: "Strike más bajo (ej. $90) — actúa como 'seguro', limitando tu pérdida máxima" },
+    ],
+    maxGanancia: "Limitada al crédito neto recibido (la diferencia entre ambas primas) — en nuestro ejemplo, $150. La obtienes completa si la acción cierra igual o por encima del strike vendido ($95) al vencimiento.",
+    maxPerdida: "(Diferencia entre ambos strikes − crédito neto recibido) × 100 — en nuestro ejemplo, $350. Esta es tu pérdida máxima absoluta, sin importar cuánto más caiga la acción por debajo de $90, gracias a la Put comprada como protección.",
+    puntoEquilibrio: "Strike vendido menos el crédito neto recibido — en nuestro ejemplo, $93.50.",
+    cuandoUsarla: "Se usa cuando tienes una opinión neutral a moderadamente alcista, similar al Naked Put, pero prefieres conocer y limitar tu riesgo máximo desde el inicio en vez de exponerte a una pérdida potencialmente mucho mayor. Es una forma común de 'vender opciones' con un perfil de riesgo mucho más controlado, y generalmente requiere menos nivel de autorización de tu broker que un Naked Put.",
+    ejemplo: "Una acción cotiza a $100. Vendes una Put con strike $95 cobrando $3.00 por acción ($300), y compras una Put con strike $90 pagando $1.50 por acción ($150). Tu crédito neto es $150 ($300 − $150). Tu punto de equilibrio es $93.50. Si la acción cierra en $95 o más, ambas Puts expiran sin valor y te quedas con los $150 completos. Si cae a $90 o menos, tu pérdida queda topada en $350 ($500 de diferencia entre strikes, menos los $150 de crédito recibido) — sin importar si la acción cae a $80 o a $20, tu pérdida máxima sigue siendo $350.",
+    riesgos: "Aunque el riesgo está limitado (a diferencia del Naked Put), sigue siendo una pérdida real y puede ocurrir con relativa frecuencia si subestimas la volatilidad de la acción. Requiere gestionar dos contratos en vez de uno, lo cual implica el doble de comisiones y algo más de complejidad de seguimiento. También sigue requiriendo aprobación de opciones de tu broker, aunque generalmente de un nivel intermedio, no el más alto.",
+    payoffPoints: [
+      { precio: 80, ganancia: -350 }, { precio: 85, ganancia: -350 }, { precio: 90, ganancia: -350 }, { precio: 93.5, ganancia: 0 },
+      { precio: 95, ganancia: 150 }, { precio: 100, ganancia: 150 }, { precio: 110, ganancia: 150 }, { precio: 130, ganancia: 150 },
+    ],
+    autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Credit Spread", "Intermedio", "Riesgo Limitado"],
+    nota: "Este contenido es educativo e informativo. Los spreads de opciones requieren aprobación de tu broker y conllevan riesgos, aunque limitados y conocidos desde el inicio. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
 ];
 
 const CONSEJOS = [
