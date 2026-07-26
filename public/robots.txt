@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /monitoreo
+
+Sitemap: https://finanzadr.com/sitemap.xml
