@@ -171,6 +171,26 @@ const ARTICULOS_OPCIONES = [
     ],
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Credit Spread", "Intermedio", "Bajista"],
     nota: "Este contenido es educativo e informativo. Los spreads de opciones requieren aprobación de tu broker y conllevan riesgos, aunque limitados y conocidos desde el inicio. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
+  { tipo: "estrategia", id: "short-strangle", nombre: "Short Strangle (Estrangulamiento Vendido)", sesgo: "neutral", nivel: "avanzado",
+    extracto: "La estrategia 'madre' del Iron Condor: vendes una Put y una Call al mismo tiempo, sin ninguna protección, apostando a que la acción se mantendrá en un rango. Riesgo muy elevado en ambas direcciones.",
+    queEs: "Un Short Strangle combina un Naked Put (que ya conoces) y su espejo, una Call vendida sin cobertura, al mismo tiempo sobre la misma acción. Vendes una Put con strike por debajo del precio actual, y una Call con strike por encima — cobrando dos primas de inmediato. Ganas si la acción se queda dentro de ese rango entre ambos strikes al vencimiento. Es esencialmente la versión 'sin protección' de lo que luego se convierte en un Iron Condor al agregarle alas de protección.",
+    legs: [
+      { accion: "venta", tipo: "put", nota: "Strike por debajo del precio actual (ej. $90) — sin protección, como el Naked Put" },
+      { accion: "venta", tipo: "call", nota: "Strike por encima del precio actual (ej. $110) — sin protección, como una Call al descubierto" },
+    ],
+    maxGanancia: "Limitada a la suma de ambas primas cobradas — en nuestro ejemplo, $400. La obtienes completa si la acción cierra entre $90 y $110 al vencimiento (ambas opciones expiran sin valor).",
+    maxPerdida: "Del lado de la Call: teóricamente ilimitada, ya que no hay techo para cuánto puede subir una acción. Del lado de la Put: grande pero limitada a que la acción caiga a cero — en nuestro ejemplo, hasta $8,600. Es una de las estrategias con mayor riesgo real de todo el Opcionario, precisamente porque combina los riesgos del Naked Put y de una Call sin cobertura al mismo tiempo.",
+    puntoEquilibrio: "Dos puntos de equilibrio: el strike de la Put menos el crédito total recibido (ej. $86), y el strike de la Call más el crédito total recibido (ej. $114).",
+    cuandoUsarla: "Se usa cuando esperas que una acción se mantenga dentro de un rango específico, sin movimientos fuertes en ninguna dirección — típicamente en periodos de baja volatilidad esperada. Requiere el nivel más alto de autorización de opciones en prácticamente todos los brokers, precisamente por el riesgo ilimitado del lado de la Call.",
+    ejemplo: "Una acción cotiza a $100. Vendes una Put con strike $90 cobrando $2.00 ($200), y una Call con strike $110 cobrando $2.00 ($200). Tu crédito total es $400. Tus puntos de equilibrio son $86 y $114. Si la acción cierra entre $90 y $110, te quedas con los $400 completos. Si sube a $130, por ejemplo, tu pérdida del lado de la Call ya supera los $1,600 y sigue creciendo mientras la acción siga subiendo — sin límite. Si cae a $70, tu pérdida del lado de la Put sería de aproximadamente $1,600 en ese momento.",
+    riesgos: "Esta es, junto al Naked Put, de las estrategias de mayor riesgo real en este Opcionario — con el agravante de que el lado de la Call no tiene límite superior de pérdida en absoluto. Requiere una cuenta con margen sustancial, vigilancia constante, y está pensada para operadores experimentados que entienden bien la gestión de riesgo. Es precisamente esta falta de protección la que resuelve la siguiente estrategia que vamos a ver: el Iron Condor.",
+    payoffPoints: [
+      { precio: 60, ganancia: -2600 }, { precio: 70, ganancia: -1600 }, { precio: 80, ganancia: -600 }, { precio: 86, ganancia: 0 },
+      { precio: 90, ganancia: 400 }, { precio: 100, ganancia: 400 }, { precio: 110, ganancia: 400 }, { precio: 114, ganancia: 0 },
+      { precio: 120, ganancia: -600 }, { precio: 130, ganancia: -1600 }, { precio: 140, ganancia: -2600 },
+    ],
+    autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Short Strangle", "Avanzado", "Riesgo Ilimitado"],
+    nota: "Este contenido es educativo e informativo. El Short Strangle incluye una pata sin cobertura con riesgo teóricamente ilimitado y requiere el nivel más alto de autorización de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
 ];
 
 const CONSEJOS = [
