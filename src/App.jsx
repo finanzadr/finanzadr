@@ -1638,14 +1638,21 @@ function NewsletterPage() {
   );
 }
 
-function LegalPage({ title, updated, children }) {
+function LegalPage({ title, updated, sections }) {
   const { C } = useOutletContext();
   return (
     <div className="fade-in">
       <SectionTitle>{title}</SectionTitle>
       <p style={{ fontSize:12, color:C.muted, marginTop:4, marginBottom:24, fontFamily:"'IBM Plex Mono'" }}>Última actualización: {updated}</p>
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", display:"grid", gap:18 }}>
-        {children.map((p,i) => <p key={i} style={{ fontSize:14, color:C.sub, lineHeight:1.8 }}>{p}</p>)}
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", display:"grid", gap:26 }}>
+        {sections.map((s,i) => (
+          <div key={i} style={{ borderTop:i>0?`1px solid ${C.border}`:"none", paddingTop:i>0?22:0 }}>
+            <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:17, fontWeight:800, color:C.text, marginBottom:10 }}>{s.titulo}</h3>
+            <div style={{ display:"grid", gap:12 }}>
+              {s.parrafos.map((p,j) => <p key={j} style={{ fontSize:14, color:C.sub, lineHeight:1.8 }}>{p}</p>)}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1653,33 +1660,72 @@ function LegalPage({ title, updated, children }) {
 
 function PrivacidadPage() {
   return (
-    <LegalPage title="Política de Privacidad" updated="Julio 2026" children={[
-      "FinanzaDR no vende ni comparte tus datos personales con terceros. No recopilamos información personal identificable salvo la que tú decidas darnos voluntariamente, como tu correo al suscribirte al newsletter (gestionado a través de MailerLite).",
-      "Usamos Vercel Analytics para medir visitas de forma agregada y anónima, sin cookies de seguimiento individual, únicamente para entender qué contenido es útil y mejorar el sitio.",
-      "El sitio integra servicios de terceros para mostrarte datos de mercado en tiempo real: Finnhub (precios y noticias), TradingView (charts y heat map) y Alternative.me (índice de sentimiento cripto). Cada uno de estos servicios tiene su propia política de privacidad independiente sobre los datos que procesan en tu navegador.",
-      "Si tienes preguntas sobre esta política, puedes escribirnos a través de los canales de contacto listados en el sitio.",
+    <LegalPage title="Política de Privacidad" updated="26 de julio de 2026" sections={[
+      { titulo: "Qué información recopilamos", parrafos: [
+        "No recopilamos información personal identificable salvo la que tú decidas darnos voluntariamente, como tu correo al suscribirte al newsletter (gestionado a través de MailerLite).",
+      ] },
+      { titulo: "Analytics", parrafos: [
+        "Usamos Vercel Analytics para medir visitas de forma agregada y anónima, sin cookies de seguimiento individual, únicamente para entender qué contenido es útil y mejorar el sitio.",
+      ] },
+      { titulo: "Cookies y publicidad", parrafos: [
+        "Este sitio puede mostrar anuncios a través de Google AdSense. Terceros proveedores de anuncios, incluido Google, utilizan cookies para publicar anuncios basados en las visitas previas del usuario a este u otros sitios web. El uso de cookies publicitarias por parte de Google permite que Google y sus socios publiquen anuncios basados en las visitas realizadas por los usuarios a este sitio o a otros sitios web. Puedes inhabilitar la publicidad personalizada visitando Configuración de anuncios de Google (adssettings.google.com).",
+      ] },
+      { titulo: "Servicios de terceros", parrafos: [
+        "El sitio integra servicios de terceros para mostrarte datos de mercado en tiempo real: Finnhub (precios y noticias), TradingView (charts y heat map) y Alternative.me (índice de sentimiento cripto). Cada uno de estos servicios tiene su propia política de privacidad independiente sobre los datos que procesan en tu navegador.",
+      ] },
+      { titulo: "Tus derechos", parrafos: [
+        "Puedes solicitar la eliminación de tu correo de nuestra lista de newsletter en cualquier momento, usando el link de darse de baja en cualquier correo que recibas, o escribiéndonos directamente.",
+      ] },
+      { titulo: "Contacto", parrafos: [
+        "Si tienes preguntas sobre esta política, puedes escribirnos a través de los canales de contacto listados en el sitio.",
+      ] },
     ]} />
   );
 }
 
 function TerminosPage() {
   return (
-    <LegalPage title="Términos de Uso" updated="Julio 2026" children={[
-      "Al usar FinanzaDR aceptas que el contenido del sitio (precios, noticias, guías, calculadoras y análisis) se ofrece exclusivamente con fines educativos e informativos.",
-      "FinanzaDR no es un broker, asesor de inversión registrado ni intermediario financiero. No ejecutamos operaciones ni gestionamos dinero de los usuarios — únicamente enlazamos a plataformas de terceros (brokers, servicios de remesas) bajo tu propia responsabilidad.",
-      "El uso de las herramientas del sitio, incluyendo la calculadora de interés compuesto y los widgets de TradingView, es bajo tu propio riesgo. No garantizamos que los resultados proyectados se cumplan en la realidad.",
-      "Podemos actualizar estos términos en cualquier momento; el uso continuado del sitio después de un cambio implica tu aceptación de los nuevos términos.",
+    <LegalPage title="Términos de Uso" updated="26 de julio de 2026" sections={[
+      { titulo: "Aceptación de los términos", parrafos: [
+        "Al usar FinanzaDR aceptas que el contenido del sitio (precios, noticias, guías, calculadoras y análisis) se ofrece exclusivamente con fines educativos e informativos.",
+      ] },
+      { titulo: "No somos un broker ni asesor registrado", parrafos: [
+        "FinanzaDR no es un broker, asesor de inversión registrado ni intermediario financiero. No ejecutamos operaciones ni gestionamos dinero de los usuarios — únicamente enlazamos a plataformas de terceros (brokers, servicios de remesas) bajo tu propia responsabilidad.",
+      ] },
+      { titulo: "Divulgación de enlaces de afiliados", parrafos: [
+        "FinanzaDR participa en programas de afiliados de plataformas como Robinhood y Tastytrade. Esto significa que podemos recibir una comisión si te registras o realizas una acción a través de nuestros enlaces, sin ningún costo adicional para ti. Esta compensación no influye en el contenido editorial ni en nuestras explicaciones — mantenemos el mismo estándar de honestidad en todo el sitio, uses o no nuestros enlaces.",
+      ] },
+      { titulo: "Uso de las herramientas del sitio", parrafos: [
+        "El uso de las herramientas del sitio, incluyendo la calculadora de interés compuesto y los widgets de TradingView, es bajo tu propio riesgo. No garantizamos que los resultados proyectados se cumplan en la realidad.",
+      ] },
+      { titulo: "Contenido de nivel avanzado (Opcionario)", parrafos: [
+        "El Opcionario contiene contenido educativo sobre estrategias de opciones de distintos niveles de riesgo, incluyendo algunas con pérdida potencial elevada o ilimitada. Este contenido está dirigido a fines educativos únicamente y no sustituye la evaluación de tu propio perfil de riesgo ni la aprobación de tu broker para operar cada nivel de estrategia.",
+      ] },
+      { titulo: "Cambios a estos términos", parrafos: [
+        "Podemos actualizar estos términos en cualquier momento; el uso continuado del sitio después de un cambio implica tu aceptación de los nuevos términos.",
+      ] },
     ]} />
   );
 }
 
 function AvisoPage() {
   return (
-    <LegalPage title="Aviso Legal" updated="Julio 2026" children={[
-      "FinanzaDR no constituye asesoría de inversión. Nada en este sitio debe interpretarse como una recomendación para comprar, vender o mantener ningún activo financiero.",
-      "Los datos de mercado provienen de proveedores externos (Finnhub, TradingView, Alternative.me) y pueden tener retrasos, errores o interrupciones. No garantizamos su exactitud, integridad ni disponibilidad continua.",
-      "Invertir en acciones, ETFs y criptomonedas conlleva riesgo de pérdida, incluyendo la pérdida total del capital invertido. Los rendimientos pasados no garantizan resultados futuros.",
-      "Antes de tomar decisiones financieras importantes, consulta con un asesor financiero, contable o legal calificado en tu jurisdicción.",
+    <LegalPage title="Aviso Legal" updated="26 de julio de 2026" sections={[
+      { titulo: "No es asesoría de inversión", parrafos: [
+        "FinanzaDR no constituye asesoría de inversión. Nada en este sitio debe interpretarse como una recomendación para comprar, vender o mantener ningún activo financiero.",
+      ] },
+      { titulo: "Riesgo general de inversión", parrafos: [
+        "Invertir en acciones, ETFs y criptomonedas conlleva riesgo de pérdida, incluyendo la pérdida total del capital invertido. Los rendimientos pasados no garantizan resultados futuros.",
+      ] },
+      { titulo: "Riesgo específico de opciones", parrafos: [
+        "Operar opciones conlleva riesgos adicionales y significativamente mayores a los de invertir en acciones o ETFs. Algunas estrategias descritas en el Opcionario (como Naked Put o Short Strangle) pueden generar pérdidas que superan la inversión inicial, incluyendo pérdidas potencialmente ilimitadas en ciertos casos. Estas estrategias requieren aprobación específica de tu broker y no son adecuadas para todos los inversionistas.",
+      ] },
+      { titulo: "Datos de mercado de terceros", parrafos: [
+        "Los datos de mercado provienen de proveedores externos (Finnhub, TradingView, Alternative.me) y pueden tener retrasos, errores o interrupciones. No garantizamos su exactitud, integridad ni disponibilidad continua.",
+      ] },
+      { titulo: "Consulta profesional", parrafos: [
+        "Antes de tomar decisiones financieras importantes, consulta a un asesor financiero, contable o legal calificado en tu jurisdicción.",
+      ] },
     ]} />
   );
 }
