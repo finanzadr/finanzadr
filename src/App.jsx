@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, Link, NavLink, Outlet, useOutletContext, useSearchParams, useLocation } from "react-router-dom";
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from "recharts";
 
 const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
 
@@ -95,6 +95,28 @@ const WS_STOCKS = [
     ], cierre: "Cometer uno de estos errores no te descalifica como inversionista — todos los grandes inversionistas empezaron sin saberlo todo. La diferencia entre quienes tienen éxito a largo plazo y quienes no está en reconocer estos patrones y corregirlos antes de que le cuesten caro a tu patrimonio.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["errores", "principiantes", "psicología"] },
 ];
 
+const ARTICULOS_OPCIONES = [
+  { tipo: "estrategia", id: "covered-call", nombre: "Covered Call", sesgo: "neutral", nivel: "básico",
+    extracto: "La estrategia de opciones más común para generar ingreso extra sobre acciones que ya tienes, a cambio de limitar tu ganancia máxima.",
+    queEs: "Un Covered Call combina dos posiciones: tienes 100 acciones de una empresa, y vendes una opción Call sobre esas mismas acciones, cobrando una prima de inmediato. Se llama 'covered' (cubierta) porque ya posees las acciones que respaldan la operación — si te asignan (te obligan a vender), simplemente entregas acciones que ya tenías, sin necesidad de comprarlas en el mercado a un precio desfavorable.",
+    legs: [
+      { accion: "compra", tipo: "acciones", nota: "100 acciones del subyacente — ya en tu portafolio, o compradas específicamente para esta estrategia" },
+      { accion: "venta", tipo: "call", nota: "1 contrato Call, generalmente vendido a 30-45 días de vencimiento, con strike por encima del precio actual de la acción" },
+    ],
+    maxGanancia: "(Precio strike − precio de compra de la acción) + prima cobrada. Tu ganancia queda limitada una vez el precio supera el strike, aunque la acción siga subiendo.",
+    maxPerdida: "(Precio de compra de la acción − prima cobrada), si la acción cae a cero. El riesgo de la caída es prácticamente el mismo que tener las acciones sin cobertura, solo reducido levemente por la prima recibida.",
+    puntoEquilibrio: "Precio de compra de la acción menos la prima cobrada por la Call.",
+    cuandoUsarla: "Se usa cuando tienes una opinión neutral a moderadamente alcista sobre una acción que ya posees — no esperas que suba de forma explosiva en el corto plazo, pero tampoco quieres venderla. Es una forma común de generar ingreso mensual extra sobre un portafolio existente, muy usada por inversionistas de largo plazo con acciones 'aburridas' y estables.",
+    ejemplo: "Supongamos que compraste 100 acciones de una empresa a $100 cada una ($10,000 total). Vendes una Call con strike $110 a 30-45 días, cobrando una prima de $3 por acción ($300 total). Tu punto de equilibrio baja a $97 (los $100 que pagaste, menos los $3 de prima). Si la acción cierra en $110 o más al vencimiento, te asignan: vendes tus acciones a $110, quedándote con una ganancia total de $1,300 ($1,000 de la subida de la acción + $300 de la prima) — esa es tu ganancia máxima, sin importar cuánto más haya subido la acción. Si la acción se queda entre $97 y $110, conservas las acciones y te quedas con la prima como ingreso extra. Si cae por debajo de $97, empiezas a perder dinero, aunque $3 menos de lo que hubieras perdido sin la estrategia.",
+    riesgos: "El riesgo principal no es 'perder más de lo normal' — es el costo de oportunidad: si la acción sube muchísimo más allá de tu strike, dejas esa ganancia extra sobre la mesa, porque estás obligado a vender al precio pactado. También sigues expuesto a la caída del precio de la acción casi en su totalidad, con la prima como único colchón. Además, necesitas aprobación de tu broker para operar opciones (incluso las estrategias 'cubiertas' requieren cierto nivel de autorización).",
+    payoffPoints: [
+      { precio: 70, ganancia: -2700 }, { precio: 80, ganancia: -1700 }, { precio: 90, ganancia: -700 }, { precio: 97, ganancia: 0 },
+      { precio: 100, ganancia: 300 }, { precio: 110, ganancia: 1300 }, { precio: 120, ganancia: 1300 }, { precio: 130, ganancia: 1300 }, { precio: 140, ganancia: 1300 },
+    ],
+    autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Covered Call", "Ingreso", "Básico"],
+    nota: "Este contenido es educativo e informativo. Operar opciones conlleva riesgos significativos y requiere aprobación previa de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar opciones." },
+];
+
 const CONSEJOS = [
   { icono: "🎯", nivel: "Principiante", consejo: "Empieza con ETFs, no acciones individuales", detalle: "Un ETF del S&P 500 te da exposición a 500 empresas con una sola compra." },
   { icono: "📅", nivel: "Principiante", consejo: "Invierte una cantidad fija cada mes", detalle: "La estrategia DCA consiste en invertir la misma cantidad cada mes." },
@@ -173,6 +195,7 @@ export default function FinanzasDR() {
           <Route path="apertura" element={<AperturaPage />} />
           <Route path="contenido-diario" element={<ContenidoDiarioPage />} />
           <Route path="aprende" element={<AprendePage />} />
+          <Route path="opciones" element={<OpcionesPage />} />
           <Route path="brokers" element={<BrokersPage />} />
           <Route path="calculadora" element={<CalculadoraPage />} />
           <Route path="compartir" element={<CompartirPage />} />
@@ -339,7 +362,7 @@ function Layout() {
 
       <footer style={{ borderTop:`1px solid ${C.border}`, padding:"32px", textAlign:"center", marginTop:40 }}>
         <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
-          {[["🌅","Apertura","/apertura"],["🤖","Briefing IA","/briefing"],["📱","Contenido Diario","/contenido-diario"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
+          {[["🌅","Apertura","/apertura"],["🤖","Briefing IA","/briefing"],["📱","Contenido Diario","/contenido-diario"],["🎯","Opcionario","/opciones"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
             <Link key={i} to={to}
               style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
               <span>{icon}</span>{label}
@@ -974,6 +997,14 @@ function AprendePage() {
           </div>
         ))}
       </div>
+      <div style={{ marginTop:28, background:C.goldBg, border:`1px solid ${C.gold}40`, borderRadius:8, padding:"20px 24px", display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+        <span style={{ fontSize:24 }}>🎯</span>
+        <div style={{ flex:1, minWidth:220 }}>
+          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:800, color:C.text, marginBottom:4 }}>¿Ya dominas lo básico?</div>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>Explora el Opcionario, nuestra guía en crecimiento de estrategias de opciones explicadas paso a paso.</p>
+        </div>
+        <Link to="/opciones" style={{ background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 20px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, textDecoration:"none", whiteSpace:"nowrap" }}>Ver Opcionario</Link>
+      </div>
     </div>
   );
 }
@@ -1268,6 +1299,112 @@ function ArticuloErrores({ post }) {
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
         <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
+    </div>
+  );
+}
+
+const SESGO_COLOR = { alcista: "green", bajista: "red", neutral: "gold" };
+
+function OpcionesPage() {
+  const { C } = useOutletContext();
+  const [expanded, setExpanded] = useState(0);
+  return (
+    <div className="fade-in">
+      <SectionTitle>Opcionario</SectionTitle>
+      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Estrategias de opciones explicadas paso a paso — contenido en crecimiento, empezando por las más comunes</p>
+      <div style={{ display:"grid", gap:24 }}>
+        {ARTICULOS_OPCIONES.map((post,i) => (
+          <div key={post.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
+            <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
+              <span style={{ background:C.goldBg, color:C[SESGO_COLOR[post.sesgo]], padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:700, textTransform:"uppercase" }}>{post.sesgo}</span>
+              <span style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:700, textTransform:"uppercase" }}>{post.nivel}</span>
+              {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
+            </div>
+            <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.nombre}</h3>
+            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
+            {expanded===i ? <ArticuloEstrategia post={post} /> : (
+              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
+            )}
+            <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
+             {expanded===i?"Ver menos":"Ver estrategia completa"}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ArticuloEstrategia({ post }) {
+  const { C } = useOutletContext();
+  const fmt$ = (n) => (n<0?"-":"") + "$" + Math.abs(Math.round(n)).toLocaleString("en-US");
+  return (
+    <div>
+      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:20 }}>{post.queEs}</p>
+
+      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Las patas de la operación</div>
+      <div style={{ display:"grid", gap:10, marginBottom:24 }}>
+        {post.legs.map((leg,i) => (
+          <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", border:`1px solid ${C.border}`, borderRadius:8, padding:"12px 16px" }}>
+            <span style={{ background:C.goldBg, color:C.gold, padding:"3px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'", fontWeight:700, whiteSpace:"nowrap", flexShrink:0 }}>
+              {leg.accion==="compra"?"+ ":"− "}{leg.tipo.toUpperCase()}
+            </span>
+            <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{leg.nota}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display:"grid", gap:12, marginBottom:24 }}>
+        <div style={{ borderLeft:`3px solid ${C.green}`, background:`${C.green}0f`, borderRadius:6, padding:"12px 18px" }}>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.green, marginBottom:4, textTransform:"uppercase" }}>Ganancia máxima</div>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.maxGanancia}</p>
+        </div>
+        <div style={{ borderLeft:`3px solid ${C.red}`, background:`${C.red}0f`, borderRadius:6, padding:"12px 18px" }}>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.red, marginBottom:4, textTransform:"uppercase" }}>Pérdida máxima</div>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.maxPerdida}</p>
+        </div>
+        <div style={{ borderLeft:`3px solid ${C.gold}`, background:C.goldBg, borderRadius:6, padding:"12px 18px" }}>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.gold, marginBottom:4, textTransform:"uppercase" }}>Punto de equilibrio</div>
+          <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.puntoEquilibrio}</p>
+        </div>
+      </div>
+
+      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Diagrama de ganancia/pérdida al vencimiento</div>
+      <div style={{ position:"relative", height:260, marginBottom:8, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 8px 4px" }}>
+        <div style={{ position:"absolute", top:14, right:16, fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.green, fontWeight:700 }}>Ganancia ↑</div>
+        <div style={{ position:"absolute", bottom:24, right:16, fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.red, fontWeight:700 }}>Pérdida ↓</div>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={post.payoffPoints} margin={{ top:10, right:10, left:0, bottom:0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+            <XAxis dataKey="precio" stroke={C.muted} tick={{ fontFamily:"'IBM Plex Mono'", fontSize:10, fill:C.muted }} tickFormatter={v=>"$"+v} />
+            <YAxis stroke={C.muted} tick={{ fontFamily:"'IBM Plex Mono'", fontSize:9, fill:C.muted }} tickFormatter={fmt$} />
+            <ReferenceLine y={0} stroke={C.muted} strokeDasharray="4 4" />
+            <Tooltip contentStyle={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:"'IBM Plex Mono'", fontSize:12 }}
+              labelFormatter={v=>`Precio subyacente: $${v}`}
+              formatter={(v)=>[<span style={{ color:v>=0?C.green:C.red, fontWeight:700 }}>{fmt$(v)}</span>, "Ganancia/Pérdida"]} />
+            <Line type="linear" dataKey="ganancia" stroke={C.gold} strokeWidth={2} dot={{ r:3, fill:C.gold, strokeWidth:0 }} activeDot={{ r:5 }} isAnimationActive={false} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+      <p style={{ fontSize:11, color:C.muted, lineHeight:1.6, marginBottom:24 }}>Puntos calculados al vencimiento de la opción, sin incluir comisiones. No refleja el valor de la posición antes del vencimiento.</p>
+
+      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Cuándo usarla</div>
+      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.cuandoUsarla}</p>
+
+      <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px", marginBottom:24 }}>
+        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.gold, marginBottom:6, textTransform:"uppercase" }}>Ejemplo numérico</div>
+        <p style={{ fontSize:14, color:C.text, lineHeight:1.75 }}>{post.ejemplo}</p>
+      </div>
+
+      <div style={{ display:"flex", gap:16, alignItems:"flex-start", background:`${C.red}12`, border:`1px solid ${C.red}30`, borderRadius:10, padding:"16px 20px", marginBottom:16 }}>
+        <div style={{ width:38, height:38, borderRadius:"50%", background:`${C.red}20`, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:17 }}>⚠️</div>
+        <div>
+          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.text, marginBottom:6, textTransform:"uppercase" }}>Riesgos</div>
+          <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.riesgos}</p>
+        </div>
+      </div>
+
+      {post.nota && <p style={{ fontSize:11, color:C.muted, lineHeight:1.6 }}>{post.nota}</p>}
     </div>
   );
 }
@@ -1969,9 +2106,9 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
     ctx.fillStyle=subCol; ctx.font="22px 'Courier New',monospace"; ctx.textAlign="right"; ctx.fillText("Wall Street en tu idioma",W-60,H-45); ctx.textAlign="left";
   };
   useEffect(()=>{ generateCanvas(); },[stocks,cardTheme,modo,fecha]);
-  const downloadImage=()=>{ const canvas=canvasRef.current,link=document.createElement("a"); link.download=`finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`; link.href=canvas.toDataURL("image/png"); link.click(); };
+  const downloadImage=()=>{ try{ const canvas=canvasRef.current,link=document.createElement("a"); link.download=`finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`; link.href=canvas.toDataURL("image/png"); link.click(); }catch(error){ console.error("[DEBUG downloadImage]",error); alert("DEBUG downloadImage: "+error); } };
   const shareOnX=()=>{ const text=`📊 Market Snapshot\n\n${stocks.slice(0,4).map(s=>`${s.s}: ${s.c>=0?"▲":"▼"}${Math.abs(s.c)}%`).join(" | ")}\n\nSentimiento: ${sentiment} (${pct}%)\n\n#WallStreet #Inversiones #FinanzaDR\nfinanzadr.com`; window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,"_blank"); };
-  const copyImage=async()=>{ const canvas=canvasRef.current; canvas.toBlob(async blob=>{ try{ await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]); setCopied(true); setTimeout(()=>setCopied(false),2000); }catch{ downloadImage(); } }); };
+  const copyImage=async()=>{ const canvas=canvasRef.current; canvas.toBlob(async blob=>{ try{ await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]); setCopied(true); setTimeout(()=>setCopied(false),2000); }catch(error){ console.error("[DEBUG copyImage]",error); alert("DEBUG copyImage: "+error); downloadImage(); } }); };
   return (
     <div>
       <div style={{display:"flex",gap:8,marginBottom:20}}>
