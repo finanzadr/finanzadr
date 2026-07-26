@@ -191,6 +191,28 @@ const ARTICULOS_OPCIONES = [
     ],
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Short Strangle", "Avanzado", "Riesgo Ilimitado"],
     nota: "Este contenido es educativo e informativo. El Short Strangle incluye una pata sin cobertura con riesgo teóricamente ilimitado y requiere el nivel más alto de autorización de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
+  { tipo: "estrategia", id: "iron-condor", nombre: "Iron Condor", sesgo: "neutral", nivel: "avanzado",
+    extracto: "El Short Strangle, pero con las dos alas de protección de los credit spreads agregadas. Riesgo limitado y conocido en ambas direcciones — probablemente la estrategia más popular entre traders de opciones experimentados.",
+    queEs: "Un Iron Condor combina 4 opciones a la vez: es un Short Strangle (Put vendida + Call vendida) al que le agregas dos 'alas' de protección — una Put comprada con strike más bajo, y una Call comprada con strike más alto. En esencia, es un Put Credit Spread y un Call Credit Spread abiertos al mismo tiempo sobre la misma acción. A diferencia del Short Strangle, tu pérdida máxima queda limitada y conocida en ambas direcciones desde el momento en que abres la posición — resolviendo exactamente el problema de riesgo ilimitado del Short Strangle.",
+    legs: [
+      { accion: "compra", tipo: "put", nota: "Ala protectora inferior (ej. $85) — limita tu pérdida máxima del lado de la baja" },
+      { accion: "venta", tipo: "put", nota: "Strike vendido inferior (ej. $90) — genera la prima principal de este lado" },
+      { accion: "venta", tipo: "call", nota: "Strike vendido superior (ej. $110) — genera la prima principal de este lado" },
+      { accion: "compra", tipo: "call", nota: "Ala protectora superior (ej. $115) — limita tu pérdida máxima del lado de la subida" },
+    ],
+    maxGanancia: "Limitada al crédito neto total recibido de las 4 patas — en nuestro ejemplo, $250. La obtienes completa si la acción cierra entre $90 y $110 (los dos strikes vendidos) al vencimiento.",
+    maxPerdida: "Limitada al ancho de cualquiera de las dos alas menos el crédito recibido — en nuestro ejemplo, $250 ($500 de ancho de ala − $250 de crédito). A diferencia del Short Strangle, este es un número fijo y conocido, sin importar cuánto suba o baje la acción más allá de las alas.",
+    puntoEquilibrio: "Dos puntos: strike de Put vendida menos crédito recibido (ej. $87.50), y strike de Call vendida más crédito recibido (ej. $112.50).",
+    cuandoUsarla: "Se usa en el mismo escenario que el Short Strangle — esperas que la acción se mantenga en un rango — pero cuando prefieres saber y limitar tu pérdida máxima exacta desde el inicio, en vez de exponerte al riesgo ilimitado del lado de la Call. Es una de las estrategias favoritas de traders de opciones más experimentados precisamente por esta relación de riesgo conocido, aunque a cambio la ganancia máxima también es menor que en un Short Strangle equivalente.",
+    ejemplo: "Una acción cotiza a $100. Vendes una Put $90 y compras una Put $85 (Put Credit Spread, crédito $150), y vendes una Call $110 y compras una Call $115 (Call Credit Spread, crédito $100). Tu crédito total es $250. Tus puntos de equilibrio son $87.50 y $112.50. Si la acción cierra entre $90 y $110, te quedas con los $250 completos. Si sube a $130 o cae a $60, tu pérdida máxima sigue siendo $250 en cualquiera de los dos casos — nunca más que eso, gracias a las alas de protección.",
+    riesgos: "Aunque el riesgo es limitado y conocido (a diferencia del Short Strangle), gestionar 4 contratos distintos implica más comisiones y más complejidad de seguimiento. La ganancia máxima suele ser más modesta en proporción al capital en riesgo, comparada con estrategias más simples. Requiere aprobación de nivel avanzado de tu broker, y entender bien las 4 patas antes de operar — un error al armar la posición puede desbalancear la protección que se busca.",
+    payoffPoints: [
+      { precio: 60, ganancia: -250 }, { precio: 80, ganancia: -250 }, { precio: 85, ganancia: -250 }, { precio: 87.5, ganancia: 0 },
+      { precio: 90, ganancia: 250 }, { precio: 100, ganancia: 250 }, { precio: 110, ganancia: 250 }, { precio: 112.5, ganancia: 0 },
+      { precio: 115, ganancia: -250 }, { precio: 130, ganancia: -250 }, { precio: 140, ganancia: -250 },
+    ],
+    autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Iron Condor", "Avanzado", "Riesgo Limitado"],
+    nota: "Este contenido es educativo e informativo. El Iron Condor requiere aprobación de nivel avanzado de tu broker y gestionar 4 contratos simultáneamente. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
 ];
 
 const CONSEJOS = [
