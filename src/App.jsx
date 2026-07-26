@@ -152,6 +152,25 @@ const ARTICULOS_OPCIONES = [
     ],
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Credit Spread", "Intermedio", "Riesgo Limitado"],
     nota: "Este contenido es educativo e informativo. Los spreads de opciones requieren aprobación de tu broker y conllevan riesgos, aunque limitados y conocidos desde el inicio. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
+  { tipo: "estrategia", id: "call-credit-spread", nombre: "Call Credit Spread (Spread de Crédito con Calls)", sesgo: "bajista", nivel: "intermedio",
+    extracto: "El espejo bajista del Put Credit Spread: vendes una Call y compras otra Call más cara como protección, apostando a que la acción NO subirá más allá de cierto punto.",
+    queEs: "Un Call Credit Spread combina dos opciones Call: vendes una Call con un strike más bajo (cobrando una prima mayor) y compras simultáneamente otra Call con un strike más alto (pagando una prima menor) como protección. La diferencia entre ambas primas es tu crédito neto recibido de inmediato. Tu pérdida máxima queda limitada y conocida desde el momento en que abres la posición, sin importar cuánto suba la acción.",
+    legs: [
+      { accion: "venta", tipo: "call", nota: "Strike más bajo (ej. $105) — la que genera la mayor prima cobrada" },
+      { accion: "compra", tipo: "call", nota: "Strike más alto (ej. $110) — actúa como 'seguro', limitando tu pérdida máxima" },
+    ],
+    maxGanancia: "Limitada al crédito neto recibido (la diferencia entre ambas primas) — en nuestro ejemplo, $150. La obtienes completa si la acción cierra igual o por debajo del strike vendido ($105) al vencimiento.",
+    maxPerdida: "(Diferencia entre ambos strikes − crédito neto recibido) × 100 — en nuestro ejemplo, $350. Esta es tu pérdida máxima absoluta, sin importar cuánto más suba la acción por encima de $110, gracias a la Call comprada como protección.",
+    puntoEquilibrio: "Strike vendido más el crédito neto recibido — en nuestro ejemplo, $106.50.",
+    cuandoUsarla: "Se usa cuando tienes una opinión neutral a moderadamente bajista — no necesariamente esperas que la acción se desplome, solo que no suba más allá de cierto nivel en el corto plazo. Es la forma más común de 'apostar a la baja' con riesgo limitado y conocido, sin necesitar vender la acción en corto (short selling), que tiene sus propios riesgos aún mayores.",
+    ejemplo: "Una acción cotiza a $100. Vendes una Call con strike $105 cobrando $3.00 por acción ($300), y compras una Call con strike $110 pagando $1.50 por acción ($150). Tu crédito neto es $150. Tu punto de equilibrio es $106.50. Si la acción cierra en $105 o menos, ambas Calls expiran sin valor y te quedas con los $150 completos. Si sube a $110 o más, tu pérdida queda topada en $350 — sin importar si la acción sube a $115 o a $200, tu pérdida máxima sigue siendo $350.",
+    riesgos: "El riesgo principal es equivocarse en la dirección: si la acción sube con fuerza (por ejemplo, tras un buen reporte de resultados), tocas tu pérdida máxima rápidamente. Requiere gestionar dos contratos, con el doble de comisiones. También conviene recordar que las acciones tienden a subir más frecuentemente que bajar en el largo plazo, así que esta estrategia suele usarse con una tesis específica de corto plazo, no como apuesta general.",
+    payoffPoints: [
+      { precio: 80, ganancia: 150 }, { precio: 90, ganancia: 150 }, { precio: 100, ganancia: 150 }, { precio: 105, ganancia: 150 },
+      { precio: 106.5, ganancia: 0 }, { precio: 110, ganancia: -350 }, { precio: 120, ganancia: -350 }, { precio: 140, ganancia: -350 },
+    ],
+    autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Credit Spread", "Intermedio", "Bajista"],
+    nota: "Este contenido es educativo e informativo. Los spreads de opciones requieren aprobación de tu broker y conllevan riesgos, aunque limitados y conocidos desde el inicio. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
 ];
 
 const CONSEJOS = [
