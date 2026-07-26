@@ -369,15 +369,13 @@ function Layout() {
             </Link>
           ))}
         </div>
-        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:10, marginBottom:20, paddingTop:20, borderTop:`1px dashed ${C.border}` }}>
-          <p style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'", maxWidth:380, lineHeight:1.6, margin:0 }}>Contenido avanzado de trading — si ya sabes qué es una acción y un ETF</p>
-          <div style={{ position:"relative", display:"inline-block" }}>
-            <span style={{ position:"absolute", top:-10, right:-10, background:`${C.red}25`, border:`1px solid ${C.red}`, color:C.red, padding:"2px 8px", borderRadius:20, fontSize:8.5, fontFamily:"'IBM Plex Mono'", fontWeight:800, letterSpacing:0.5, whiteSpace:"nowrap", textTransform:"uppercase" }}>Nivel Avanzado</span>
-            <Link to="/opciones"
-              style={{ background:`${C.red}10`, border:`1px solid ${C.red}40`, color:C.red, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
-              <span>🎯</span>Opcionario
-            </Link>
-          </div>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", marginBottom:20, paddingTop:20, borderTop:`1px dashed ${C.border}` }}>
+          <p style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'", maxWidth:380, lineHeight:1.6, margin:"0 0 12px" }}>Contenido avanzado de trading — si ya sabes qué es una acción y un ETF</p>
+          <span style={{ display:"inline-block", background:`${C.red}25`, border:`1px solid ${C.red}`, color:C.red, padding:"2px 8px", borderRadius:20, fontSize:8.5, fontFamily:"'IBM Plex Mono'", fontWeight:800, letterSpacing:0.5, whiteSpace:"nowrap", textTransform:"uppercase", marginBottom:8 }}>Nivel Avanzado</span>
+          <Link to="/opciones"
+            style={{ background:`${C.red}10`, border:`1px solid ${C.red}40`, color:C.red, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
+            <span>🎯</span>Opcionario
+          </Link>
         </div>
         <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted }}>
           FinanzaDR &copy; 2026 &middot; Todos los derechos reservados &middot; No constituye asesoria de inversion
