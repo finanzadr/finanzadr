@@ -115,6 +115,24 @@ const ARTICULOS_OPCIONES = [
     ],
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Covered Call", "Ingreso", "Básico"],
     nota: "Este contenido es educativo e informativo. Operar opciones conlleva riesgos significativos y requiere aprobación previa de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar opciones." },
+  { tipo: "estrategia", id: "naked-put", nombre: "Naked Put (Put al Descubierto)", sesgo: "alcista", nivel: "avanzado",
+    extracto: "Vender una opción Put sin tener el efectivo completo reservado, apostando a que la acción se mantendrá por encima de un precio determinado. Alto riesgo, no recomendada para principiantes.",
+    queEs: "En un Naked Put, vendes una opción Put sin reservar el efectivo completo necesario para comprar las acciones si te asignan — dependes del margen de tu cuenta como respaldo, en vez de tener el dinero completo apartado. Esto la diferencia de un 'Cash-Secured Put', donde sí reservas el 100% del efectivo necesario y el riesgo es más controlado. Cobras la prima de inmediato, apostando a que el precio de la acción se mantendrá por encima de tu strike.",
+    legs: [
+      { accion: "venta", tipo: "put", nota: "1 contrato Put, generalmente vendido a 30-45 días de vencimiento, con strike por debajo del precio actual de la acción — SIN reservar el efectivo completo, usando margen de la cuenta" },
+    ],
+    maxGanancia: "Limitada a la prima cobrada — en nuestro ejemplo, $250. Esta es tu ganancia máxima si la acción cierra igual o por encima del strike al vencimiento.",
+    maxPerdida: "(Precio strike − prima cobrada) × 100, si la acción cae a cero — en nuestro ejemplo, hasta $9,250. Es una de las pérdidas potenciales más grandes entre las estrategias básicas de opciones, porque el límite inferior real es cero.",
+    puntoEquilibrio: "Precio strike menos la prima cobrada — en nuestro ejemplo, $92.50.",
+    cuandoUsarla: "Se usa cuando tienes una opinión neutral a moderadamente alcista sobre una acción, y estás dispuesto a comprarla al precio strike si cae — pero sin tener necesariamente el efectivo completo reservado, confiando en el margen de tu cuenta. Algunos operadores la usan para 'entrar' a una acción que quieren poseer a un precio más bajo que el actual, cobrando la prima mientras esperan.",
+    ejemplo: "Una acción cotiza a $100. Vendes un Put con strike $95 a 30-45 días, cobrando una prima de $2.50 por acción ($250 total por contrato). Tu punto de equilibrio es $92.50. Si la acción cierra en $95 o más al vencimiento, el Put expira sin valor y te quedas con los $250 completos de ganancia. Si cae por debajo de $95, te asignan: estás obligado a comprar 100 acciones a $95 cada una ($9,500), sin importar cuánto haya caído el precio real de mercado. Si la acción se desploma a $40, por ejemplo, tu pérdida sería de aproximadamente $5,250 en ese momento.",
+    riesgos: "Esta es una de las estrategias de opciones con mayor riesgo real para un principiante. Como no reservaste el efectivo completo, tu broker puede emitir una 'llamada de margen' (margin call) si la acción cae fuerte, exigiéndote depositar más dinero de inmediato o cerrando la posición de forma forzada, posiblemente en el peor momento. La pérdida potencial es mucho mayor que en un Covered Call, y requiere el nivel más alto de autorización de opciones en la mayoría de brokers. La variante 'Cash-Secured Put' (con el efectivo completo reservado) es considerablemente más segura y suele ser el punto de entrada recomendado antes de intentar esta versión.",
+    payoffPoints: [
+      { precio: 50, ganancia: -4250 }, { precio: 60, ganancia: -3250 }, { precio: 70, ganancia: -2250 }, { precio: 80, ganancia: -1250 },
+      { precio: 90, ganancia: -250 }, { precio: 92.5, ganancia: 0 }, { precio: 95, ganancia: 250 }, { precio: 100, ganancia: 250 }, { precio: 110, ganancia: 250 }, { precio: 140, ganancia: 250 },
+    ],
+    autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Naked Put", "Avanzado", "Riesgo Alto"],
+    nota: "Este contenido es educativo e informativo. El Naked Put es una estrategia de alto riesgo que puede generar pérdidas significativas y requiere aprobación de nivel avanzado de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
 ];
 
 const CONSEJOS = [
