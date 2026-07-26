@@ -291,6 +291,16 @@ function ScrollToTop() {
   return null;
 }
 
+function useDocumentMeta(title, description) {
+  useEffect(() => {
+    document.title = title;
+    if (description) {
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) meta.setAttribute("content", description);
+    }
+  }, [title, description]);
+}
+
 export default function FinanzasDR() {
   return (
     <BrowserRouter>
@@ -504,6 +514,7 @@ function Layout() {
 }
 
 function InicioPage() {
+  useDocumentMeta("FinanzaDR — Wall Street en tu idioma", "Educación financiera en español para latinos en EE.UU.: precios en tiempo real, análisis con IA y guías claras para aprender a invertir.");
   const { stocks, C, dark } = useOutletContext();
   return (
     <div className="fade-in">
@@ -612,6 +623,7 @@ function InicioPage() {
 }
 
 function MercadosPage() {
+  useDocumentMeta("Mercados en Vivo — FinanzaDR", "Precios en tiempo real de los principales índices, sectores y criptomonedas, explicados en español.");
   const { stocks, C, lastUpdate, realLoading, fetchRealPrices } = useOutletContext();
   const [searchParams] = useSearchParams();
   const [mercadosView, setMercadosView] = useState(searchParams.get("view") === "charts" ? "charts" : "cards");
@@ -665,6 +677,7 @@ function MercadosPage() {
 }
 
 function NoticiasPage() {
+  useDocumentMeta("Noticias Financieras — FinanzaDR", "Las noticias más relevantes de Wall Street, explicadas en español para inversionistas latinos.");
   const { noticias, noticiasLoading, fetchNoticias, C } = useOutletContext();
   return (
     <div className="fade-in">
@@ -707,6 +720,7 @@ function NoticiasPage() {
 }
 
 function BriefingPage() {
+  useDocumentMeta("Resumen de Cierre del Mercado — FinanzaDR", "Análisis diario de cómo cerró Wall Street, con la cadena de causas explicada en español simple.");
   const { C } = useOutletContext();
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
@@ -769,6 +783,7 @@ function BriefingPage() {
 }
 
 function AperturaPage() {
+  useDocumentMeta("Resumen de Apertura del Mercado — FinanzaDR", "Qué esperar del mercado hoy: futuros, earnings y noticias overnight, explicados en español.");
   const { C } = useOutletContext();
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
@@ -842,6 +857,7 @@ function CopyButton({ texto }) {
 }
 
 function ContenidoDiarioPage() {
+  useDocumentMeta("Contenido Diario para Redes — FinanzaDR", "Guiones listos para compartir el análisis financiero del día en tus redes sociales.");
   const { C } = useOutletContext();
   const [searchParams] = useSearchParams();
   const [fuenteView, setFuenteView] = useState(searchParams.get("fuente") === "apertura" ? "apertura" : "cierre");
@@ -1037,6 +1053,7 @@ function MonitoreoReporte() {
 }
 
 function MonitoreoPage() {
+  useDocumentMeta("Monitoreo — FinanzaDR");
   const { C } = useOutletContext();
   const [autenticado, setAutenticado] = useState(false);
   const [password, setPassword] = useState("");
@@ -1086,6 +1103,7 @@ function MonitoreoPage() {
 }
 
 function AprendePage() {
+  useDocumentMeta("Aprende a Invertir Desde Cero — FinanzaDR", "Guías claras en español sobre ETFs, acciones, cuentas de retiro y más, para quien está empezando a invertir.");
   const { C } = useOutletContext();
   const [expanded, setExpanded] = useState(0);
   return (
@@ -1425,6 +1443,7 @@ function ArticuloErrores({ post }) {
 const SESGO_COLOR = { alcista: "green", bajista: "red", neutral: "gold" };
 
 function OpcionesPage() {
+  useDocumentMeta("Opcionario: Estrategias de Opciones — FinanzaDR", "Estrategias de trading de opciones explicadas paso a paso, con ejemplos y diagramas de ganancia/pérdida.");
   const { C } = useOutletContext();
   const [expanded, setExpanded] = useState(0);
   return (
@@ -1529,6 +1548,7 @@ function ArticuloEstrategia({ post }) {
 }
 
 function BrokersPage() {
+  useDocumentMeta("Brokers Recomendados — FinanzaDR", "Compara plataformas para invertir desde Estados Unidos, con guías para abrir tu cuenta.");
   const { C } = useOutletContext();
   return (
     <div className="fade-in">
@@ -1542,10 +1562,12 @@ function BrokersPage() {
 }
 
 function CalculadoraPage() {
+  useDocumentMeta("Calculadora de Interés Compuesto — FinanzaDR", "Simula cómo crece tu dinero invertido con el tiempo usando interés compuesto.");
   return <div className="fade-in"><CompoundCalc /></div>;
 }
 
 function HeatmapPage() {
+  useDocumentMeta("Heat Map del Mercado — FinanzaDR", "Visualiza de un vistazo qué sectores y activos suben o bajan hoy en Wall Street.");
   const { C } = useOutletContext();
   return (
     <div className="fade-in">
@@ -1559,6 +1581,7 @@ function HeatmapPage() {
 }
 
 function CompartirPage() {
+  useDocumentMeta("Comparte el Mercado de Hoy — FinanzaDR", "Genera una imagen con el resumen del mercado para compartir en tus redes.");
   const { stocks, C } = useOutletContext();
   const [searchParams] = useSearchParams();
   const [vista, setVista] = useState(searchParams.get("vista") === "cierre" ? "cierre" : "vivo");
@@ -1629,6 +1652,7 @@ function CompartirPage() {
 }
 
 function SentimientoPage() {
+  useDocumentMeta("Sentimiento del Mercado Cripto — FinanzaDR", "El índice de miedo y codicia de las criptomonedas, actualizado y explicado en español.");
   return (
     <div className="fade-in">
       <SentimientoMercado />
@@ -1637,6 +1661,7 @@ function SentimientoPage() {
 }
 
 function NewsletterPage() {
+  useDocumentMeta("Newsletter Gratis — FinanzaDR", "Recibe el análisis financiero diario directo en tu correo, gratis.");
   const { C, dark } = useOutletContext();
   return (
     <div className="fade-in">
@@ -1672,6 +1697,7 @@ function LegalPage({ title, updated, sections }) {
 }
 
 function PrivacidadPage() {
+  useDocumentMeta("Política de Privacidad — FinanzaDR", "Cómo protegemos tu información en FinanzaDR.");
   return (
     <LegalPage title="Política de Privacidad" updated="26 de julio de 2026" sections={[
       { titulo: "Qué información recopilamos", parrafos: [
@@ -1697,6 +1723,7 @@ function PrivacidadPage() {
 }
 
 function TerminosPage() {
+  useDocumentMeta("Términos de Uso — FinanzaDR", "Condiciones de uso de la plataforma FinanzaDR.");
   return (
     <LegalPage title="Términos de Uso" updated="26 de julio de 2026" sections={[
       { titulo: "Aceptación de los términos", parrafos: [
@@ -1722,6 +1749,7 @@ function TerminosPage() {
 }
 
 function AvisoPage() {
+  useDocumentMeta("Aviso Legal — FinanzaDR", "Aviso legal y de riesgo de FinanzaDR. Contenido educativo, no asesoría financiera.");
   return (
     <LegalPage title="Aviso Legal" updated="26 de julio de 2026" sections={[
       { titulo: "No es asesoría de inversión", parrafos: [
