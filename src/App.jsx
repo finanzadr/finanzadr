@@ -254,6 +254,15 @@ const formatHora = (iso) => {
   return `${h}:${m} ${ampm}`;
 };
 
+const formatTiempoRelativo = (iso) => {
+  const minutos = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (minutos < 1) return "justo ahora";
+  if (minutos < 60) return `hace ${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `hace ${horas}h`;
+  return `hace ${Math.floor(horas / 24)}d`;
+};
+
 // Convierte Markdown básico (**negritas** y *itálica*) en nodos React, sin
 // usar dangerouslySetInnerHTML — el texto viene de una respuesta de Claude,
 // así que se parsea a elementos en vez de inyectar HTML crudo.
@@ -749,17 +758,24 @@ function BriefingPage() {
   }
 
   const parrafos = (data.resumen || "").split(/\n+/).map(p => p.trim()).filter(Boolean);
+  const [titulo, ...cuerpo] = parrafos;
 
   return (
     <div className="fade-in">
-      <SectionTitle>🤖 Briefing del Mercado</SectionTitle>
-      <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:24 }}>
-        ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
-      </p>
+      <Label>── 🤖 Briefing del Mercado</Label>
+      {titulo && (
+        <>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:24 }}>
+            <span className="live-dot" style={{ width:7, height:7, borderRadius:"50%", background:C.green, display:"inline-block" }} />
+            <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.green }}>Actualizado {formatTiempoRelativo(data.generadoEn)}</span>
+          </div>
+        </>
+      )}
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", marginBottom:32 }}>
-        {parrafos.map((p, i) => (
-          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === parrafos.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
+        {cuerpo.map((p, i) => (
+          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
         ))}
       </div>
 
@@ -812,17 +828,24 @@ function AperturaPage() {
   }
 
   const parrafos = (data.resumen || "").split(/\n+/).map(p => p.trim()).filter(Boolean);
+  const [titulo, ...cuerpo] = parrafos;
 
   return (
     <div className="fade-in">
-      <SectionTitle>🌅 Resumen de Apertura</SectionTitle>
-      <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:24 }}>
-        ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
-      </p>
+      <Label>── 🌅 Resumen de Apertura</Label>
+      {titulo && (
+        <>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:24 }}>
+            <span className="live-dot" style={{ width:7, height:7, borderRadius:"50%", background:C.green, display:"inline-block" }} />
+            <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.green }}>Actualizado {formatTiempoRelativo(data.generadoEn)}</span>
+          </div>
+        </>
+      )}
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px" }}>
-        {parrafos.map((p, i) => (
-          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === parrafos.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
+        {cuerpo.map((p, i) => (
+          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
         ))}
       </div>
     </div>
