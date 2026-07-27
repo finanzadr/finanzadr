@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { put } from "@vercel/blob";
 import { autorizadoParaCron } from "./_auth.js";
 
-const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
+const FINNHUB_KEY = process.env.FINNHUB_KEY;
 
 // Pathname fijo (sin sufijo aleatorio) para poder ubicar el mismo blob en
 // cada lectura desde /api/briefing sin tener que guardar la URL en otro lado.
@@ -25,7 +25,7 @@ const isSafeHeadline = (headline) => {
   return !BLOCKED_HEADLINE_WORDS.some((w) => text.includes(w));
 };
 
-async function fetchPrecios() {
+export async function fetchPrecios() {
   return Promise.all(
     WS_STOCKS.map(async (st) => {
       const symbol = st.s === "BTC-USD" ? "BINANCE:BTCUSDT" : st.s;
@@ -44,18 +44,25 @@ async function fetchPrecios() {
   );
 }
 
-async function fetchNoticias() {
+// Artículos ya filtrados por isSafeHeadline pero sin transformar campos —
+// preserva el shape crudo de Finnhub (headline, summary, source, datetime,
+// category, url) para que cada consumidor recorte lo que necesite.
+export async function fetchNoticiasCrudas(limite = 10) {
   try {
     const res = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
     const data = await res.json();
     if (!Array.isArray(data)) return [];
-    return data
-      .filter((n) => isSafeHeadline(n.headline))
-      .slice(0, 10)
-      .map((n) => ({ titulo: n.headline, resumen: n.summary, fuente: n.source }));
+    return data.filter((n) => isSafeHeadline(n.headline)).slice(0, limite);
   } catch {
     return [];
   }
+}
+
+// Shape reducido {titulo, resumen, fuente} para el prompt de Agente 1 (menos
+// tokens, sin campos que no usa la redacción del briefing).
+export async function fetchNoticias() {
+  const crudas = await fetchNoticiasCrudas(10);
+  return crudas.map((n) => ({ titulo: n.headline, resumen: n.summary, fuente: n.source }));
 }
 
 async function fetchFearGreed() {

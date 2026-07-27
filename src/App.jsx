@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, Link, NavLink, Outlet, useOutletContext, useSearchParams, useLocation } from "react-router-dom";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from "recharts";
 
-const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
-
 const WS_STOCKS = [
   { s: "SPY",     n: "S&P 500",       p: 528.40,  c:  0.43, icon: "📊" },
   { s: "QQQ",     n: "NASDAQ",        p: 446.82,  c:  0.71, icon: "💻" },
@@ -244,12 +242,6 @@ const BROKERS = [
   { name: "Remitly", initial: "R", nivel: "Remesas", desc: "Remesas rápidas y seguras a República Dominicana y toda Latinoamérica, con tu primer envío gratis.", cta: "Enviar remesa", url: "https://remitly.com" },
 ];
 
-const BLOCKED_HEADLINE_WORDS = ["war", "strike", "missile", "election", "died", "dies"];
-const isSafeHeadline = (headline) => {
-  const text = (headline || "").toLowerCase();
-  return !BLOCKED_HEADLINE_WORDS.some(w => text.includes(w));
-};
-
 const fmt = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const clr = (c) => c >= 0 ? "#00d68f" : "#ff4466";
 const arr = (c) => c >= 0 ? "▲" : "▼";
@@ -346,11 +338,11 @@ function Layout() {
   const fetchNoticias = async () => {
     setNoticiasLoading(true);
     try {
-      const res = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+      const res = await fetch("/api/noticias");
       const data = await res.json();
       if (data && data.length > 0) {
         const cats = { "earnings":"Ganancias","ipo":"IPO","merger":"Fusiones","crypto":"Cripto","forex":"Divisas","economy":"Economía","general":"Mercados" };
-        setNoticias(data.filter(n => isSafeHeadline(n.headline)).slice(0,15).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} días`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
+        setNoticias(data.slice(0,15).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} días`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
       }
     } catch(e) {}
     setNoticiasLoading(false);
@@ -359,15 +351,13 @@ function Layout() {
   const fetchRealPrices = async () => {
     setRealLoading(true);
     try {
-      const updated = await Promise.all(WS_STOCKS.map(async st => {
-        try {
-          const symbol = st.s === "BTC-USD" ? "BINANCE:BTCUSDT" : st.s;
-          const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`);
-          const data = await res.json();
-          if (data.c && data.c > 0) return { ...st, p: data.c, c: +(data.dp ?? ((data.c-data.pc)/data.pc*100)).toFixed(2) };
-          return st;
-        } catch { return st; }
-      }));
+      const res = await fetch("/api/precios");
+      const data = await res.json();
+      const porSimbolo = Object.fromEntries(data.map(p => [p.simbolo, p]));
+      const updated = WS_STOCKS.map(st => {
+        const p = porSimbolo[st.s];
+        return p && p.precio != null ? { ...st, p: p.precio, c: p.cambioPct } : st;
+      });
       setStocks(updated);
       setLastUpdate(new Date().toLocaleTimeString("es-DO"));
     } catch(e) { setRealErr("No se pudo conectar."); }
@@ -1855,9 +1845,9 @@ function SentimientoMercado() {
       })
       .catch(() => setLoading(false));
 
-    fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`)
+    fetch("/api/noticias")
       .then(r => r.json())
-      .then(d => setNews(d.filter(n => isSafeHeadline(n.headline)).slice(0, 4)))
+      .then(d => setNews(d.slice(0, 4)))
       .catch(() => {});
   }, []);
 
