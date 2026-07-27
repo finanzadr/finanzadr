@@ -365,7 +365,7 @@ function Layout() {
       const porSimbolo = Object.fromEntries(data.map(p => [p.simbolo, p]));
       const updated = WS_STOCKS.map(st => {
         const p = porSimbolo[st.s];
-        return p && p.precio != null ? { ...st, p: p.precio, c: p.cambioPct } : st;
+        return p && p.precio != null ? { ...st, p: p.precio, c: p.cambioPct, tipo: p.tipo ?? st.tipo } : st;
       });
       setStocks(updated);
       setLastUpdate(new Date().toLocaleTimeString("es-DO"));
