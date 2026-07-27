@@ -762,7 +762,7 @@ function BriefingPage() {
 
   return (
     <div className="fade-in">
-      <Label>── 🤖 Briefing del Mercado</Label>
+      <Label>── 🤖 Resumen de Cierre</Label>
       {titulo && (
         <>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
