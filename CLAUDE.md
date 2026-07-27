@@ -24,11 +24,11 @@ This is a single-page marketing/tool site for FinanzaDR ("Wall Street en tu idio
 
 **Styling is all inline JS style objects** — there are no CSS Modules and effectively no component-scoped CSS. `src/index.css` (loaded via `main.jsx`) only provides global resets/fonts from the original Vite template. `src/App.css` exists but is **not imported anywhere** and is dead leftover from the create-vite template — don't assume it applies. Animations/keyframes and a handful of hover/media-query rules that can't be done as inline styles are injected into `document.head` at runtime inside a `useEffect` in `Layout`.
 
-**External data sources**, all called directly from the browser with `fetch` (no backend/API layer):
-- Finnhub (`FINNHUB_KEY` hardcoded near the top of `App.jsx`) for stock quotes (`/quote`, polled every 60s) and market news (`/news`).
-- `api.alternative.me/fng` for the crypto Fear & Greed index — labeled "Sentimiento Cripto" in the UI on purpose, since it measures crypto market sentiment, not the traditional stock market.
-- MailerLite form endpoint (hardcoded form ID) for newsletter signups.
-- TradingView's `tv.js` widget script (Charts en Vivo, nested inside Mercados) and TradingView's `embed-widget-stock-heatmap.js` script (Heat Map page), both injected dynamically.
+**External data sources:**
+- Finnhub stock quotes and market news are **not** called directly from the browser — `FINNHUB_KEY` lives server-side only (`process.env.FINNHUB_KEY` in `api/agente-mercados.js`, which exports `fetchPrecios()`/`fetchNoticiasCrudas()`). The frontend polls `/api/precios` (quotes, polled every 60s from `Layout`) and `/api/noticias` (market news) instead, both thin serverless endpoints (`api/precios.js`, `api/noticias.js`) with a short in-memory cache (25s / 90s respectively) to avoid multiplying real Finnhub calls per concurrent visitor. Neither endpoint takes query params — they always serve the fixed `WS_STOCKS` symbol set / general news category, so they can't be used as an open proxy to Finnhub.
+- `api.alternative.me/fng` for the crypto Fear & Greed index, still called directly from the browser — labeled "Sentimiento Cripto" in the UI on purpose, since it measures crypto market sentiment, not the traditional stock market.
+- MailerLite form endpoint (hardcoded form ID) for newsletter signups, called directly from the browser.
+- TradingView's `tv.js` widget script (Charts en Vivo, nested inside Mercados) and TradingView's `embed-widget-stock-heatmap.js` script (Heat Map page), both injected dynamically, browser-side.
 
 **`FinanzasDR.jsx` at the repo root is a stray duplicate/backup** — it is not imported by `main.jsx` or anything else and is not part of the build. The actual app entry point is `src/main.jsx` → `src/App.jsx`. Don't edit the root-level file expecting it to affect the running app.
 
