@@ -273,7 +273,7 @@ const DARK = { bg: "#07080f", card: "#0d0f1e", border: "#1a1e35", gold: "#c8a84b
 const LIGHT = { bg: "#f4f5f8", card: "#ffffff", border: "#e0e4ef", gold: "#b8860b", goldBg: "#b8860b15", green: "#00875a", red: "#d93025", text: "#1a1d2e", muted: "#8891a8", sub: "#555e7a", navBg: "#ffffff", tickerBg: "#1a1d2e" };
 
 const NAV_ITEMS = [
-  ["/", "🚀 Empieza Aquí"], ["/mercados", "📊 Mercados"], ["/heatmap", "🔲 Heat Map"], ["/sentimiento", "🪙 Sentimiento Cripto"],
+  ["/", "🚀 Empieza Aquí"], ["/apertura", "🌅 Apertura"], ["/briefing", "🤖 Cierre"], ["/mercados", "📊 Mercados"], ["/heatmap", "🔲 Heat Map"], ["/sentimiento", "🪙 Sentimiento Cripto"],
   ["/noticias", "📰 Noticias"], ["/aprende", "📚 Aprende"], ["/brokers", "💳 Brokers"], ["/calculadora", "🧮 Calculadora"],
 ];
 
@@ -522,7 +522,6 @@ function InicioPage() {
             <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
               <Link to="/mercados" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>📊 Explorar Mercados</Link>
               <Link to="/mercados?view=charts" style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, textDecoration:"none", display:"inline-block" }}>📈 Charts en Vivo</Link>
-              <Link to="/briefing" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>🤖 Análisis AI</Link>
             </div>
             <div style={{ display:"flex", gap:24, marginTop:28, paddingTop:24, borderTop:`1px solid ${C.border}`, flexWrap:"wrap" }}>
               {[{n:"8",l:"Activos en Vivo"},{n:"∞",l:"Charts Disponibles"},{n:"24/7",l:"Datos en Tiempo Real"},{n:"$0",l:"Costo Total"}].map((s,i) => (
@@ -599,7 +598,7 @@ function InicioPage() {
         <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
           <Label style={{ margin:"0 0 12px 0" }}>── ACCESO RÁPIDO</Label>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            {[{icon:"📈",label:"Charts en Vivo",to:"/mercados?view=charts"},{icon:"📰",label:"Noticias Wall St.",to:"/noticias"},{icon:"🧮",label:"Calculadora",to:"/calculadora"},{icon:"📧",label:"Newsletter Gratis",to:"/newsletter"}].map((a,i) => (
+            {[{icon:"🌅",label:"Apertura",to:"/apertura"},{icon:"🤖",label:"Cierre del Mercado",to:"/briefing"},{icon:"📈",label:"Charts en Vivo",to:"/mercados?view=charts"},{icon:"📰",label:"Noticias Wall St.",to:"/noticias"},{icon:"🧮",label:"Calculadora",to:"/calculadora"},{icon:"📧",label:"Newsletter Gratis",to:"/newsletter"}].map((a,i) => (
               <Link key={i} to={a.to} style={{ background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:7, padding:"9px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:10, textDecoration:"none" }}>
                 <span style={{ fontSize:16 }}>{a.icon}</span>
                 <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, color:C.gold }}>{a.label}</span>
