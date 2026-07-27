@@ -990,7 +990,7 @@ function TablaSimple({ filas }) {
   );
 }
 
-function MonitoreoReporte() {
+function MonitoreoReporte({ password }) {
   const { C } = useOutletContext();
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
@@ -998,7 +998,7 @@ function MonitoreoReporte() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/agente-monitoreo")
+    fetch("/api/monitoreo", { headers: { "x-monitoreo-password": password } })
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok) throw new Error(body?.error || "No se pudo generar el reporte de monitoreo.");
@@ -1007,7 +1007,7 @@ function MonitoreoReporte() {
       .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
       .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
     return () => { cancelled = true; };
-  }, []);
+  }, [password]);
 
   if (status === "loading") {
     return (
@@ -1080,7 +1080,7 @@ function MonitoreoPage() {
     }
   };
 
-  if (autenticado) return <MonitoreoReporte />;
+  if (autenticado) return <MonitoreoReporte password={password} />;
 
   return (
     <div className="fade-in" style={{ maxWidth:400, margin:"60px auto 0", textAlign:"center" }}>

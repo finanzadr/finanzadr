@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { put } from "@vercel/blob";
+import { autorizadoParaCron } from "./_auth.js";
 
 const FINNHUB_KEY = "d88c1mhr01qq4342hla0d88c1mhr01qq4342hlag";
 
@@ -366,6 +367,11 @@ export async function generarBriefing() {
 // una regeneración (por ejemplo, para probar cambios en el prompt).
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+
+  if (!autorizadoParaCron(req)) {
+    res.status(401).json({ error: "No autorizado." });
+    return;
+  }
 
   if (!process.env.ANTHROPIC_API_KEY) {
     res.status(500).json({ error: "Falta configurar ANTHROPIC_API_KEY en las variables de entorno." });

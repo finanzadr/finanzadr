@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { put } from "@vercel/blob";
+import { autorizadoParaCron } from "./_auth.js";
 
 // Pathname fijo (sin sufijo aleatorio) para poder ubicar el mismo blob en
 // cada lectura desde /api/apertura sin tener que guardar la URL en otro lado.
@@ -159,6 +160,11 @@ export async function generarApertura() {
 // guardarlo en Blob. Sin cron todavía — se activa a mano mientras se prueba.
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+
+  if (!autorizadoParaCron(req)) {
+    res.status(401).json({ error: "No autorizado." });
+    return;
+  }
 
   if (!process.env.ANTHROPIC_API_KEY) {
     res.status(500).json({ error: "Falta configurar ANTHROPIC_API_KEY en las variables de entorno." });

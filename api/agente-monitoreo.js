@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { put } from "@vercel/blob";
+import { autorizadoParaCron } from "./_auth.js";
 
 // Pathname fijo (sin sufijo aleatorio) para poder ubicar el mismo blob en
 // cada lectura, igual que en Agente 1 (briefing/latest.json) y Agente 2
@@ -108,6 +109,11 @@ export async function generarMonitoreo() {
 // los suyos. Sin cron todavía — se invoca manualmente mientras se prueba.
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+
+  if (!autorizadoParaCron(req)) {
+    res.status(401).json({ error: "No autorizado." });
+    return;
+  }
 
   if (!process.env.ANTHROPIC_API_KEY) {
     res.status(500).json({ error: "Falta configurar ANTHROPIC_API_KEY en las variables de entorno." });
