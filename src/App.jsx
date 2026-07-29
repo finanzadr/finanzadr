@@ -493,7 +493,7 @@ function Layout() {
           <p style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'", maxWidth:380, lineHeight:1.6, margin:"0 0 12px" }}>Contenido avanzado de trading — si ya sabes qué es una acción y un ETF</p>
           <span style={{ display:"inline-block", background:`${C.red}25`, border:`1px solid ${C.red}`, color:C.red, padding:"2px 8px", borderRadius:20, fontSize:8.5, fontFamily:"'IBM Plex Mono'", fontWeight:800, letterSpacing:0.5, whiteSpace:"nowrap", textTransform:"uppercase", marginBottom:8 }}>Nivel Avanzado</span>
           <Link to="/opciones"
-            style={{ background:`${C.red}10`, border:`1px solid ${C.red}40`, color:C.red, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
+            style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
             <span>🎯</span>Opcionario
           </Link>
         </div>
