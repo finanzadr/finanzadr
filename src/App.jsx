@@ -2323,18 +2323,30 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
     ctx.fillStyle=subCol; ctx.font="22px 'Courier New',monospace"; ctx.textAlign="right"; ctx.fillText("Wall Street en tu idioma",W-60,H-45); ctx.textAlign="left";
   };
   useEffect(()=>{ generateCanvas(); },[stocks,cardTheme,modo,fecha]);
-  const downloadImage = () => {
+  const downloadImage = async () => {
     try {
       const canvas = canvasRef.current;
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error("toBlob devolvió null")), "image/png");
+      });
+      const fileName = `finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`;
+      const file = new File([blob], fileName, { type: "image/png" });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+
       const link = document.createElement("a");
-      link.download = `finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.download = fileName;
+      link.href = URL.createObjectURL(blob);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
     } catch (error) {
       console.error("[downloadImage]", error);
-      alert("No se pudo descargar la imagen. Intenta con 'Copiar Imagen' o toma captura de pantalla.");
+      alert("No se pudo guardar la imagen. Mantén presionada la imagen y selecciona 'Guardar imagen'.");
     }
   };
   const shareOnX=()=>{ const text=`📊 Market Snapshot\n\n${stocks.slice(0,4).map(s=>`${s.s}: ${s.c>=0?"▲":"▼"}${Math.abs(s.c)}%`).join(" | ")}\n\nSentimiento: ${sentiment} (${pct}%)\n\n#WallStreet #Inversiones #FinanzaDR\nfinanzadr.com`; window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,"_blank"); };
@@ -2367,7 +2379,7 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
         <canvas ref={canvasRef} style={{width:"100%",height:"auto",borderRadius:8,display:"block"}}/>
       </div>
       <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-        <button onClick={downloadImage} style={{background:C.gold,color:"#000",border:"none",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>⬇️ Descargar PNG</button>
+        <button onClick={downloadImage} style={{background:C.gold,color:"#000",border:"none",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>⬇️ Guardar Imagen</button>
         <button onClick={copyImage} style={{background:copied?C.gold:"none",color:copied?"#000":C.gold,border:`1px solid ${C.gold}`,padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>{copied?"✅ ¡Copiado!":"📋 Copiar Imagen"}</button>
         <button onClick={shareOnX} style={{background:"#000",color:"#fff",border:"1px solid #333",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>𝕏 Compartir en X</button>
       </div>
