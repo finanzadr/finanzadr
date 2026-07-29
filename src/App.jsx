@@ -2323,9 +2323,41 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
     ctx.fillStyle=subCol; ctx.font="22px 'Courier New',monospace"; ctx.textAlign="right"; ctx.fillText("Wall Street en tu idioma",W-60,H-45); ctx.textAlign="left";
   };
   useEffect(()=>{ generateCanvas(); },[stocks,cardTheme,modo,fecha]);
-  const downloadImage=()=>{ try{ const canvas=canvasRef.current,link=document.createElement("a"); link.download=`finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`; link.href=canvas.toDataURL("image/png"); link.click(); }catch(error){ console.error("[DEBUG downloadImage]",error); alert("DEBUG downloadImage: "+error); } };
+  const downloadImage = () => {
+    try {
+      const canvas = canvasRef.current;
+      const link = document.createElement("a");
+      link.download = `finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`;
+      link.href = canvas.toDataURL("image/png");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("[downloadImage]", error);
+      alert("No se pudo descargar la imagen. Intenta con 'Copiar Imagen' o toma captura de pantalla.");
+    }
+  };
   const shareOnX=()=>{ const text=`📊 Market Snapshot\n\n${stocks.slice(0,4).map(s=>`${s.s}: ${s.c>=0?"▲":"▼"}${Math.abs(s.c)}%`).join(" | ")}\n\nSentimiento: ${sentiment} (${pct}%)\n\n#WallStreet #Inversiones #FinanzaDR\nfinanzadr.com`; window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,"_blank"); };
-  const copyImage=async()=>{ const canvas=canvasRef.current; canvas.toBlob(async blob=>{ try{ await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]); setCopied(true); setTimeout(()=>setCopied(false),2000); }catch(error){ console.error("[DEBUG copyImage]",error); alert("DEBUG copyImage: "+error); downloadImage(); } }); };
+  const copyImage = async () => {
+    const canvas = canvasRef.current;
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "image/png": new Promise((resolve, reject) => {
+            canvas.toBlob(blob => {
+              if (blob) resolve(blob);
+              else reject(new Error("toBlob devolvió null"));
+            }, "image/png");
+          })
+        })
+      ]);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("[copyImage]", error);
+      downloadImage();
+    }
+  };
   return (
     <div>
       <div style={{display:"flex",gap:8,marginBottom:20}}>
