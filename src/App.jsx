@@ -1457,26 +1457,38 @@ const SESGO_COLOR = { alcista: "green", bajista: "red", neutral: "gold" };
 function OpcionesPage() {
   useDocumentMeta("Opcionario: Estrategias de Opciones — FinanzaDR", "Estrategias de trading de opciones explicadas paso a paso, con ejemplos y diagramas de ganancia/pérdida.");
   const { C } = useOutletContext();
-  const [expanded, setExpanded] = useState(0);
+  const [expanded, setExpanded] = useState(null);
+  const [filtroSesgo, setFiltroSesgo] = useState(null);
+  const [filtroNivel, setFiltroNivel] = useState(null);
+  const filtradas = ARTICULOS_OPCIONES.filter(post =>
+    (!filtroSesgo || post.sesgo === filtroSesgo) &&
+    (!filtroNivel || post.nivel === filtroNivel)
+  );
   return (
     <div className="fade-in">
       <SectionTitle>Opcionario</SectionTitle>
       <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Estrategias de opciones explicadas paso a paso — contenido en crecimiento, empezando por las más comunes</p>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16, flexWrap:"wrap" }}>
+        <span style={{ fontSize:12, color:C.sub, fontFamily:"'IBM Plex Mono'" }}>Mostrando {filtradas.length} de {ARTICULOS_OPCIONES.length} estrategias</span>
+        {(filtroSesgo || filtroNivel) && (
+          <span onClick={() => { setFiltroSesgo(null); setFiltroNivel(null); }} style={{ fontSize:12, color:C.gold, fontFamily:"'IBM Plex Mono'", textDecoration:"underline", cursor:"pointer" }}>Limpiar filtros</span>
+        )}
+      </div>
       <div style={{ display:"grid", gap:24 }}>
-        {ARTICULOS_OPCIONES.map((post,i) => (
+        {filtradas.map((post) => (
           <div key={post.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
             <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
-              <span style={{ background:C.goldBg, color:C[SESGO_COLOR[post.sesgo]], padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:700, textTransform:"uppercase" }}>{post.sesgo}</span>
-              <span style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:700, textTransform:"uppercase" }}>{post.nivel}</span>
+              <span onClick={(e) => { e.stopPropagation(); setFiltroSesgo(filtroSesgo===post.sesgo ? null : post.sesgo); }} style={{ background:filtroSesgo===post.sesgo ? C[SESGO_COLOR[post.sesgo]] : C.goldBg, color:filtroSesgo===post.sesgo ? C.bg : C[SESGO_COLOR[post.sesgo]], padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:700, textTransform:"uppercase", cursor:"pointer" }}>{post.sesgo}</span>
+              <span onClick={(e) => { e.stopPropagation(); setFiltroNivel(filtroNivel===post.nivel ? null : post.nivel); }} style={{ background:filtroNivel===post.nivel ? C.gold : C.border, color:filtroNivel===post.nivel ? C.bg : C.sub, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:700, textTransform:"uppercase", cursor:"pointer" }}>{post.nivel}</span>
               {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
             </div>
             <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.nombre}</h3>
             <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
-            {expanded===i ? <ArticuloEstrategia post={post} /> : (
+            {expanded===post.id ? <ArticuloEstrategia post={post} /> : (
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
             )}
-            <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
-             {expanded===i?"Ver menos":"Ver estrategia completa"}
+            <button onClick={() => setExpanded(expanded===post.id?null:post.id)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
+             {expanded===post.id?"Ver menos":"Ver estrategia completa"}
             </button>
           </div>
         ))}
