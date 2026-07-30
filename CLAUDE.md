@@ -31,6 +31,13 @@ For all `/api` work in this repo, skip local testing entirely. Deploy to a Verce
 
 `vite dev` does NOT serve `/api` routes and `vercel dev` frequently fails to inject env vars or is unauthenticated. Do not spend cycles debugging local serverless runs — deploy to a Vercel preview/production and verify with `curl` against the deployed URL instead. Playwright/chromium are not installed, so do not attempt screenshots.
 
+## Visual Verification
+
+No Chrome extension is installed — never attempt a screenshot after a UI change. Instead provide, in under 10 lines:
+1. A 3-5 item visual checklist with exact viewport widths to test.
+2. Expected computed styles for the elements touched.
+3. The specific iOS Safari behavior to confirm, if relevant.
+
 ## Architecture
 
 This is a single-page marketing/tool site for FinanzaDR ("Wall Street en tu idioma" — investing education for Latin American/Dominican audience), built with Vite + React 19 + React Router (`react-router-dom`, `BrowserRouter`).
