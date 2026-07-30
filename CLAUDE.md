@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow: Plan Before Code
+
+For any multi-step or visual change, present a written plan + diff for approval BEFORE editing files. Wait for explicit 'go' on each phase. Never batch multiple phases into one edit run.
+
+## Secrets Handling
+
+NEVER cat, echo, or print `.env.local`, `.env`, or any API key value — not even partially, not for debugging. To verify env vars, only check key NAMES (e.g. `grep -o '^[A-Z_]*=' .env.local`) or confirm non-empty length. Watch for UTF-8 BOM in `.env` files written by the user's editor.
+
 ## Commands
 
 - `npm run dev` — start Vite dev server
@@ -10,6 +18,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint` — ESLint (flat config in `eslint.config.js`, `dist/` ignored)
 
 No test suite exists in this repo.
+
+## Commit Policy
+
+After every approved increment: run `npm run build` to verify, then commit and push to main with a scoped message. Commit ONLY the files for the current change — never include pre-existing debug code or unrelated diffs (`git add <specific files>`, never `git add -A`).
+
+## Local Testing Constraints (Windows + Vite + Vercel)
+
+`vite dev` does NOT serve `/api` routes and `vercel dev` frequently fails to inject env vars or is unauthenticated. Do not spend cycles debugging local serverless runs — deploy to a Vercel preview/production and verify with `curl` against the deployed URL instead. Playwright/chromium are not installed, so do not attempt screenshots.
 
 ## Architecture
 
@@ -33,3 +49,9 @@ This is a single-page marketing/tool site for FinanzaDR ("Wall Street en tu idio
 **`FinanzasDR.jsx` at the repo root is a stray duplicate/backup** — it is not imported by `main.jsx` or anything else and is not part of the build. The actual app entry point is `src/main.jsx` → `src/App.jsx`. Don't edit the root-level file expecting it to affect the running app.
 
 The site deploys to Vercel. `vercel.json` has a catch-all rewrite (`/(.*)` → `/index.html`) so client-side routes resolve on direct navigation/refresh — required once real routes replaced in-memory tab state.
+
+## Styling Conventions
+
+### CSS / Layout Rules
+
+Do not use absolute positioning for badges or overlays inside interactive containers — use flex/inline layout so nothing overlaps buttons. Embedded widgets (TradingView, iframes) must get an explicit pixel height, never `height: '100%'`.
