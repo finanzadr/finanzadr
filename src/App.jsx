@@ -623,6 +623,31 @@ function NoticiasTeaser() {
   );
 }
 
+const HOME_GUIAS_INDICES = [0, 3, 7];
+const ICONOS_TIPO = { pasos:"📝", stats:"📊", tabla:"📋", herramientas:"🛠️", simulador:"🧮", errores:"⚠️" };
+
+function UltimasGuias() {
+  const { C } = useOutletContext();
+  return (
+    <div style={{ marginBottom:24 }}>
+      <Label>── ÚLTIMAS GUÍAS</Label>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:16 }}>
+        {HOME_GUIAS_INDICES.map((idx) => {
+          const post = ARTICULOS[idx];
+          return (
+            <Link key={idx} to={`/aprende?articulo=${idx}`} className="card-hover"
+              style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"18px 20px", textDecoration:"none", display:"block" }}>
+              <div style={{ fontSize:20, marginBottom:8 }}>{ICONOS_TIPO[post.tipo] || "📚"}</div>
+              <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:15, fontWeight:800, color:C.text, marginBottom:6, lineHeight:1.35 }}>{post.titulo}</h3>
+              <p style={{ fontSize:12, color:C.sub, lineHeight:1.6, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{post.extracto}</p>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function InicioPage() {
   useDocumentMeta("FinanzaDR — Wall Street en tu idioma", "Educación financiera en español para latinos en EE.UU.: precios en tiempo real, análisis con IA y guías claras para aprender a invertir.");
   const { stocks, C, dark } = useOutletContext();
@@ -696,6 +721,8 @@ function InicioPage() {
         </div>
         <NoticiasTeaser />
       </div>
+
+      <UltimasGuias />
 
       {/* QUIÉN SOY */}
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"32px 36px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
@@ -1212,14 +1239,25 @@ function MonitoreoPage() {
 function AprendePage() {
   useDocumentMeta("Aprende a Invertir Desde Cero — FinanzaDR", "Guías claras en español sobre ETFs, acciones, cuentas de retiro y más, para quien está empezando a invertir.");
   const { C } = useOutletContext();
-  const [expanded, setExpanded] = useState(0);
+  const [searchParams] = useSearchParams();
+  const articuloParam = parseInt(searchParams.get("articulo"), 10);
+  const articuloInicial = Number.isInteger(articuloParam) && articuloParam >= 0 && articuloParam < ARTICULOS.length ? articuloParam : 0;
+  const [expanded, setExpanded] = useState(articuloInicial);
+  const articuloRefs = useRef([]);
+
+  useEffect(() => {
+    if (searchParams.get("articulo") !== null && articuloRefs.current[articuloInicial]) {
+      articuloRefs.current[articuloInicial].scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+  }, []);
+
   return (
     <div className="fade-in">
       <SectionTitle>Aprende a Invertir</SectionTitle>
       <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Guías completas para inversores principiantes e intermedios</p>
       <div style={{ display:"grid", gap:24 }}>
         {ARTICULOS.map((post,i) => (
-          <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
+          <div key={i} ref={el => articuloRefs.current[i] = el} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
             <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
               {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
             </div>
