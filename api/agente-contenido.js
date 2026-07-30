@@ -3,6 +3,7 @@ import { put } from "@vercel/blob";
 import { leerBriefingGuardado } from "./briefing.js";
 import { leerAperturaGuardado } from "./apertura.js";
 import { autorizadoParaCron } from "./_auth.js";
+import { EMOJI_RULES, HASHTAG_RULES } from "./_editorial-spec.js";
 
 // Pathnames fijos (sin sufijo aleatorio) para poder ubicar el mismo blob en
 // cada lectura desde /api/contenido sin tener que guardar la URL en otro
@@ -27,11 +28,7 @@ ${resumenBriefing}
 
 Con base ÚNICAMENTE en ese resumen, genera 3 piezas de contenido para redes sociales. Cada una debe cerrar invitando explícitamente a visitar finanzadr.com para ver el análisis completo del día.
 
-USO DE EMOJIS (aplica a las 3 piezas):
-- En cada pieza, usa entre 3 y 5 emojis en total, elegidos ÚNICAMENTE de este set: 📈 📉 💰 💵 🏦 🥇 ₿ 🎯 🔍
-- Cada emoji debe conectar directamente con lo que se está diciendo en ese punto exacto del texto: 📈 cuando algo subió, 📉 cuando algo cayó, 🥇 al hablar del oro, ₿ al hablar de Bitcoin/cripto, 💰 o 💵 al hablar de dinero o ganancias, 🏦 al hablar de bancos/bonos/instituciones, 🎯 al dar la conclusión o lección clave, 🔍 al invitar a profundizar o analizar.
-- NUNCA uses emojis decorativos, de celebración o genéricos (nada de 🎉🚀🔥💯👏😱), ni emojis que no tengan relación directa con el dato o idea que acompañan en esa frase.
-- Los emojis acompañan el contenido, no lo reemplazan ni le agregan hype — el tono sigue siendo formal y educativo.
+${EMOJI_RULES}
 
 1. GUION PARA TIKTOK/REELS (60 segundos):
 - Escrito para hablarse en voz alta, no para leerse: frases cortas, cotidianas, como si le explicaras esto a un amigo en persona. Evita listas, viñetas o construcciones de texto escrito.
@@ -50,8 +47,7 @@ USO DE EMOJIS (aplica a las 3 piezas):
 3. CAPTION DE INSTAGRAM:
 - Gancho inicial en la primera línea, cuerpo breve con la idea central del día (2-4 líneas), cierre invitando a visitar finanzadr.com.
 - Tono de profesor.
-- Entre 5 y 8 hashtags relevantes, mezclando finanzas/inversión (ej. #EducaciónFinanciera, #InversionesLatam) y comunidad latina (ej. #FinanzasParaLatinos, #LatinosInvirtiendo).
-- Los hashtags NUNCA deben contener espacios: cada uno es una sola palabra, en CamelCase si combina varios términos. Correcto: "#InvertirDesdeCero". Incorrecto: "#Invertir Desde Cero" o "#invertir desde cero".
+${HASHTAG_RULES}
 
 Cada pieza debe poder entenderse de forma independiente — alguien que solo vea el Reel no necesita haber leído el hilo de X.
 
