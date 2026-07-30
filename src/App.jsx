@@ -572,6 +572,57 @@ function BriefingTeaser() {
   );
 }
 
+function NoticiasTeaser() {
+  const { C } = useOutletContext();
+  const [status, setStatus] = useState("loading");
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    fetch("/api/noticias-es", { signal: controller.signal })
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok || body.disponible === false || !Array.isArray(body.items) || body.items.length === 0) return null;
+        return body.items;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        if (!data) { setStatus("empty"); return; }
+        setItems(data);
+        setStatus("ready");
+      })
+      .catch(() => { if (!cancelled) setStatus("empty"); })
+      .finally(() => clearTimeout(timeoutId));
+
+    return () => { cancelled = true; clearTimeout(timeoutId); controller.abort(); };
+  }, []);
+
+  if (status === "empty") return null;
+
+  if (status === "loading") {
+    return <div className="skeleton-pulse" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px", height:180 }} />;
+  }
+
+  return (
+    <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
+      <Label style={{ margin:"0 0 12px 0" }}>── NOTICIAS DEL DÍA</Label>
+      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        {items.map((n, i) => (
+          <div key={i} onClick={() => n.url && window.open(n.url, "_blank", "noopener,noreferrer")}
+            style={{ cursor:n.url?"pointer":"default", paddingBottom:i===items.length-1?0:12, borderBottom:i===items.length-1?"none":`1px solid ${C.border}` }}>
+            <div style={{ fontSize:10, fontFamily:"'IBM Plex Mono'", color:C.muted, marginBottom:3 }}>{n.fuente} · {formatTiempoRelativo(n.datetime * 1000)} · 🔗 en inglés</div>
+            <div style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:3, lineHeight:1.4 }}>{n.titulo}</div>
+            <p style={{ fontSize:12, color:C.sub, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{n.resumen}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function InicioPage() {
   useDocumentMeta("FinanzaDR — Wall Street en tu idioma", "Educación financiera en español para latinos en EE.UU.: precios en tiempo real, análisis con IA y guías claras para aprender a invertir.");
   const { stocks, C, dark } = useOutletContext();
@@ -658,17 +709,7 @@ function InicioPage() {
             </div>);
           })()}
         </div>
-        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
-          <Label style={{ margin:"0 0 12px 0" }}>── ACCESO RÁPIDO</Label>
-          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            {[{icon:"🌅",label:"Apertura",to:"/apertura"},{icon:"🤖",label:"Cierre del Mercado",to:"/briefing"},{icon:"📈",label:"Charts en Vivo",to:"/mercados?view=charts"},{icon:"📰",label:"Noticias Wall St.",to:"/noticias"},{icon:"🧮",label:"Calculadora",to:"/calculadora"},{icon:"📧",label:"Newsletter Gratis",to:"/newsletter"}].map((a,i) => (
-              <Link key={i} to={a.to} style={{ background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:7, padding:"9px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:10, textDecoration:"none" }}>
-                <span style={{ fontSize:16 }}>{a.icon}</span>
-                <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, color:C.gold }}>{a.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
+        <NoticiasTeaser />
       </div>
     </div>
   );
