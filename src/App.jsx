@@ -613,7 +613,7 @@ function NoticiasTeaser() {
         {items.map((n, i) => (
           <div key={i} onClick={() => n.url && window.open(n.url, "_blank", "noopener,noreferrer")}
             style={{ cursor:n.url?"pointer":"default", paddingBottom:i===items.length-1?0:12, borderBottom:i===items.length-1?"none":`1px solid ${C.border}` }}>
-            <div style={{ fontSize:10, fontFamily:"'IBM Plex Mono'", color:C.muted, marginBottom:3 }}>{n.fuente} · {formatTiempoRelativo(n.datetime * 1000)}</div>
+            <div style={{ fontSize:10, fontFamily:"'IBM Plex Mono'", color:C.muted, marginBottom:3 }}>{n.fuente} · {formatTiempoRelativo(n.datetime * 1000)} · 🔗 en inglés</div>
             <div style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:3, lineHeight:1.4 }}>{n.titulo}</div>
             <p style={{ fontSize:12, color:C.sub, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{n.resumen}</p>
           </div>
