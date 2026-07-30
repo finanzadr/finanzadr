@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{let j;try{j=JSON.parse(d)}catch(e){process.exit(0)}const cmd=(j.tool_input&&j.tool_input.command)||'';if(/(^|[;&|]|\\s)(cat|type|echo|head|tail|xxd|od|more|less|strings)\\s+[^&|;]*\\.env/i.test(cmd)){console.error('BLOCKED: never print .env contents');process.exit(2);}process.exit(0);});\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run build --silent"
+          }
+        ]
+      }
+    ]
+  }
+}
