@@ -27,6 +27,10 @@ After every approved increment: run `npm run build` to verify, then commit and p
 
 For all `/api` work in this repo, skip local testing entirely. Deploy to a Vercel preview, then verify with `curl` against the preview URL (pass the `CRON_SECRET` header where needed) and show the raw response. Never run `vercel dev` or try to read `.env.local`.
 
+## Search Strategy
+
+For any question of the form "where is X used/consumed/defined", launch a Task subagent to search the codebase and return only a file:line list with one-line notes. Never do manual grep loops in the main context.
+
 ## Local Testing Constraints (Windows + Vite + Vercel)
 
 `vite dev` does NOT serve `/api` routes and `vercel dev` frequently fails to inject env vars or is unauthenticated. Do not spend cycles debugging local serverless runs — deploy to a Vercel preview/production and verify with `curl` against the deployed URL instead. Playwright/chromium are not installed, so do not attempt screenshots.
