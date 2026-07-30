@@ -23,6 +23,10 @@ No test suite exists in this repo.
 
 After every approved increment: run `npm run build` to verify, then commit and push to main with a scoped message. Commit ONLY the files for the current change — never include pre-existing debug code or unrelated diffs (`git add <specific files>`, never `git add -A`).
 
+## API Testing Policy
+
+For all `/api` work in this repo, skip local testing entirely. Deploy to a Vercel preview, then verify with `curl` against the preview URL (pass the `CRON_SECRET` header where needed) and show the raw response. Never run `vercel dev` or try to read `.env.local`.
+
 ## Local Testing Constraints (Windows + Vite + Vercel)
 
 `vite dev` does NOT serve `/api` routes and `vercel dev` frequently fails to inject env vars or is unauthenticated. Do not spend cycles debugging local serverless runs — deploy to a Vercel preview/production and verify with `curl` against the deployed URL instead. Playwright/chromium are not installed, so do not attempt screenshots.
