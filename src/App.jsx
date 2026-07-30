@@ -689,7 +689,7 @@ function InicioPage() {
 
       {/* SUMMARY CARDS */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:16, marginBottom:28 }} className="summary-grid">
-        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
+        <Link to="/sentimiento" className="market-item" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px", cursor:"pointer", textDecoration:"none", color:"inherit", display:"block" }}>
           <Label style={{ margin:"0 0 12px 0" }}>── SENTIMIENTO HOY</Label>
           {(() => {
             const gainers = stocks.filter(s=>s.c>0).length;
@@ -704,8 +704,8 @@ function InicioPage() {
               <p style={{ fontSize:12, color:C.sub }}>{gainers} de {stocks.length} activos en verde — {pct}% positivo</p>
             </div>);
           })()}
-        </div>
-        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
+        </Link>
+        <Link to="/mercados" className="market-item" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px", cursor:"pointer", textDecoration:"none", color:"inherit", display:"block" }}>
           <Label style={{ margin:"0 0 12px 0" }}>── TOP MOVER</Label>
           {(() => {
             const top = [...stocks].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0];
@@ -718,7 +718,7 @@ function InicioPage() {
               <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:16, color:C.text, fontWeight:700 }}>{fmt(top.p)}</div>
             </div>);
           })()}
-        </div>
+        </Link>
         <NoticiasTeaser />
       </div>
 
