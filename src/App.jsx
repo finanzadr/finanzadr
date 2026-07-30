@@ -386,11 +386,13 @@ function Layout() {
       @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
       @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
       @keyframes pulse-dot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.6} }
+      @keyframes skeleton-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
       html,body,#root { width:100%; min-height:100vh; margin:0; padding:0; }
       .ticker-track { display:flex; animation:ticker 70s linear infinite; white-space:nowrap; }
       .ticker-track:hover { animation-play-state:paused; }
       .fade-in { animation:fadeIn 0.4s ease forwards; }
       .live-dot { animation:pulse-dot 1.5s ease-in-out infinite; display:inline-block; }
+      .skeleton-pulse { animation:skeleton-pulse 1.4s ease-in-out infinite; }
       * { box-sizing:border-box; margin:0; padding:0; transition:background 0.3s,color 0.2s,border-color 0.2s; }
       .nav-btn:hover { color:#c8a84b !important; }
       .card-hover { transition:all 0.2s; }
@@ -512,6 +514,64 @@ function Layout() {
   );
 }
 
+function BriefingTeaser() {
+  const { C } = useOutletContext();
+  const [status, setStatus] = useState("loading");
+  const [teaser, setTeaser] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const cargar = async (url) => {
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        const body = await res.json();
+        if (!res.ok || body.disponible === false || !body.resumen) return null;
+        return body;
+      } catch {
+        return null;
+      }
+    };
+
+    Promise.all([
+      cargar("/api/briefing?soloCache=true").then(data => data && { data, to:"/briefing", label:"🤖 Cierre de Hoy" }),
+      cargar("/api/apertura?soloCache=true").then(data => data && { data, to:"/apertura", label:"🌅 Resumen de Apertura" }),
+    ]).then((candidatos) => {
+      if (cancelled) return;
+      const disponibles = candidatos.filter(Boolean).sort((a, b) => new Date(b.data.generadoEn) - new Date(a.data.generadoEn));
+      if (disponibles.length === 0) { setStatus("empty"); return; }
+      const elegido = disponibles[0];
+      const parrafos = (elegido.data.resumen || "").split(/\n+/).map(p => p.trim()).filter(Boolean);
+      const [titulo, ...cuerpo] = parrafos;
+      setTeaser({ titulo, preview: cuerpo[0] || "", generadoEn: elegido.data.generadoEn, to: elegido.to, label: elegido.label });
+      setStatus("ready");
+    }).catch(() => { if (!cancelled) setStatus("empty"); })
+      .finally(() => clearTimeout(timeoutId));
+
+    return () => { cancelled = true; clearTimeout(timeoutId); controller.abort(); };
+  }, []);
+
+  if (status === "empty") return null;
+
+  if (status === "loading") {
+    return <div className="skeleton-pulse" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"28px 32px", marginBottom:24, height:148 }} />;
+  }
+
+  return (
+    <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"28px 32px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8, marginBottom:12 }}>
+        <Label style={{ margin:0 }}>── {teaser.label}</Label>
+        <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted }}>Actualizado {formatTiempoRelativo(teaser.generadoEn)}</span>
+      </div>
+      {teaser.titulo && <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(teaser.titulo)}</h2>}
+      {teaser.preview && <p style={{ fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:16, display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{renderTextoConNegritas(teaser.preview)}</p>}
+      <Link to={teaser.to} style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.gold, textDecoration:"none" }}>Leer el análisis completo →</Link>
+    </div>
+  );
+}
+
 function InicioPage() {
   useDocumentMeta("FinanzaDR — Wall Street en tu idioma", "Educación financiera en español para latinos en EE.UU.: precios en tiempo real, análisis con IA y guías claras para aprender a invertir.");
   const { stocks, C, dark } = useOutletContext();
@@ -532,14 +592,6 @@ function InicioPage() {
               <Link to="/mercados" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>📊 Explorar Mercados</Link>
               <Link to="/mercados?view=charts" style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, textDecoration:"none", display:"inline-block" }}>📈 Charts en Vivo</Link>
             </div>
-            <div style={{ display:"flex", gap:24, marginTop:28, paddingTop:24, borderTop:`1px solid ${C.border}`, flexWrap:"wrap" }}>
-              {[{n:"8",l:"Activos en Vivo"},{n:"∞",l:"Charts Disponibles"},{n:"24/7",l:"Datos en Tiempo Real"},{n:"$0",l:"Costo Total"}].map((s,i) => (
-                <div key={i}>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, color:C.gold }}>{s.n}</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, letterSpacing:1, marginTop:2 }}>{s.l}</div>
-                </div>
-              ))}
-            </div>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, minWidth:280 }} className="hero-stocks">
             {stocks.slice(0,4).map(st => (
@@ -556,6 +608,8 @@ function InicioPage() {
           </div>
         </div>
       </div>
+
+      <BriefingTeaser />
 
       {/* QUIÉN SOY */}
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"32px 36px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>

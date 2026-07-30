@@ -28,6 +28,13 @@ export default async function handler(req, res) {
     return;
   }
 
+  // ?soloCache=true (usado por el teaser del home): nunca disparar una
+  // generación en vivo (implica web_search), solo servir lo que haya en Blob.
+  if (req.query.soloCache === "true") {
+    res.status(200).json({ disponible: false });
+    return;
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     res.status(500).json({ error: "Falta configurar ANTHROPIC_API_KEY en las variables de entorno." });
     return;
