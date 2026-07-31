@@ -179,6 +179,7 @@ export function getContextoTemporal(now = new Date()) {
     fechaReferenciaTexto: formatearFechaLarga(diaReferenciaUTC),
     nombreDiaReferencia: DIAS_SEMANA[diaReferenciaUTC.getUTCDay()],
     esReferenciaHoy: diaReferenciaUTC.getTime() === hoyUTC.getTime(),
+    diaReferenciaISO: diaReferenciaUTC.toISOString().slice(0, 10),
   };
 }
 

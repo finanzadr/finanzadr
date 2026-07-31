@@ -25,6 +25,28 @@ const WS_STOCKS = [
   { s: "BTC-USD", n: "Bitcoin", tipo: "Cripto" },
 ];
 
+// Lista fija de empresas grandes/reconocibles para un lector principiante.
+// Filtra el calendario de earnings de Finnhub (que trae decenas de tickers
+// pequeños cada día) sin necesidad de llamadas extra por capitalización de
+// mercado. Editar este array a mano cuando se quiera agregar/quitar una.
+const EMPRESAS_RELEVANTES = [
+  { s: "AAPL", n: "Apple" },
+  { s: "MSFT", n: "Microsoft" },
+  { s: "AMZN", n: "Amazon" },
+  { s: "GOOGL", n: "Alphabet (Google)" },
+  { s: "META", n: "Meta" },
+  { s: "NVDA", n: "Nvidia" },
+  { s: "TSLA", n: "Tesla" },
+  { s: "JPM", n: "JPMorgan Chase" },
+  { s: "V", n: "Visa" },
+  { s: "WMT", n: "Walmart" },
+  { s: "DIS", n: "Disney" },
+  { s: "KO", n: "Coca-Cola" },
+  { s: "NFLX", n: "Netflix" },
+  { s: "XOM", n: "ExxonMobil" },
+  { s: "JNJ", n: "Johnson & Johnson" },
+];
+
 const BLOCKED_HEADLINE_WORDS = ["war", "strike", "missile", "election", "died", "dies"];
 const isSafeHeadline = (headline) => {
   const text = (headline || "").toLowerCase();
@@ -83,6 +105,69 @@ async function fetchFearGreed() {
   }
 }
 
+// Calendario de earnings de Finnhub para el día de referencia, filtrado a
+// EMPRESAS_RELEVANTES. Finnhub a veces devuelve el mismo evento real
+// duplicado bajo dos `quarter` distintos (confirmado: revenueActual
+// idéntico entre copias) — se agrupa por símbolo y, si el epsActual de
+// las copias no coincide entre sí, se omite esa cifra puntual en vez de
+// adivinar cuál es la correcta. `yaReporto` distingue "reportó pero sin
+// cifra confiable" de "aún no reporta" cuando ni epsReal ni revenueReal
+// terminan disponibles (confirmado que revenueActual puede venir null
+// incluso en un reporte real, ver IRMD 2026-07-31 en el dump de prueba).
+async function fetchEarningsRelevantes(fechaISO) {
+  try {
+    const res = await fetch(
+      `https://finnhub.io/api/v1/calendar/earnings?from=${fechaISO}&to=${fechaISO}&token=${FINNHUB_KEY}`
+    );
+    const data = await res.json();
+    const calendario = data?.earningsCalendar;
+    if (!Array.isArray(calendario)) return [];
+    const nombresPorSimbolo = new Map(EMPRESAS_RELEVANTES.map((e) => [e.s, e.n]));
+
+    const porSimbolo = new Map();
+    for (const c of calendario) {
+      if (!nombresPorSimbolo.has(c.symbol)) continue;
+      if (!porSimbolo.has(c.symbol)) porSimbolo.set(c.symbol, []);
+      porSimbolo.get(c.symbol).push(c);
+    }
+
+    const masReciente = (lista) => [...lista].sort((a, b) => b.year - a.year || b.quarter - a.quarter)[0];
+
+    return Array.from(porSimbolo.entries()).map(([simbolo, entradas]) => {
+      const conReporte = entradas.filter((e) => e.epsActual != null);
+
+      if (conReporte.length === 0) {
+        const ultima = masReciente(entradas);
+        return {
+          simbolo,
+          nombre: nombresPorSimbolo.get(simbolo),
+          hora: ultima.hour,
+          epsEstimado: ultima.epsEstimate ?? null,
+          epsReal: null,
+          revenueReal: null,
+          yaReporto: false,
+        };
+      }
+
+      const epsValoresDistintos = new Set(conReporte.map((e) => e.epsActual));
+      const epsConfiable = epsValoresDistintos.size === 1;
+      const entradaReporte = masReciente(conReporte);
+
+      return {
+        simbolo,
+        nombre: nombresPorSimbolo.get(simbolo),
+        hora: entradaReporte.hour,
+        epsEstimado: epsConfiable ? entradaReporte.epsEstimate ?? null : null,
+        epsReal: epsConfiable ? entradaReporte.epsActual : null,
+        revenueReal: entradaReporte.revenueActual ?? null,
+        yaReporto: true,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 function calcularVolatilidad(precios) {
   const indices = precios.filter((p) => p.tipo === "Índices" && p.cambioPct != null);
   if (!indices.length) return { nivel: "Medio", promedioAbs: null };
@@ -114,12 +199,45 @@ function agruparPreciosPorTipo(precios) {
     .join("\n\n");
 }
 
-function buildPrompt(precios, noticias, fearGreed) {
+function formatearRevenueBillones(revenue) {
+  if (revenue == null) return null;
+  return `$${(revenue / 1_000_000_000).toFixed(1)}B`;
+}
+
+function buildEarningsTexto(earnings) {
+  if (!earnings.length) {
+    return "No hay resultados trimestrales de empresas grandes programados para hoy.";
+  }
+  return earnings
+    .map((e) => {
+      if (e.epsReal != null) {
+        return `- ${e.nombre} (${e.simbolo}): reportó EPS real de $${e.epsReal}${
+          e.epsEstimado != null ? ` vs. estimado de $${e.epsEstimado}` : ""
+        }`;
+      }
+      if (e.revenueReal != null) {
+        return `- ${e.nombre} (${e.simbolo}): reportó resultados trimestrales, con ingresos de ${formatearRevenueBillones(
+          e.revenueReal
+        )}`;
+      }
+      if (e.yaReporto) {
+        return `- ${e.nombre} (${e.simbolo}): reportó resultados trimestrales hoy.`;
+      }
+      const momento =
+        e.hora === "amc" ? " (se esperan después del cierre)" : e.hora === "bmo" ? " (se esperan antes de abrir)" : "";
+      return `- ${e.nombre} (${e.simbolo}): aún no ha reportado resultados${momento}`;
+    })
+    .join("\n");
+}
+
+function buildPrompt(precios, noticias, fearGreed, earnings) {
   const preciosTexto = agruparPreciosPorTipo(precios);
 
   const noticiasTexto = noticias.length
     ? noticias.map((n) => `- ${n.titulo}${n.resumen ? `: ${n.resumen}` : ""}`).join("\n")
     : "No hay noticias disponibles en este momento.";
+
+  const earningsTexto = buildEarningsTexto(earnings);
 
   const ctx = getContextoTemporal();
   const contextoTiempoTexto = buildContextoTiempoTexto(ctx);
@@ -149,13 +267,16 @@ ${preciosTexto}
 NOTICIAS RECIENTES:
 ${noticiasTexto}
 
+EARNINGS DE HOY (empresas grandes, ${ctx.fechaReferenciaTexto}):
+${earningsTexto}
+
 SENTIMIENTO CRIPTO (Fear & Greed Index de Alternative.me): ${fearGreedTexto}
 
 NIVEL DE VOLATILIDAD YA CALCULADO (basado en el cambio promedio de los índices SPY/QQQ/DIA/IWM): ${nivelVolatilidad}${
     volatilidadPromedio != null ? ` (variación promedio de ${volatilidadPromedio}%)` : ""
   }. Usa este nivel tal cual, no lo recalcules ni lo contradigas.
 
-Con base ÚNICAMENTE en los datos de arriba, redacta el "Resumen de Cierre" de hoy siguiendo EXACTAMENTE la estructura "ESTRUCTURA — RESUMEN DE CIERRE" de la especificación editorial de arriba (a, b, c, d) y todas las reglas de escritura no negociables.
+Con base ÚNICAMENTE en los datos de arriba (precios, noticias, earnings y sentimiento cripto), redacta el "Resumen de Cierre" de hoy siguiendo EXACTAMENTE la estructura "ESTRUCTURA — RESUMEN DE CIERRE" de la especificación editorial de arriba (a, b, c, d) y todas las reglas de escritura no negociables.
 
 Instrucciones finales:
 - Escribe en español.
@@ -168,10 +289,12 @@ Instrucciones finales:
 }
 
 export async function generarBriefing() {
-  const [precios, noticias, fearGreed] = await Promise.all([
+  const ctx = getContextoTemporal();
+  const [precios, noticias, fearGreed, earnings] = await Promise.all([
     fetchPrecios(),
     fetchNoticias(),
     fetchFearGreed(),
+    fetchEarningsRelevantes(ctx.diaReferenciaISO),
   ]);
 
   const client = new Anthropic();
@@ -180,7 +303,7 @@ export async function generarBriefing() {
     max_tokens: 1536,
     thinking: { type: "disabled" },
     output_config: { effort: "low" },
-    messages: [{ role: "user", content: buildPrompt(precios, noticias, fearGreed) }],
+    messages: [{ role: "user", content: buildPrompt(precios, noticias, fearGreed, earnings) }],
   });
 
   const textBlock = response.content.find((b) => b.type === "text");
