@@ -1,0 +1,59 @@
+name: Respaldo Agente Cierre
+
+on:
+  schedule:
+    - cron: "7 22 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  verificar-y-regenerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verificar frescura del briefing
+        id: check
+        run: |
+          respuesta=$(curl -s -w "\n%{http_code}" "https://finanzadr.com/api/briefing")
+          codigo=$(echo "$respuesta" | tail -n1)
+          cuerpo=$(echo "$respuesta" | sed '$d')
+
+          if [ "$codigo" != "200" ]; then
+            echo "fresco=no" >> "$GITHUB_OUTPUT"
+            echo "No se pudo leer /api/briefing (HTTP $codigo) — se regenerará por seguridad."
+            exit 0
+          fi
+
+          generado_en=$(echo "$cuerpo" | jq -r '.generadoEn // empty')
+          if [ -z "$generado_en" ]; then
+            echo "fresco=no" >> "$GITHUB_OUTPUT"
+            echo "No vino generadoEn en la respuesta — se regenerará por seguridad."
+            exit 0
+          fi
+
+          fecha_blob=$(echo "$generado_en" | cut -c1-10)
+          fecha_hoy=$(date -u +%Y-%m-%d)
+
+          echo "generadoEn: $generado_en (fecha $fecha_blob) — hoy UTC: $fecha_hoy"
+
+          if [ "$fecha_blob" == "$fecha_hoy" ]; then
+            echo "fresco=si" >> "$GITHUB_OUTPUT"
+          else
+            echo "fresco=no" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Regenerar (el cron nativo no corrió a tiempo)
+        if: steps.check.outputs.fresco == 'no'
+        run: |
+          codigo=$(curl -s -o /tmp/respuesta.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://finanzadr.com/api/agente-mercados")
+          echo "Respuesta de agente-mercados: HTTP $codigo"
+          cat /tmp/respuesta.json
+          if [ "$codigo" != "200" ]; then
+            echo "Falló la regeneración de respaldo (HTTP $codigo)"
+            exit 1
+          fi
+
+      - name: Ya estaba fresco
+        if: steps.check.outputs.fresco == 'si'
+        run: echo "El cron nativo de Vercel ya corrió hoy — no se gasta una llamada extra a Claude."
