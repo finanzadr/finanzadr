@@ -341,6 +341,8 @@ function Layout() {
   const [realErr, setRealErr] = useState(null);
   const [noticias, setNoticias] = useState(NOTICIAS);
   const [noticiasLoading, setNoticiasLoading] = useState(false);
+  const [noticiasRD, setNoticiasRD] = useState([]);
+  const [noticiasRDLoading, setNoticiasRDLoading] = useState(false);
 
   const C = dark ? DARK : LIGHT;
 
@@ -373,7 +375,18 @@ function Layout() {
     setRealLoading(false);
   };
 
+  const fetchNoticiasRD = async () => {
+    setNoticiasRDLoading(true);
+    try {
+      const res = await fetch("/api/noticias-rd");
+      const data = await res.json();
+      if (data?.items?.length > 0) setNoticiasRD(data.items);
+    } catch(e) {}
+    setNoticiasRDLoading(false);
+  };
+
   useEffect(() => { fetchNoticias(); }, []);
+  useEffect(() => { fetchNoticiasRD(); }, []);
   useEffect(() => { fetchRealPrices(); const t = setInterval(fetchRealPrices, 60000); return () => clearInterval(t); }, []);
 
   useEffect(() => {
@@ -416,7 +429,7 @@ function Layout() {
     return () => { document.head.removeChild(link); document.head.removeChild(style); };
   }, []);
 
-  const outletCtx = { stocks, C, dark, setDark, lastUpdate, realLoading, fetchRealPrices, noticias, noticiasLoading, fetchNoticias };
+  const outletCtx = { stocks, C, dark, setDark, lastUpdate, realLoading, fetchRealPrices, noticias, noticiasLoading, fetchNoticias, noticiasRD, noticiasRDLoading, fetchNoticiasRD };
 
   return (
     <div style={{ minHeight:"100vh", width:"100vw", maxWidth:"100%", background:C.bg, color:C.text, fontFamily:"'Inter',sans-serif", overflowX:"hidden" }}>
@@ -797,17 +810,74 @@ function MercadosPage() {
 }
 
 function NoticiasPage() {
-  useDocumentMeta("Noticias Financieras — FinanzaDR", "Las noticias más relevantes de Wall Street, explicadas en español para inversionistas latinos.");
-  const { noticias, noticiasLoading, fetchNoticias, C } = useOutletContext();
+  useDocumentMeta("Noticias Financieras — FinanzaDR", "Las noticias más relevantes de Wall Street y República Dominicana, en español para inversionistas latinos.");
+  const { noticias, noticiasLoading, fetchNoticias, noticiasRD, noticiasRDLoading, fetchNoticiasRD, C } = useOutletContext();
+
+  const cardStyle = (url) => ({
+    background:C.card, border:`1px solid ${C.border}`, borderRadius:10,
+    padding:"20px 24px", cursor:url?"pointer":"default", transition:"border-color 0.2s"
+  });
+
   return (
     <div className="fade-in">
+
+      {/* ── NOTICIAS REPÚBLICA DOMINICANA ── */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
+        <div>
+          <SectionTitle>🇩🇴 Noticias República Dominicana</SectionTitle>
+          <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>
+            {noticiasRDLoading ? "Cargando..." : "El Dinero · Diario Libre · En tiempo real"}
+          </p>
+        </div>
+        <button onClick={fetchNoticiasRD} disabled={noticiasRDLoading}
+          style={{ background:noticiasRDLoading?C.border:"#1a6b3c", color:noticiasRDLoading?C.muted:"#fff",
+            border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasRDLoading?"not-allowed":"pointer",
+            fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
+          {noticiasRDLoading ? "⏳ Cargando..." : "🔄 Actualizar"}
+        </button>
+      </div>
+
+      {noticiasRDLoading ? (
+        <div style={{ display:"grid", gap:14, marginBottom:40 }}>
+          {[0,1,2].map(i => <div key={i} className="skeleton-pulse" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, height:110 }} />)}
+        </div>
+      ) : noticiasRD.length === 0 ? (
+        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"32px 24px", textAlign:"center", color:C.muted, marginBottom:40 }}>
+          <div style={{ fontSize:28, marginBottom:10 }}>📡</div>
+          <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:12 }}>Sin noticias disponibles en este momento.</p>
+        </div>
+      ) : (
+        <div style={{ display:"grid", gap:14, marginBottom:40 }}>
+          {noticiasRD.map((item, i) => (
+            <div key={i} onClick={() => /^https?:\/\//i.test(item.url || "") && window.open(item.url, "_blank", "noopener,noreferrer")}
+              style={cardStyle(item.url)}
+              onMouseEnter={e => { if(item.url) e.currentTarget.style.borderColor="#1a6b3c88"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
+                <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+                  <span style={{ background:"#1a6b3c22", color:"#2ea866", padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>🇩🇴 {item.fuente}</span>
+                  {item.fecha && <span style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'" }}>{new Date(item.fecha).toLocaleDateString("es-DO",{day:"numeric",month:"short"})}</span>}
+                </div>
+                {item.url && <span style={{ fontSize:11, color:"#2ea866", fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{'>'}</span>}
+              </div>
+              <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:17, fontWeight:700, color:C.text, marginBottom:6, lineHeight:1.4 }}>{item.titulo}</h3>
+              <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{item.resumen}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── NOTICIAS WALL STREET ── */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
         <div>
-          <SectionTitle>Noticias Wall Street</SectionTitle>
-          <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>{noticiasLoading?"Cargando noticias...":"Noticias reales de hoy · Powered by Finnhub"}</p>
+          <SectionTitle>📈 Noticias Wall Street</SectionTitle>
+          <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>{noticiasLoading ? "Cargando noticias..." : "Noticias reales de hoy · Powered by Finnhub"}</p>
         </div>
-        <button onClick={fetchNoticias} disabled={noticiasLoading} style={{ background:noticiasLoading?C.border:C.gold, color:noticiasLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
-          {noticiasLoading?"⏳ Cargando...":"🔄 Actualizar"}
+        <button onClick={fetchNoticias} disabled={noticiasLoading}
+          style={{ background:noticiasLoading?C.border:C.gold, color:noticiasLoading?C.muted:"#000",
+            border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasLoading?"not-allowed":"pointer",
+            fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
+          {noticiasLoading ? "⏳ Cargando..." : "🔄 Actualizar"}
         </button>
       </div>
       {noticiasLoading ? (
@@ -819,7 +889,7 @@ function NoticiasPage() {
         <div style={{ display:"grid", gap:14 }}>
           {noticias.map((item,i) => (
             <div key={i} onClick={() => item.url && window.open(item.url,"_blank")}
-              style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 24px", cursor:item.url?"pointer":"default", transition:"border-color 0.2s" }}
+              style={cardStyle(item.url)}
               onMouseEnter={e => { if(item.url) e.currentTarget.style.borderColor=C.gold+"66"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
