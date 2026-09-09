@@ -2071,108 +2071,198 @@ function AperturaPage() {
   );
 }
 
-function CopyButton({ texto }) {
+// ===========================================================================
+// CONTENIDO DIARIO
+// ===========================================================================
+//
+// Es una herramienta editorial, pero pública: la ruta está en la navegación y
+// no pide contraseña, al contrario que /monitoreo. Se deja como está y se dice
+// para qué sirve, en vez de cambiarle el acceso por nuestra cuenta.
+
+// Botón de copiar con confirmación anunciada. El anterior no tenía `.catch`:
+// si el navegador bloqueaba el portapapeles, el botón se quedaba mudo y el
+// aviso de éxito era solo un cambio de color, que un lector de pantalla no
+// anuncia.
+function CopyButton({ texto, etiqueta = "Copiar" }) {
   const { C } = useOutletContext();
-  const [copiado, setCopiado] = useState(false);
-  const copiar = () => {
-    navigator.clipboard.writeText(texto).then(() => {
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    });
+  const [estado, setEstado] = useState("inactivo");
+
+  const copiar = async () => {
+    try {
+      if (!navigator.clipboard) throw new Error("Portapapeles no disponible");
+      await navigator.clipboard.writeText(texto);
+      setEstado("copiado");
+    } catch (error) {
+      console.error("[CopyButton]", error);
+      setEstado("error");
+    }
+    setTimeout(() => setEstado("inactivo"), 3000);
   };
+
   return (
-    <button onClick={copiar} style={{ background:copiado?C.green:"none", border:`1px solid ${copiado?C.green:C.gold}`, color:copiado?"#000":C.gold, padding:"7px 16px", borderRadius:6, cursor:"pointer", fontFamily:F.sans, fontSize:11, fontWeight:700, whiteSpace:"nowrap", flexShrink:0 }}>
-      {copiado ? "Copiado ✓" : "📋 Copiar"}
-    </button>
+    <span style={{ display: "inline-flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
+      <button type="button" onClick={copiar}
+        style={{ minHeight: 44, padding: "0 16px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+        {etiqueta}
+      </button>
+      <span role="status" style={{ fontSize: 13, color: estado === "error" ? C.red : C.sub, minHeight: 18 }}>
+        {estado === "copiado" ? "Copiado" : estado === "error" ? "No se pudo copiar" : ""}
+      </span>
+    </span>
   );
 }
 
+const FORMATOS_CONTENIDO = [
+  { clave: "tiktok", etiqueta: "TikTok / Reels" },
+  { clave: "x", etiqueta: "Hilo de X" },
+  { clave: "instagram", etiqueta: "Instagram" },
+];
+
 function ContenidoDiarioPage() {
-  useDocumentMeta("Contenido Diario para Redes — FinanzaDR", "Guiones listos para compartir el análisis financiero del día en tus redes sociales.");
+  useDocumentMeta(
+    "Contenido diario — FinanzaDR",
+    "Guiones y textos listos para redes, generados a partir de los resúmenes de apertura y cierre."
+  );
   const { C } = useOutletContext();
   const [searchParams] = useSearchParams();
-  const [fuenteView, setFuenteView] = useState(searchParams.get("fuente") === "apertura" ? "apertura" : "cierre");
-  const [status, setStatus] = useState("loading");
+  const [fuente, setFuente] = useState(searchParams.get("fuente") === "apertura" ? "apertura" : "cierre");
+  const [formato, setFormato] = useState("tiktok");
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [intento, setIntento] = useState(0);
+
+  // Estado derivado, no fijado dentro del efecto.
+  const estado = error ? "error" : data ? "listo" : "cargando";
 
   useEffect(() => {
-    let cancelled = false;
-    setStatus("loading");
-    setError(null);
-    const url = fuenteView === "apertura" ? "/api/contenido?fuente=apertura" : "/api/contenido";
+    let cancelado = false;
+    const url = fuente === "apertura" ? "/api/contenido?fuente=apertura" : "/api/contenido";
     fetch(url)
       .then(async (res) => {
         const body = await res.json();
-        if (!res.ok) throw new Error(body?.error || "No se pudo generar el contenido.");
+        if (!res.ok) throw new Error(body?.error || "No se pudo obtener el contenido.");
         return body;
       })
-      .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
-      .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
-    return () => { cancelled = true; };
-  }, [fuenteView]);
+      .then((body) => {
+        if (cancelado) return;
+        setData({ ...body, deHoy: claveDiaMercado(body.generadoEn) === claveDiaMercado(Date.now()) });
+      })
+      .catch((err) => { if (!cancelado) setError(err.message); });
+    return () => { cancelado = true; };
+  }, [fuente, intento]);
 
-  const hashtagsTexto = status === "ready" ? (data.instagram.hashtags || []).join(" ") : "";
-  const instagramCompleto = status === "ready" ? `${data.instagram.caption}\n\n${hashtagsTexto}` : "";
+  const cambiarFuente = (nueva) => { setFuente(nueva); setData(null); setError(null); };
+
+  const botonEstilo = (activo) => ({
+    minHeight: 44, padding: "0 18px", borderRadius: 10,
+    border: `1px solid ${activo ? C.text : C.border}`,
+    background: activo ? C.text : C.card, color: activo ? C.bg : C.text,
+    fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer",
+  });
+
+  const bloque = { background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "22px 26px" };
+  const hashtags = estado === "listo" ? (data.instagram?.hashtags || []).join(" ") : "";
+  const instagramCompleto = estado === "listo" ? `${data.instagram?.caption || ""}\n\n${hashtags}`.trim() : "";
 
   return (
     <div className="fade-in">
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
-        <SectionTitle>📱 Contenido Diario</SectionTitle>
-        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-          {["cierre","apertura"].map(v => (
-            <button key={v} onClick={() => setFuenteView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${fuenteView===v?C.gold:C.border}`, background:fuenteView===v?C.goldBg:"none", color:fuenteView===v?C.gold:C.muted, fontFamily:F.sans, fontSize:12, fontWeight:600, cursor:"pointer" }}>
-              {v==="cierre"?"🌇 Cierre":"🌅 Apertura"}
-            </button>
-          ))}
-        </div>
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Contenido diario</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, margin: "8px 0 24px", maxWidth: "68ch" }}>
+        Textos listos para redes, escritos a partir del resumen de la sesión. Cada pieza sale de la edición que se indica arriba, así que dicen lo mismo que el análisis publicado.
+      </p>
+
+      <div role="group" aria-label="Edición de origen" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+        {[["cierre", "Desde el cierre"], ["apertura", "Desde la apertura"]].map(([clave, texto]) => (
+          <button key={clave} type="button" onClick={() => cambiarFuente(clave)} aria-pressed={fuente === clave} style={botonEstilo(fuente === clave)}>{texto}</button>
+        ))}
       </div>
 
-      {status === "loading" && (
-        <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-          <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-          <div style={{ fontFamily:F.sans, fontSize:13 }}>Generando el contenido del día...</div>
+      {estado === "cargando" && (
+        <div className="skeleton-pulse" style={{ ...bloque, height: 260 }} aria-hidden="true" />
+      )}
+
+      {estado === "error" && (
+        <div style={bloque}>
+          <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, maxWidth: "68ch" }}>No se pudo cargar el contenido. {error}</p>
+          <div style={{ marginTop: 16 }}>
+            <Boton onClick={() => { setError(null); setIntento((n) => n + 1); }} variante="secundario">Reintentar</Boton>
+          </div>
         </div>
       )}
 
-      {status === "error" && (
-        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el contenido en este momento. {error}</p>
-        </div>
-      )}
-
-      {status === "ready" && (
+      {estado === "listo" && (
         <>
-          <p style={{ fontFamily:F.sans, fontSize:11, color:C.green, marginTop:4, marginBottom:28 }}>
-            ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
-          </p>
-
-          <Label>── 🎬 TikTok / Reels (60 seg)</Label>
-          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
-            <p style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, marginBottom:20, whiteSpace:"pre-wrap" }}>{data.tiktok.guion}</p>
-            <CopyButton texto={data.tiktok.guion} />
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <p style={{ fontSize: 15, color: C.sub }}>
+              Sesión del {fmtFechaSesion(data.generadoEn)} · generado a las {fmtHoraET(data.generadoEn)} (hora de Nueva York)
+            </p>
+            <Link to={fuente === "apertura" ? "/apertura" : "/briefing"}
+              style={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: 15, fontWeight: 600, color: C.goldText, textDecoration: "underline" }}>
+              Ver la edición completa
+            </Link>
           </div>
 
-          <Label>── 🧵 Hilo de X</Label>
-          <div style={{ display:"grid", gap:12, marginBottom:32 }}>
-            {data.hiloX.map((tweet, i) => (
-              <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"18px 22px", borderLeft:`3px solid ${C.gold}`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
-                <p style={{ fontFamily:F.sans, fontSize:14, lineHeight:1.7, color:C.text, flex:1, margin:0 }}>{tweet}</p>
-                <CopyButton texto={tweet} />
-              </div>
+          {!data.deHoy && (
+            <p role="status" style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 16px", fontSize: 15, color: C.sub, lineHeight: 1.55, marginBottom: 20, maxWidth: "72ch" }}>
+              Es el último contenido disponible y corresponde a otra jornada. Revisa las cifras antes de publicarlo.
+            </p>
+          )}
+
+          {/* Pestañas por formato: antes los tres bloques iban apilados en una
+              página larguísima que había que recorrer entera. */}
+          <div role="tablist" aria-label="Formato" style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "16px 0 20px" }}>
+            {FORMATOS_CONTENIDO.map(({ clave, etiqueta }) => (
+              <button key={clave} type="button" role="tab" id={`tab-${clave}`}
+                aria-selected={formato === clave} aria-controls={`panel-${clave}`}
+                onClick={() => setFormato(clave)} style={botonEstilo(formato === clave)}>
+                {etiqueta}
+              </button>
             ))}
           </div>
 
-          <Label>── 📸 Instagram</Label>
-          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
-            <p style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, marginBottom:16, whiteSpace:"pre-wrap" }}>{data.instagram.caption}</p>
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20 }}>
-              {data.instagram.hashtags.map((h, i) => (
-                <span key={i} style={{ background:C.goldBg, color:C.gold, padding:"4px 12px", borderRadius:4, fontSize:12, fontFamily:F.sans }}>{h}</span>
-              ))}
-            </div>
-            <CopyButton texto={instagramCompleto} />
-          </div>
+          {formato === "tiktok" && (
+            <section role="tabpanel" id="panel-tiktok" aria-labelledby="tab-tiktok" style={bloque}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 12 }}>Guion para vídeo corto</h2>
+              <p style={{ fontSize: 17, lineHeight: 1.75, color: C.text, whiteSpace: "pre-wrap", marginBottom: 20, maxWidth: "68ch" }}>{data.tiktok?.guion}</p>
+              <CopyButton texto={data.tiktok?.guion || ""} etiqueta="Copiar el guion" />
+            </section>
+          )}
+
+          {formato === "x" && (
+            <section role="tabpanel" id="panel-x" aria-labelledby="tab-x">
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 12 }}>Hilo, publicación a publicación</h2>
+              <ol style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
+                {(data.hiloX || []).map((tweet, i) => (
+                  <li key={i} style={{ ...bloque, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+                    <p style={{ fontSize: 16, lineHeight: 1.65, color: C.text, flex: "1 1 320px", margin: 0 }}>
+                      <span className="sr-only">{`Publicación ${i + 1}: `}</span>{tweet}
+                    </p>
+                    <CopyButton texto={tweet} etiqueta={`Copiar ${i + 1}`} />
+                  </li>
+                ))}
+              </ol>
+              <div style={{ marginTop: 16 }}>
+                <CopyButton texto={(data.hiloX || []).join("\n\n")} etiqueta="Copiar el hilo entero" />
+              </div>
+            </section>
+          )}
+
+          {formato === "instagram" && (
+            <section role="tabpanel" id="panel-instagram" aria-labelledby="tab-instagram" style={bloque}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 12 }}>Pie de publicación</h2>
+              <p style={{ fontSize: 17, lineHeight: 1.75, color: C.text, whiteSpace: "pre-wrap", marginBottom: 16, maxWidth: "68ch" }}>{data.instagram?.caption}</p>
+              <ul role="list" style={{ listStyle: "none", display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+                {(data.instagram?.hashtags || []).map((h, i) => (
+                  <li key={i} style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, color: C.sub, padding: "4px 12px", borderRadius: 999, fontSize: 14 }}>{h}</li>
+                ))}
+              </ul>
+              <CopyButton texto={instagramCompleto} etiqueta="Copiar pie y etiquetas" />
+            </section>
+          )}
+
+          <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 24, maxWidth: "72ch" }}>
+            Estos textos los redacta un modelo de lenguaje a partir de la edición del día y se publican sin revisión previa. Antes de usarlos, comprueba que las cifras coinciden con la edición enlazada arriba.
+          </p>
         </>
       )}
     </div>
@@ -3528,93 +3618,6 @@ function CalculadoraPage() {
   return <CompoundCalc />;
 }
 
-function CompartirPage() {
-  useDocumentMeta("Comparte el Mercado de Hoy — FinanzaDR", "Genera una imagen con el resumen del mercado para compartir en tus redes.");
-  const { stocks, C } = useOutletContext();
-  const [searchParams] = useSearchParams();
-  const [vista, setVista] = useState(searchParams.get("vista") === "cierre" ? "cierre" : "vivo");
-  const [cierreStatus, setCierreStatus] = useState("loading");
-  const [cierreStocks, setCierreStocks] = useState(null);
-  const [cierreFecha, setCierreFecha] = useState(null);
-  const [cierreError, setCierreError] = useState(null);
-
-  useEffect(() => {
-    if (vista !== "cierre") return;
-    let cancelled = false;
-    setCierreStatus("loading");
-    setCierreError(null);
-    fetch("/api/briefing")
-      .then(async (res) => {
-        const body = await res.json();
-        if (!res.ok) throw new Error(body?.error || "No se pudo obtener el cierre del mercado.");
-        return body;
-      })
-      .then((body) => {
-        if (cancelled) return;
-        const indices = (body.precios || [])
-          .filter((p) => p.tipo === "ETFs de índice" && p.precio != null && p.cambioPct != null)
-          .map((p) => ({ s: p.simbolo, n: p.nombre, corto: p.corto || p.nombre, tipoActivo: p.tipoActivo || "ETF", moneda: "USD", p: p.precio, c: p.cambioPct }));
-        if (indices.length === 0) throw new Error("No hay datos de índices disponibles en el cierre guardado.");
-        setCierreStocks(indices);
-        setCierreFecha(new Date(body.generadoEn));
-        setCierreStatus("ready");
-      })
-      .catch((err) => { if (!cancelled) { setCierreError(err.message); setCierreStatus("error"); } });
-    return () => { cancelled = true; };
-  }, [vista]);
-
-  return (
-    <div className="fade-in">
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
-        <SectionTitle>📸 Market Snapshot</SectionTitle>
-        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-          {["vivo","cierre"].map(v => (
-            <button key={v} onClick={() => setVista(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${vista===v?C.gold:C.border}`, background:vista===v?C.goldBg:"none", color:vista===v?C.gold:C.muted, fontFamily:F.sans, fontSize:12, fontWeight:600, cursor:"pointer" }}>
-              {v==="vivo"?"🔴 Vivo":"🌇 Cierre de Hoy"}
-            </button>
-          ))}
-        </div>
-      </div>
-      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Genera una card visual del mercado lista para compartir.</p>
-
-      {vista === "vivo" && <SnapshotCard stocks={stocks} />}
-
-      {vista === "cierre" && cierreStatus === "loading" && (
-        <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-          <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-          <div style={{ fontFamily:F.sans, fontSize:13 }}>Cargando el cierre del mercado...</div>
-        </div>
-      )}
-
-      {vista === "cierre" && cierreStatus === "error" && (
-        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px" }}>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo cargar el cierre del mercado. {cierreError}</p>
-        </div>
-      )}
-
-      {vista === "cierre" && cierreStatus === "ready" && (
-        <SnapshotCard stocks={cierreStocks} modo="cierre" fecha={cierreFecha} />
-      )}
-    </div>
-  );
-}
-
-function NewsletterPage() {
-  useDocumentMeta("Newsletter Gratis — FinanzaDR", "Recibe el análisis financiero diario directo en tu correo, gratis.");
-  const { C, dark } = useOutletContext();
-  return (
-    <div className="fade-in">
-      <div style={{ background:dark?"linear-gradient(135deg,#0f1228,#130f2a)":"linear-gradient(135deg,#eef0f8,#e8eaf5)", border:`1px solid ${C.gold}30`, borderRadius:16, padding:"40px", marginBottom:32, textAlign:"center" }}>
-        <div style={{ fontSize:48, marginBottom:16 }}>📈</div>
-        <div style={{ fontFamily:F.sans, fontSize:11, color:C.gold, letterSpacing:3, marginBottom:12 }}>GRATIS · CADA SEMANA</div>
-        <h1 style={{ fontFamily:F.serif, fontSize:32, fontWeight:800, color:C.text, marginBottom:14, lineHeight:1.3 }}>Lo más importante de<br/><span style={{ color:C.gold }}>Wall Street en tu idioma</span></h1>
-        <p style={{ fontSize:15, color:C.sub, maxWidth:480, margin:"0 auto 32px", lineHeight:1.8 }}>Cada semana te enviamos un resumen claro de lo que pasó en los mercados.</p>
-        <div style={{ maxWidth:480, margin:"0 auto" }}><NewsletterForm /></div>
-      </div>
-    </div>
-  );
-}
-
 function LegalPage({ title, updated, sections }) {
   const { C } = useOutletContext();
   return (
@@ -3799,43 +3802,202 @@ function Label({ children, style: s }) {
   return <div style={{ fontFamily:F.sans, fontSize:10, color:C.gold, letterSpacing:2, textTransform:"uppercase", marginBottom:14, ...s }}>{children}</div>;
 }
 
+// ===========================================================================
+// NEWSLETTER
+// ===========================================================================
+
+const MAILERLITE_JSONP = "https://assets.mailerlite.com/jsonp/2369844/forms/188124188244968944/subscribe";
+
+// El alta se envía por JSONP porque es lo que admite ese endpoint y, a
+// diferencia de un fetch cross-origin, deja leer la respuesta del proveedor.
+// La versión anterior hacía `await fetch(...)` dentro de un try con el catch
+// vacío y ponía el estado en "success" fuera del catch: el visitante veía
+// "¡Ya estás suscrito!" aunque la petición hubiera fallado o el alta hubiera
+// sido rechazada.
+function suscribirPorJsonp(email, tiempoLimiteMs = 10000) {
+  return new Promise((resolve, reject) => {
+    const nombreCallback = `mlCallback${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const script = document.createElement("script");
+    let resuelto = false;
+
+    const limpiar = () => {
+      delete window[nombreCallback];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+
+    const temporizador = setTimeout(() => {
+      if (resuelto) return;
+      resuelto = true;
+      limpiar();
+      // Sin respuesta no se afirma nada: quien llama muestra "no pudimos
+      // confirmar", que es distinto de éxito y distinto de error.
+      reject(new Error("sin-confirmacion"));
+    }, tiempoLimiteMs);
+
+    window[nombreCallback] = (respuesta) => {
+      if (resuelto) return;
+      resuelto = true;
+      clearTimeout(temporizador);
+      limpiar();
+      resolve(respuesta);
+    };
+
+    script.onerror = () => {
+      if (resuelto) return;
+      resuelto = true;
+      clearTimeout(temporizador);
+      limpiar();
+      reject(new Error("red"));
+    };
+
+    const parametros = new URLSearchParams({
+      callback: nombreCallback,
+      "fields[email]": email,
+      "ml-submit": "1",
+      anticsrf: "true",
+    });
+    script.src = `${MAILERLITE_JSONP}?${parametros.toString()}`;
+    document.body.appendChild(script);
+  });
+}
+
+// Interpreta la respuesta del proveedor sin inventarse un contrato: solo se
+// da por buena si viene una señal explícita de éxito.
+function interpretarRespuestaAlta(respuesta) {
+  if (!respuesta || typeof respuesta !== "object") return "sin-confirmar";
+  if (respuesta.success === true) return "exito";
+
+  const texto = JSON.stringify(respuesta).toLowerCase();
+  if (texto.includes("already") || texto.includes("exists") || texto.includes("duplicate")) return "duplicado";
+  if (respuesta.success === false || respuesta.errors) return "error";
+  return "sin-confirmar";
+}
+
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 function NewsletterForm() {
   const { C } = useOutletContext();
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState(null);
-  const handleSubmit = async () => {
-    if (!email || !email.includes("@")) { setStatus("error"); return; }
-    setStatus("loading");
+  const [estado, setEstado] = useState("inactivo");
+
+  const enviar = async (evento) => {
+    evento.preventDefault();
+    if (!EMAIL_VALIDO.test(email.trim())) { setEstado("invalido"); return; }
+    setEstado("enviando");
     try {
-      await fetch("https://assets.mailerlite.com/jsonp/2369844/forms/188124188244968944/subscribe", {
-        method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"},
-        body:`fields[email]=${encodeURIComponent(email)}&ml-submit=1&anticsrf=true`,
-      });
-    } catch(e) {}
-    setStatus("success"); setEmail("");
+      const respuesta = await suscribirPorJsonp(email.trim());
+      setEstado(interpretarRespuestaAlta(respuesta));
+    } catch (err) {
+      setEstado(err.message === "sin-confirmacion" ? "sin-confirmar" : "error");
+    }
   };
-  if (status === "success") return (
-    <div style={{ background:"#00d68f15", border:"1px solid #00d68f", borderRadius:12, padding:"28px 24px", textAlign:"center" }}>
-      <div style={{ fontSize:40, marginBottom:12 }}>🎉</div>
-      <div style={{ fontFamily:F.serif, fontSize:22, fontWeight:700, color:"#00d68f", marginBottom:8 }}>¡Ya estás suscrito!</div>
-      <p style={{ fontSize:14, color:C.sub }}>Revisa tu correo para confirmar.</p>
-    </div>
-  );
+
+  if (estado === "exito" || estado === "duplicado") {
+    return (
+      <div role="status" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px" }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>
+          {estado === "exito" ? "Suscripción registrada" : "Ese correo ya estaba suscrito"}
+        </h3>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>
+          {estado === "exito"
+            ? "Revisa tu correo: si hace falta confirmar la suscripción, el mensaje estará ahí (mira también en spam)."
+            : "No hace falta que hagas nada más; seguirás recibiendo el resumen semanal."}
+        </p>
+      </div>
+    );
+  }
+
+  const hayError = estado === "invalido" || estado === "error" || estado === "sin-confirmar";
+  const mensajes = {
+    invalido: "Escribe un correo con el formato nombre@dominio.com.",
+    error: "No se pudo completar la suscripción. Inténtalo de nuevo en un momento.",
+    "sin-confirmar": "Enviamos la solicitud pero no recibimos confirmación. Revisa tu correo en unos minutos; si no llega nada, vuelve a intentarlo.",
+  };
+
   return (
-    <div>
-      <div style={{ display:"flex", gap:10, marginBottom:12, flexWrap:"wrap" }}>
-        <input type="email" placeholder="tu@email.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSubmit()}
-          style={{ flex:1, minWidth:200, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", color:C.text, fontFamily:F.sans, fontSize:15, outline:"none" }} />
-        <button onClick={handleSubmit} disabled={status==="loading"} style={{ background:C.gold, color:"#000", border:"none", padding:"14px 24px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:13, fontWeight:700 }}>
-         {status==="loading"?"⏳ Enviando...":"Suscribirse"}
+    <form onSubmit={enviar} noValidate>
+      <label htmlFor="newsletter-email" style={{ display: "block", fontSize: 15, fontWeight: 600, color: C.text, marginBottom: 8 }}>
+        Tu correo electrónico
+      </label>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <input
+          id="newsletter-email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); if (estado !== "enviando") setEstado("inactivo"); }}
+          aria-invalid={hayError || undefined}
+          aria-describedby={hayError ? "newsletter-mensaje" : "newsletter-privacidad"}
+          placeholder="nombre@dominio.com"
+          style={{
+            flex: "1 1 240px", minHeight: 48, background: C.card,
+            border: `1px solid ${hayError ? C.red : C.border}`, borderRadius: 10,
+            padding: "0 14px", color: C.text, fontFamily: F.sans, fontSize: 16,
+          }}
+        />
+        <button type="submit" disabled={estado === "enviando"}
+          style={{
+            minHeight: 48, padding: "0 22px", borderRadius: 10, border: "1px solid transparent",
+            background: C.text, color: C.bg, fontFamily: F.sans, fontSize: 15, fontWeight: 600,
+            cursor: estado === "enviando" ? "progress" : "pointer",
+          }}>
+          {estado === "enviando" ? "Enviando…" : "Suscribirme"}
         </button>
       </div>
-      {status==="error" && <p style={{ fontSize:12, color:C.red }}>⚠️ Ingresa un email válido</p>}
+
+      {hayError && (
+        <p id="newsletter-mensaje" role="alert" style={{ fontSize: 14, color: estado === "sin-confirmar" ? C.sub : C.red, lineHeight: 1.55, marginTop: 10 }}>
+          {mensajes[estado]}
+        </p>
+      )}
+
+      <p id="newsletter-privacidad" style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>
+        Un correo por semana. Puedes darte de baja desde el enlace que lleva cada envío. Gestionamos la lista con MailerLite y no usamos tu dirección para otra cosa; el detalle está en la <Link to="/privacidad" style={{ color: C.goldText }}>política de privacidad</Link>.
+      </p>
+    </form>
+  );
+}
+
+function NewsletterPage() {
+  useDocumentMeta(
+    "Resumen semanal — FinanzaDR",
+    "Un correo por semana con lo que movió al mercado y las guías nuevas, en español y sin jerga."
+  );
+  const { C } = useOutletContext();
+
+  return (
+    <div className="fade-in">
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2, maxWidth: "20ch" }}>Recibe el resumen semanal</h1>
+      <p style={{ fontSize: 18, color: C.sub, lineHeight: 1.65, margin: "12px 0 32px", maxWidth: "62ch" }}>
+        Un solo correo por semana con lo que movió al mercado, la guía nueva si la hay y el contexto para entenderla. En español y sin jerga.
+      </p>
+
+      <div className="portada-grid-2" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "28px 32px", alignItems: "start" }}>
+        <div>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 12 }}>Qué te llega</h2>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+            {[
+              "Un repaso de la semana en Wall Street, con la cadena de causas y no solo las cifras.",
+              "La guía nueva de la biblioteca, cuando publicamos una.",
+              "Nada de recomendaciones de compra o venta: es contenido educativo.",
+            ].map((linea, i) => (
+              <li key={i} style={{ display: "flex", gap: 10, fontSize: 16, color: C.sub, lineHeight: 1.6 }}>
+                <span aria-hidden="true" style={{ color: C.goldText }}>—</span><span>{linea}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div><NewsletterForm /></div>
+      </div>
+
+      <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginTop: 24, maxWidth: "68ch" }}>
+        ¿Quieres ver antes de qué va? Los resúmenes diarios de <Link to="/apertura" style={{ color: C.goldText }}>apertura</Link> y <Link to="/briefing" style={{ color: C.goldText }}>cierre</Link> están publicados en el sitio; el correo semanal recoge lo esencial de esas ediciones.
+      </p>
     </div>
   );
 }
 
-// ===========================================================================
 // CALCULADORA DE INTERÉS COMPUESTO
 // ===========================================================================
 
@@ -4612,122 +4774,344 @@ function SentimientoPage() {
   );
 }
 
-function SnapshotCard({ stocks, modo = "vivo", fecha }) {
-  const { C } = useOutletContext();
-  const canvasRef = useRef(null);
-  const [copied, setCopied] = useState(false);
-  const [cardTheme, setCardTheme] = useState("dark");
-  // Solo entran instrumentos con precio y variacion reales: una imagen que se
-  // comparte no puede llevar cifras semilla.
-  const conDato = stocks.filter(s => s.p != null && s.c != null);
-  const gainers = conDato.filter(s=>s.c>0).length;
-  const pct = conDato.length ? Math.round(gainers/conDato.length*100) : 0;
-  const sentiment = pct>=70?"ALCISTA 🟢":pct>=40?"NEUTRAL ⚪":"BAJISTA 🔴";
-  const topMover = conDato.length ? [...conDato].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0] : null;
-  const date = (fecha || new Date()).toLocaleDateString("es-DO",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
-  const etiqueta = modo==="cierre" ? `CIERRE DEL ${date.toUpperCase()}` : "MARKET SNAPSHOT · "+date.toUpperCase();
-  const generateCanvas = () => {
-    const canvas=canvasRef.current; if(!canvas || !conDato.length) return;
-    const ctx=canvas.getContext("2d");
-    // El alto del canvas se calcula a partir de cuántas filas de activos hay
-    // (cols fijo en 4) — así una tarjeta con menos activos (ej. los 4 índices
-    // del Cierre, 1 fila) no deja un hueco vacío abajo como pasaría con un
-    // alto fijo pensado para 8 activos (2 filas).
-    const W=1080,cols=4,cellW=(W-120)/cols,startY=350;
-    const rows=Math.ceil(conDato.length/cols);
-    const tmY=startY+rows*160+20;
-    const H=tmY+390;
-    canvas.width=W; canvas.height=H;
-    const isDark=cardTheme==="dark";
-    const bg=isDark?"#07080f":"#f4f5f8",card=isDark?"#0d0f1e":"#ffffff",border=isDark?"#1a1e35":"#e0e4ef",gold="#c8a84b",textCol=isDark?"#dde1f5":"#1a1d2e",subCol=isDark?"#8890b5":"#555e7a",green="#00d68f",red="#ff4466";
-    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle=gold; ctx.fillRect(0,0,W,6);
-    ctx.fillStyle=gold; ctx.font="bold 72px Georgia,serif"; ctx.fillText("FinanzaDR",60,100);
-    ctx.fillStyle=subCol; ctx.font="28px 'Courier New',monospace"; ctx.fillText(etiqueta,60,145);
-    ctx.fillStyle=border; ctx.fillRect(60,165,W-120,2);
-    ctx.fillStyle=pct>=70?green:pct>=40?gold:red; ctx.font="bold 52px Georgia,serif"; ctx.fillText(sentiment,60,250);
-    ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText(`${gainers} de ${conDato.length} activos seguidos en verde — ${pct}% positivo`,60,295);
-    ctx.fillStyle=border; ctx.fillRect(60,320,W-120,2);
-    conDato.forEach((st,i)=>{
-      const col=i%cols,row=Math.floor(i/cols),x=60+col*cellW,y=startY+row*160;
-      ctx.fillStyle=card;
-      ctx.beginPath();ctx.moveTo(x+8+12,y);ctx.lineTo(x+cellW-8-12,y);ctx.quadraticCurveTo(x+cellW-8,y,x+cellW-8,y+12);ctx.lineTo(x+cellW-8,y+140-12);ctx.quadraticCurveTo(x+cellW-8,y+140,x+cellW-8-12,y+140);ctx.lineTo(x+8+12,y+140);ctx.quadraticCurveTo(x+8,y+140,x+8,y+140-12);ctx.lineTo(x+8,y+12);ctx.quadraticCurveTo(x+8,y,x+8+12,y);ctx.closePath();ctx.fill();
-      ctx.fillStyle=st.c>=0?green:red; ctx.fillRect(x+8,y,4,140);
-      ctx.fillStyle=gold; ctx.font="bold 28px 'Courier New',monospace"; ctx.fillText(st.s,x+22,y+38);
-      ctx.fillStyle=subCol; ctx.font="18px 'Courier New',monospace"; const etiquetaCorta=(st.corto||st.n); ctx.fillText(etiquetaCorta.length>16?etiquetaCorta.slice(0,16)+"…":etiquetaCorta,x+22,y+65);
-      ctx.fillStyle=textCol; ctx.font="bold 30px 'Courier New',monospace"; ctx.fillText(st.p>=1000?Math.round(st.p).toLocaleString():st.p.toFixed(2),x+22,y+105);
-      ctx.fillStyle=st.c>=0?green:red; ctx.font="bold 22px 'Courier New',monospace"; ctx.fillText(`${st.c>=0?"▲":"▼"} ${Math.abs(st.c)}%`,x+22,y+132);
-    });
-    ctx.fillStyle=border; ctx.fillRect(60,tmY,W-120,2);
-    ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText("TOP MOVER:",60,tmY+46);
-    ctx.fillStyle=gold; ctx.font="bold 48px Georgia,serif"; ctx.fillText(`${topMover.s} — ${topMover.c>=0?"▲":"▼"} ${Math.abs(topMover.c)}%`,60,tmY+105);
-    ctx.fillStyle=border; ctx.fillRect(60,H-90,W-120,2);
-    ctx.fillStyle=gold; ctx.font="bold 32px 'Courier New',monospace"; ctx.fillText("finanzadr.com",60,H-45);
-    ctx.fillStyle=subCol; ctx.font="22px 'Courier New',monospace"; ctx.textAlign="right"; ctx.fillText("Wall Street en tu idioma",W-60,H-45); ctx.textAlign="left";
-  };
-  useEffect(()=>{ generateCanvas(); },[stocks,cardTheme,modo,fecha]);
-  const downloadImage = async () => {
-    try {
-      const canvas = canvasRef.current;
-      const blob = await new Promise((resolve, reject) => {
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error("toBlob devolvió null")), "image/png");
-      });
-      const fileName = `finanzadr-snapshot-${new Date().toISOString().split("T")[0]}.png`;
-      const file = new File([blob], fileName, { type: "image/png" });
+// ===========================================================================
+// RESUMEN PARA COMPARTIR
+// ===========================================================================
+//
+// La imagen se dibuja con la tipografía y los tokens del sitio (antes iba en
+// Courier New y Georgia, con su propia paleta en hexadecimal), y nombra cada
+// instrumento por lo que es: la versión anterior rotulaba "S&P 500" encima del
+// precio de SPY, el mismo error que ya se corrigió en el resto del sitio.
+// También lleva fuente, fecha de sesión y hora de consulta, y distingue una
+// cotización en curso de la captura de un cierre.
 
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file] });
+function SnapshotCard({ stocks, modo = "vivo", fecha }) {
+  const { C, dark, lastUpdate } = useOutletContext();
+  const canvasRef = useRef(null);
+  const [accion, setAccion] = useState({ tipo: null, mensaje: "" });
+  const [temaTarjeta, setTemaTarjeta] = useState(dark ? "oscuro" : "claro");
+
+  // Solo entran instrumentos con precio y variación reales: una imagen que se
+  // comparte no puede llevar cifras semilla.
+  const conDato = stocks.filter((s) => s.p != null && s.c != null);
+  const enVerde = conDato.filter((s) => s.c > 0).length;
+  // Momento retratado, como número: en modo cierre, cuándo se publicó esa
+  // edición; en vivo, cuándo consultamos los precios.
+  const momentoMs = fecha ? fecha.getTime() : (lastUpdate ? Date.parse(lastUpdate) : null);
+  // Clave estable del contenido dibujado. Las dependencias del efecto tienen
+  // que ser primitivas: con el array de instrumentos, que se crea nuevo en
+  // cada render, el canvas se redibujaría en bucle.
+  const claveDatos = conDato.map((s) => `${s.s}:${s.p}:${s.c}`).join("|");
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || conDato.length === 0) return;
+    let cancelado = false;
+
+    const dibujar = () => {
+      if (cancelado) return;
+      const ctx = canvas.getContext("2d");
+      const oscuro = temaTarjeta === "oscuro";
+      const paleta = oscuro ? DARK : LIGHT;
+
+      const ANCHO = 1080;
+      const columnas = 2;
+      const margen = 64;
+      const anchoFicha = (ANCHO - margen * 2 - 24) / columnas;
+      const altoFicha = 132;
+      const inicioFichas = 330;
+      const filas = Math.ceil(conDato.length / columnas);
+      const alto = inicioFichas + filas * (altoFicha + 16) + 190;
+
+      canvas.width = ANCHO;
+      canvas.height = alto;
+
+      ctx.fillStyle = paleta.bg;
+      ctx.fillRect(0, 0, ANCHO, alto);
+      ctx.fillStyle = paleta.gold;
+      ctx.fillRect(0, 0, ANCHO, 8);
+
+      // Marca
+      ctx.fillStyle = paleta.text;
+      ctx.font = "700 60px 'Source Serif 4', Georgia, serif";
+      ctx.fillText("FinanzaDR", margen, 108);
+      ctx.fillStyle = paleta.sub;
+      ctx.font = "500 26px Inter, system-ui, sans-serif";
+      ctx.fillText("Wall Street en tu idioma", margen, 146);
+
+      // Identidad de la captura: qué periodo es y de cuándo
+      const fechaTexto = momentoMs != null
+        ? new Intl.DateTimeFormat("es-DO", { timeZone: TZ_MERCADO, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(momentoMs)
+        : "";
+      ctx.fillStyle = paleta.text;
+      ctx.font = "600 30px Inter, system-ui, sans-serif";
+      ctx.fillText(modo === "cierre" ? `Cierre de la sesión del ${fechaTexto}` : `Cotizaciones en curso${fechaTexto ? ` · ${fechaTexto}` : ""}`, margen, 208);
+
+      ctx.fillStyle = paleta.sub;
+      ctx.font = "400 24px Inter, system-ui, sans-serif";
+      ctx.fillText(`${enVerde} de ${conDato.length} activos seguidos en positivo`, margen, 248);
+
+      ctx.strokeStyle = paleta.border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(margen, 284);
+      ctx.lineTo(ANCHO - margen, 284);
+      ctx.stroke();
+
+      conDato.forEach((instrumento, i) => {
+        const columna = i % columnas;
+        const fila = Math.floor(i / columnas);
+        const x = margen + columna * (anchoFicha + 24);
+        const y = inicioFichas + fila * (altoFicha + 16);
+        const positivo = instrumento.c >= 0;
+
+        ctx.fillStyle = paleta.card;
+        ctx.beginPath();
+        ctx.roundRect(x, y, anchoFicha, altoFicha, 14);
+        ctx.fill();
+        ctx.strokeStyle = paleta.border;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = paleta.text;
+        ctx.font = "700 30px Inter, system-ui, sans-serif";
+        ctx.fillText(instrumento.s, x + 20, y + 44);
+
+        ctx.fillStyle = paleta.muted;
+        ctx.font = "400 20px Inter, system-ui, sans-serif";
+        const descripcion = `${instrumento.corto || instrumento.n} · ${instrumento.tipoActivo || ""}`.replace(/ · $/, "");
+        ctx.fillText(descripcion.length > 34 ? `${descripcion.slice(0, 33)}…` : descripcion, x + 20, y + 74);
+
+        ctx.fillStyle = paleta.text;
+        ctx.font = "600 32px Inter, system-ui, sans-serif";
+        const precio = instrumento.p >= 1000
+          ? instrumento.p.toLocaleString("en-US", { maximumFractionDigits: 0 })
+          : instrumento.p.toFixed(2);
+        ctx.fillText(`${precio} ${instrumento.moneda || "USD"}`, x + 20, y + 112);
+
+        ctx.fillStyle = positivo ? paleta.green : paleta.red;
+        ctx.font = "700 26px Inter, system-ui, sans-serif";
+        const variacion = `${positivo ? "▲" : "▼"} ${positivo ? "+" : "−"}${Math.abs(instrumento.c).toFixed(2)}%`;
+        ctx.textAlign = "right";
+        ctx.fillText(variacion, x + anchoFicha - 20, y + 112);
+        ctx.textAlign = "left";
+      });
+
+      // Pie: fuente, hora del dato y advertencia
+      const pieY = alto - 120;
+      ctx.strokeStyle = paleta.border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(margen, pieY);
+      ctx.lineTo(ANCHO - margen, pieY);
+      ctx.stroke();
+
+      ctx.fillStyle = paleta.sub;
+      ctx.font = "400 22px Inter, system-ui, sans-serif";
+      ctx.fillText(
+        momentoMs == null
+          ? "Datos de Finnhub"
+          : modo === "cierre"
+            ? `Datos de Finnhub · cierre publicado a las ${fmtHoraET(momentoMs)} (hora de Nueva York)`
+            : `Datos de Finnhub · consultados a las ${fmtHoraET(momentoMs)} (hora de Nueva York)`,
+        margen, pieY + 40
+      );
+      ctx.fillStyle = paleta.muted;
+      ctx.font = "400 20px Inter, system-ui, sans-serif";
+      ctx.fillText("Los ETFs siguen a un índice: su precio no es el nivel del índice. Contenido educativo.", margen, pieY + 72);
+
+      ctx.fillStyle = paleta.text;
+      ctx.font = "700 24px Inter, system-ui, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("finanzadr.com", ANCHO - margen, pieY + 72);
+      ctx.textAlign = "left";
+    };
+
+    // Las fuentes del sitio se cargan por CSS: dibujar antes de que estén
+    // listas deja la imagen en la tipografía de reserva.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(dibujar);
+    } else {
+      dibujar();
+    }
+    return () => { cancelado = true; };
+  // Dependencias primitivas a proposito (ver claveDatos).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claveDatos, temaTarjeta, modo, momentoMs, enVerde]);
+
+  const anunciar = (tipo, mensaje) => {
+    setAccion({ tipo, mensaje });
+    setTimeout(() => setAccion({ tipo: null, mensaje: "" }), 4000);
+  };
+
+  const obtenerBlob = () => new Promise((resolve, reject) => {
+    const canvas = canvasRef.current;
+    if (!canvas) { reject(new Error("No hay imagen que exportar.")); return; }
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("El navegador no pudo generar la imagen.")), "image/png");
+  });
+
+  const descargar = async () => {
+    try {
+      const blob = await obtenerBlob();
+      const nombre = `finanzadr-${modo}-${claveDiaMercado(momentoMs ?? Date.now())}.png`;
+      const archivo = new File([blob], nombre, { type: "image/png" });
+
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        await navigator.share({ files: [archivo] });
+        anunciar("ok", "Imagen enviada al menú de compartir.");
         return;
       }
 
-      const link = document.createElement("a");
-      link.download = fileName;
-      link.href = URL.createObjectURL(blob);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
+      const enlace = document.createElement("a");
+      enlace.download = nombre;
+      enlace.href = URL.createObjectURL(blob);
+      document.body.appendChild(enlace);
+      enlace.click();
+      document.body.removeChild(enlace);
+      URL.revokeObjectURL(enlace.href);
+      anunciar("ok", `Imagen descargada como ${nombre}.`);
     } catch (error) {
-      console.error("[downloadImage]", error);
-      alert("No se pudo guardar la imagen. Mantén presionada la imagen y selecciona 'Guardar imagen'.");
+      console.error("[descargar]", error);
+      anunciar("error", "No se pudo descargar. Mantén pulsada la imagen y elige “Guardar imagen”.");
     }
   };
-  const shareOnX=()=>{ const text=`📊 Market Snapshot\n\n${stocks.slice(0,4).map(s=>`${s.s}: ${s.c>=0?"▲":"▼"}${Math.abs(s.c)}%`).join(" | ")}\n\nSentimiento: ${sentiment} (${pct}%)\n\n#WallStreet #Inversiones #FinanzaDR\nfinanzadr.com`; window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,"_blank"); };
-  const copyImage = async () => {
-    const canvas = canvasRef.current;
+
+  const copiar = async () => {
     try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "image/png": new Promise((resolve, reject) => {
-            canvas.toBlob(blob => {
-              if (blob) resolve(blob);
-              else reject(new Error("toBlob devolvió null"));
-            }, "image/png");
-          })
-        })
-      ]);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (!navigator.clipboard || !window.ClipboardItem) throw new Error("Portapapeles no disponible");
+      const blob = await obtenerBlob();
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      anunciar("ok", "Imagen copiada al portapapeles.");
     } catch (error) {
-      console.error("[copyImage]", error);
-      downloadImage();
+      console.error("[copiar]", error);
+      anunciar("error", "Tu navegador no permite copiar imágenes. Usa “Descargar imagen”.");
     }
   };
+
+  const botonEstilo = (primario) => ({
+    minHeight: 48, padding: "0 20px", borderRadius: 10,
+    border: `1px solid ${primario ? "transparent" : C.border}`,
+    background: primario ? C.text : C.card, color: primario ? C.bg : C.text,
+    fontFamily: F.sans, fontSize: 15, fontWeight: 600, cursor: "pointer",
+  });
+
+  if (conDato.length === 0) {
+    return (
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "24px 28px" }}>
+        <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6 }}>
+          Todavía no hay cotizaciones con las que generar la imagen. Vuelve a intentarlo cuando carguen los precios.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div style={{display:"flex",gap:8,marginBottom:20}}>
-        {["dark","light"].map(s=>(<button key={s} onClick={()=>setCardTheme(s)} style={{padding:"9px 20px",borderRadius:8,border:`1px solid ${cardTheme===s?C.gold:C.border}`,background:cardTheme===s?C.goldBg:"none",color:cardTheme===s?C.gold:C.muted,fontFamily:F.sans,fontSize:12,fontWeight:600,cursor:"pointer"}}>{s==="dark"?"🌙 Oscuro":"☀️ Claro"}</button>))}
+      <div role="group" aria-label="Tema de la imagen" style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        {[["claro", "Tema claro"], ["oscuro", "Tema oscuro"]].map(([clave, texto]) => (
+          <button key={clave} type="button" onClick={() => setTemaTarjeta(clave)} aria-pressed={temaTarjeta === clave} style={botonEstilo(temaTarjeta === clave)}>
+            {texto}
+          </button>
+        ))}
       </div>
-      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:20,overflow:"hidden"}}>
-        {conDato.length
-          ? <canvas ref={canvasRef} style={{width:"100%",height:"auto",borderRadius:8,display:"block"}}/>
-          : <p style={{fontSize:14,color:C.sub,lineHeight:1.6}}>Todavía no hay cotizaciones con las que generar la imagen. Vuelve a intentarlo cuando carguen los precios.</p>}
+
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 20 }}>
+        <canvas ref={canvasRef} style={{ width: "100%", height: "auto", borderRadius: 10, display: "block" }}
+          aria-label={`Imagen del ${modo === "cierre" ? "cierre" : "mercado en curso"} con ${conDato.length} instrumentos, ${enVerde} en positivo`} />
       </div>
-      <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-        <button onClick={downloadImage} style={{background:C.gold,color:"#000",border:"none",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>⬇️ Guardar Imagen</button>
-        <button onClick={copyImage} style={{background:copied?C.gold:"none",color:copied?"#000":C.gold,border:`1px solid ${C.gold}`,padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>{copied?"✅ ¡Copiado!":"📋 Copiar Imagen"}</button>
-        <button onClick={shareOnX} style={{background:"#000",color:"#fff",border:"1px solid #333",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>𝕏 Compartir en X</button>
+
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button type="button" onClick={descargar} style={botonEstilo(true)}>Descargar imagen</button>
+        <button type="button" onClick={copiar} style={botonEstilo(false)}>Copiar imagen</button>
       </div>
+
+      <p role="status" style={{ minHeight: 24, marginTop: 12, fontSize: 14, lineHeight: 1.55, color: accion.tipo === "error" ? C.red : C.sub }}>
+        {accion.mensaje}
+      </p>
     </div>
   );
 }
+
+function CompartirPage() {
+  useDocumentMeta(
+    "Resumen para compartir — FinanzaDR",
+    "Genera una imagen con las cotizaciones del momento o con el cierre de la sesión, lista para compartir."
+  );
+  const { stocks, C } = useOutletContext();
+  const [searchParams] = useSearchParams();
+  const [vista, setVista] = useState(searchParams.get("vista") === "cierre" ? "cierre" : "vivo");
+  const [cierreStocks, setCierreStocks] = useState(null);
+  const [cierreFecha, setCierreFecha] = useState(null);
+  const [errorCierre, setErrorCierre] = useState(null);
+  const estadoCierre = errorCierre ? "error" : cierreStocks ? "listo" : "loading";
+
+  useEffect(() => {
+    if (vista !== "cierre") return;
+    let cancelado = false;
+    fetch("/api/briefing")
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body?.error || "No se pudo obtener el cierre del mercado.");
+        return body;
+      })
+      .then((body) => {
+        if (cancelado) return;
+        const instrumentos = (body.precios || [])
+          .filter((p) => p.precio != null && p.cambioPct != null)
+          .map((p) => ({
+            s: p.simbolo, n: p.nombre, corto: p.corto || p.nombre,
+            tipoActivo: p.tipoActivo || "", moneda: p.moneda || "USD",
+            p: p.precio, c: p.cambioPct,
+          }));
+        if (instrumentos.length === 0) throw new Error("El cierre guardado no trae cotizaciones.");
+        setCierreStocks(instrumentos);
+        setCierreFecha(new Date(body.generadoEn));
+      })
+      .catch((err) => { if (!cancelado) setErrorCierre(err.message); });
+    return () => { cancelado = true; };
+  }, [vista]);
+
+  const botonEstilo = (activo) => ({
+    minHeight: 44, padding: "0 18px", borderRadius: 10,
+    border: `1px solid ${activo ? C.text : C.border}`,
+    background: activo ? C.text : C.card, color: activo ? C.bg : C.text,
+    fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer",
+  });
+
+  return (
+    <div className="fade-in">
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Resumen para compartir</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, margin: "8px 0 24px", maxWidth: "68ch" }}>
+        Una imagen con los instrumentos que seguimos, lista para redes. Lleva la fecha de la sesión, la fuente y la hora del dato, para que se entienda a qué momento corresponde.
+      </p>
+
+      <div role="group" aria-label="Qué momento retratar" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
+        {[["vivo", "Cotizaciones en curso"], ["cierre", "Cierre de la última sesión"]].map(([clave, texto]) => (
+          <button key={clave} type="button" onClick={() => { setVista(clave); setCierreStocks(null); setErrorCierre(null); }} aria-pressed={vista === clave} style={botonEstilo(vista === clave)}>{texto}</button>
+        ))}
+      </div>
+
+      {vista === "vivo" && <SnapshotCard stocks={stocks} modo="vivo" />}
+
+      {vista === "cierre" && estadoCierre === "loading" && (
+        <div className="skeleton-pulse" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, height: 320 }} aria-hidden="true" />
+      )}
+
+      {vista === "cierre" && estadoCierre === "error" && (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "24px 28px" }}>
+          <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6 }}>No se pudo cargar el cierre del mercado. {errorCierre}</p>
+        </div>
+      )}
+
+      {vista === "cierre" && estadoCierre === "listo" && (
+        <>
+          <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginBottom: 16 }}>
+            Captura de la sesión del {fmtFechaSesion(cierreFecha)}. No son precios del momento: es la foto de aquel cierre.
+          </p>
+          <SnapshotCard stocks={cierreStocks} modo="cierre" fecha={cierreFecha} />
+        </>
+      )}
+    </div>
+  );
+}
+
