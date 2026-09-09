@@ -3,10 +3,7 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/agentes?agente=apertura", "schedule": "0 11 * * 1-5" },
-    { "path": "/api/agentes?agente=contenido&fuente=apertura", "schedule": "45 11 * * 1-5" },
-    { "path": "/api/agentes?agente=contenido", "schedule": "0 12 * * *" },
-    { "path": "/api/agentes?agente=monitoreo", "schedule": "0 13 * * 1" },
-    { "path": "/api/agentes?agente=mercados", "schedule": "30 21 * * 1-5" }
+    { "path": "/api/agentes?plan=apertura", "schedule": "0 11 * * *" },
+    { "path": "/api/agentes?plan=cierre", "schedule": "30 22 * * *" }
   ]
 }

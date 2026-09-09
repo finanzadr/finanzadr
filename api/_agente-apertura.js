@@ -92,6 +92,29 @@ export async function generarApertura() {
 
 // Endpoint invocable manualmente para generar el Resumen de Apertura y
 // guardarlo en Blob. Sin cron todavía — se activa a mano mientras se prueba.
+// Genera el resultado y lo guarda en Blob. Separado del handler HTTP para que
+// el cron encadenado (api/agentes.js, modo ?plan=) pueda ejecutar varios
+// agentes dentro de una misma invocación: dos handlers no pueden escribir en
+// la misma respuesta.
+export async function ejecutar() {
+  const body = await generarApertura();
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      await put(BLOB_PATHNAME, JSON.stringify(body), {
+        access: "private",
+        contentType: "application/json",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      });
+    } catch (err) {
+      console.error("No se pudo guardar el resumen de apertura en Blob:", err);
+    }
+  }
+
+  return body;
+}
+
 export async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -106,22 +129,7 @@ export async function handler(req, res) {
   }
 
   try {
-    const body = await generarApertura();
-
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        await put(BLOB_PATHNAME, JSON.stringify(body), {
-          access: "private",
-          contentType: "application/json",
-          addRandomSuffix: false,
-          allowOverwrite: true,
-        });
-      } catch (err) {
-        console.error("No se pudo guardar el resumen de apertura en Blob:", err);
-      }
-    }
-
-    res.status(200).json(body);
+    res.status(200).json(await ejecutar());
   } catch (err) {
     console.error("Error en agente-apertura:", err);
     res.status(500).json({ error: "No se pudo generar el resumen de apertura." });

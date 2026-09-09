@@ -97,6 +97,30 @@ export async function generarContenido(fuente = "cierre") {
 // ?fuente=apertura usa el resumen de Apertura y guarda en su propio blob;
 // cualquier otro valor (incluido ausente) se comporta igual que siempre:
 // usa el briefing de Cierre y contenido/latest.json.
+// Genera el resultado y lo guarda en Blob. Separado del handler HTTP para que
+// el cron encadenado (api/agentes.js, modo ?plan=) pueda ejecutar varios
+// agentes dentro de una misma invocación: dos handlers no pueden escribir en
+// la misma respuesta.
+export async function ejecutar(fuente = "cierre") {
+  const pathname = fuente === "apertura" ? BLOB_PATHNAME_APERTURA : BLOB_PATHNAME;
+  const body = await generarContenido(fuente);
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      await put(pathname, JSON.stringify(body), {
+        access: "private",
+        contentType: "application/json",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      });
+    } catch (err) {
+      console.error("No se pudo guardar el contenido en Blob:", err);
+    }
+  }
+
+  return body;
+}
+
 export async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -111,25 +135,9 @@ export async function handler(req, res) {
   }
 
   const fuente = req.query?.fuente === "apertura" ? "apertura" : "cierre";
-  const pathname = fuente === "apertura" ? BLOB_PATHNAME_APERTURA : BLOB_PATHNAME;
 
   try {
-    const body = await generarContenido(fuente);
-
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        await put(pathname, JSON.stringify(body), {
-          access: "private",
-          contentType: "application/json",
-          addRandomSuffix: false,
-          allowOverwrite: true,
-        });
-      } catch (err) {
-        console.error("No se pudo guardar el contenido en Blob:", err);
-      }
-    }
-
-    res.status(200).json(body);
+    res.status(200).json(await ejecutar(fuente));
   } catch (err) {
     console.error(`Error en agente-contenido (fuente=${fuente}):`, err);
     res.status(500).json({ error: err.message || "No se pudo generar el contenido." });

@@ -336,6 +336,29 @@ export async function generarBriefing() {
 // el briefing y lo guarda en Blob para que /api/briefing lo sirva sin
 // regenerar en cada visita. Sigue siendo invocable manualmente para forzar
 // una regeneración (por ejemplo, para probar cambios en el prompt).
+// Genera el resultado y lo guarda en Blob. Separado del handler HTTP para que
+// el cron encadenado (api/agentes.js, modo ?plan=) pueda ejecutar varios
+// agentes dentro de una misma invocación: dos handlers no pueden escribir en
+// la misma respuesta.
+export async function ejecutar() {
+  const body = await generarBriefing();
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      await put(BLOB_PATHNAME, JSON.stringify(body), {
+        access: "private",
+        contentType: "application/json",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      });
+    } catch (err) {
+      console.error("No se pudo guardar el briefing en Blob:", err);
+    }
+  }
+
+  return body;
+}
+
 export async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -350,22 +373,7 @@ export async function handler(req, res) {
   }
 
   try {
-    const body = await generarBriefing();
-
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        await put(BLOB_PATHNAME, JSON.stringify(body), {
-          access: "private",
-          contentType: "application/json",
-          addRandomSuffix: false,
-          allowOverwrite: true,
-        });
-      } catch (err) {
-        console.error("No se pudo guardar el briefing en Blob:", err);
-      }
-    }
-
-    res.status(200).json(body);
+    res.status(200).json(await ejecutar());
   } catch (err) {
     console.error("Error en agente-mercados:", err);
     res.status(500).json({ error: "No se pudo generar el resumen del mercado." });

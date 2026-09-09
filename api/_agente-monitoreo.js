@@ -107,6 +107,35 @@ export async function generarMonitoreo() {
 // Agente 3 (Monitoreo): genera el reporte semanal de tráfico y lo guarda en
 // Blob bajo su propio store ("monitoreo"), igual que Agente 1 y Agente 2 con
 // los suyos. Sin cron todavía — se invoca manualmente mientras se prueba.
+// Genera el resultado y lo guarda en Blob. Separado del handler HTTP para que
+// el cron encadenado (api/agentes.js, modo ?plan=) pueda ejecutar varios
+// agentes dentro de una misma invocación: dos handlers no pueden escribir en
+// la misma respuesta.
+// La comprobación de variables de Vercel vive aquí (y no solo en el handler)
+// para que el cron encadenado falle con el mismo mensaje explícito.
+export async function ejecutar() {
+  if (!process.env.VERCEL_API_TOKEN || !process.env.VERCEL_PROJECT_ID || !process.env.VERCEL_TEAM_SLUG) {
+    throw new Error("Faltan variables de entorno de Vercel (VERCEL_API_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_SLUG).");
+  }
+
+  const body = await generarMonitoreo();
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      await put(BLOB_PATHNAME, JSON.stringify(body), {
+        access: "private",
+        contentType: "application/json",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      });
+    } catch (err) {
+      console.error("No se pudo guardar el monitoreo en Blob:", err);
+    }
+  }
+
+  return body;
+}
+
 export async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -119,30 +148,9 @@ export async function handler(req, res) {
     res.status(500).json({ error: "Falta configurar ANTHROPIC_API_KEY en las variables de entorno." });
     return;
   }
-  if (!process.env.VERCEL_API_TOKEN || !process.env.VERCEL_PROJECT_ID || !process.env.VERCEL_TEAM_SLUG) {
-    res.status(500).json({
-      error: "Faltan variables de entorno de Vercel (VERCEL_API_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_SLUG).",
-    });
-    return;
-  }
 
   try {
-    const body = await generarMonitoreo();
-
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        await put(BLOB_PATHNAME, JSON.stringify(body), {
-          access: "private",
-          contentType: "application/json",
-          addRandomSuffix: false,
-          allowOverwrite: true,
-        });
-      } catch (err) {
-        console.error("No se pudo guardar el monitoreo en Blob:", err);
-      }
-    }
-
-    res.status(200).json(body);
+    res.status(200).json(await ejecutar());
   } catch (err) {
     console.error("Error en agente-monitoreo:", err);
     res.status(500).json({ error: err.message || "No se pudo generar el reporte de monitoreo." });
