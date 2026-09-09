@@ -253,9 +253,6 @@ const BROKERS = [
   { name: "Remitly", initial: "R", nivel: "Remesas", desc: "Remesas rápidas y seguras a República Dominicana y toda Latinoamérica, con tu primer envío gratis.", cta: "Enviar remesa", url: "https://remitly.com" },
 ];
 
-const fmt = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const clr = (c) => c >= 0 ? "#00d68f" : "#ff4466";
-const arr = (c) => c >= 0 ? "▲" : "▼";
 const formatHora = (iso) => {
   const d = new Date(iso);
   let h = d.getHours();
@@ -544,8 +541,16 @@ function Layout() {
       const res = await fetch("/api/noticias");
       const data = await res.json();
       if (data && data.length > 0) {
-        const cats = { "earnings":"Ganancias","ipo":"IPO","merger":"Fusiones","crypto":"Cripto","forex":"Divisas","economy":"Economía","general":"Mercados" };
-        setNoticias(data.slice(0,15).map(n => ({ titulo: n.headline, resumen: n.summary?.slice(0,240)+"..." || "Sin resumen.", fuente: n.source||"Finnhub", tiempo: (() => { const m=Math.floor((Date.now()/1000-n.datetime)/60); return m<60?`Hace ${m} min`:m<1440?`Hace ${Math.floor(m/60)}h`:`Hace ${Math.floor(m/1440)} días`; })(), categoria: cats[n.category]||"Mercados", url: n.url })));
+        // Sin categoría fiable no se inventa una: antes todo lo desconocido
+        // se etiquetaba "Mercados", lo que dejaba la etiqueta sin significado.
+        setNoticias(data.slice(0,15).map(n => ({
+          titulo: n.headline,
+          resumen: n.summary ? n.summary.slice(0,240) + "…" : "Sin resumen disponible.",
+          fuente: n.source || "Finnhub",
+          categoria: categoriaNoticia(n.category),
+          datetime: n.datetime ? n.datetime * 1000 : null,
+          url: n.url,
+        })));
       }
     } catch(e) {}
     setNoticiasLoading(false);
@@ -625,10 +630,12 @@ function Layout() {
          768px la tabla desaparece y aparecen las fichas apiladas. */
       .mercados-fichas { display:none !important; }
       .tv-contenedor { height:560px; }
+      .heatmap-contenedor { width:100%; height:600px; }
       @media (max-width:768px) {
         .mercados-tabla { display:none !important; }
         .mercados-fichas { display:flex !important; }
         .tv-contenedor { height:420px; }
+        .heatmap-contenedor { height:420px; }
       }
       .tarjeta-enlace { transition:transform 0.2s, border-color 0.2s; }
       .tarjeta-enlace:hover { transform:translateY(-2px); }
@@ -1669,238 +1676,393 @@ function MercadosPage() {
   );
 }
 
-function NoticiasPage() {
-  useDocumentMeta("Noticias Financieras — FinanzaDR", "Las noticias más relevantes de Wall Street y República Dominicana, en español para inversionistas latinos.");
-  const { noticias, noticiasLoading, fetchNoticias, noticiasRD, noticiasRDLoading, fetchNoticiasRD, C } = useOutletContext();
+// ===========================================================================
+// ACTUALIDAD
+// ===========================================================================
 
-  const cardStyle = (url) => ({
-    background:C.card, border:`1px solid ${C.border}`, borderRadius:10,
-    padding:"20px 24px", cursor:url?"pointer":"default", transition:"border-color 0.2s"
-  });
+// Categorias tal como las nombra Finnhub. Lo que no esta en el mapa no recibe
+// etiqueta: antes todo lo desconocido caia en "Mercados", que convertia la
+// categoria en ruido.
+const CATEGORIAS_NOTICIA = {
+  earnings: "Resultados",
+  ipo: "Salidas a bolsa",
+  merger: "Fusiones",
+  crypto: "Cripto",
+  forex: "Divisas",
+  economy: "Economía",
+  "top news": "Portada",
+  general: null,
+};
+
+const categoriaNoticia = (bruta) => {
+  const clave = (bruta || "").toLowerCase();
+  return Object.prototype.hasOwnProperty.call(CATEGORIAS_NOTICIA, clave) ? CATEGORIAS_NOTICIA[clave] : null;
+};
+
+// Tarjeta de noticia. Es un <article> con un enlace real, no un <div> con
+// onClick: lo anterior no se podia alcanzar ni activar con el teclado.
+function TarjetaNoticia({ titulo, resumen, fuente, categoria, fecha, url, procedencia }) {
+  const { C } = useOutletContext();
+  // Las fechas del RSS dominicano son texto de la fuente y no siempre se
+  // pueden parsear: sin esta comprobación, toISOString lanzaría y tumbaría la
+  // página entera por una entradilla mal formada.
+  const instante = fecha ? new Date(fecha) : null;
+  const fechaValida = instante !== null && !Number.isNaN(instante.getTime());
+  return (
+    <li>
+      <article style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", height: "100%" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, fontSize: 13, color: C.muted, marginBottom: 10 }}>
+          {categoria && (
+            <span style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: "3px 10px", fontWeight: 600, color: C.sub }}>{categoria}</span>
+          )}
+          <span style={{ color: C.sub }}>{fuente}</span>
+          {fechaValida && <><span aria-hidden="true">·</span><time dateTime={instante.toISOString()}>{formatTiempoRelativo(instante)}</time></>}
+        </div>
+        <h3 style={{ fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.35, marginBottom: 8 }}>
+          {url
+            ? <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: C.text, textDecoration: "none" }}>{titulo}</a>
+            : titulo}
+        </h3>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{resumen}</p>
+        <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.55, marginTop: 12 }}>
+          {procedencia}
+          {url && <> · <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: C.goldText }}>Leer el artículo original<span className="sr-only"> (se abre en una pestaña nueva)</span></a></>}
+        </p>
+      </article>
+    </li>
+  );
+}
+
+function NoticiasPage() {
+  useDocumentMeta(
+    "Noticias — FinanzaDR",
+    "Lo que pasa en Wall Street y en República Dominicana, resumido en español y con enlace a la fuente original."
+  );
+  const { C, noticias, noticiasLoading, fetchNoticias, noticiasRD, noticiasRDLoading, fetchNoticiasRD } = useOutletContext();
+
+  // /api/noticias-es reescribe en español las noticias relevantes con un
+  // modelo de lenguaje. Se pide solo desde esta pagina (no desde Layout) para
+  // no gastar una llamada por cada visita a cualquier ruta del sitio.
+  const [estadoEs, setEstadoEs] = useState("loading");
+  const [noticiasEs, setNoticiasEs] = useState([]);
+
+  useEffect(() => {
+    let cancelado = false;
+    fetch("/api/noticias-es")
+      .then((res) => res.json())
+      .then((body) => {
+        if (cancelado) return;
+        if (!body || body.disponible === false || !Array.isArray(body.items) || body.items.length === 0) {
+          setEstadoEs("sin-traduccion");
+          return;
+        }
+        setNoticiasEs(body.items);
+        setEstadoEs("listo");
+      })
+      .catch(() => { if (!cancelado) setEstadoEs("sin-traduccion"); });
+    return () => { cancelado = true; };
+  }, []);
+
+  const encabezado = (titulo, descripcion, alActualizar, cargando) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
+      <div style={{ maxWidth: "62ch" }}>
+        <h2 style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1.25 }}>{titulo}</h2>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginTop: 6 }}>{descripcion}</p>
+      </div>
+      <button type="button" onClick={alActualizar} disabled={cargando}
+        style={{ minHeight: 44, padding: "0 18px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, color: cargando ? C.muted : C.text, fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: cargando ? "progress" : "pointer" }}>
+        {cargando ? "Actualizando…" : "Actualizar"}
+      </button>
+    </div>
+  );
 
   return (
     <div className="fade-in">
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Noticias</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, margin: "8px 0 40px", maxWidth: "62ch" }}>
+        Lo que mueve a Wall Street y lo que se publica en República Dominicana, con la fuente y el enlace al artículo original siempre a la vista.
+      </p>
 
-      {/* ── NOTICIAS REPÚBLICA DOMINICANA ── */}
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
-        <div>
-          <SectionTitle>🇩🇴 Noticias República Dominicana</SectionTitle>
-          <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>
-            {noticiasRDLoading ? "Cargando..." : "El Dinero · Diario Libre · En tiempo real"}
-          </p>
+      <section aria-labelledby="noticias-ws">
+        <div id="noticias-ws">
+          {encabezado(
+            "Wall Street",
+            estadoEs === "listo"
+              ? "Resúmenes en español elaborados por FinanzaDR a partir de artículos publicados en inglés. Se actualizan cada pocos minutos y se muestran los más relevantes de la jornada."
+              : "Titulares de Finnhub. En este momento no hay versión en español disponible, así que se muestran tal como los publica la fuente.",
+            fetchNoticias,
+            noticiasLoading
+          )}
         </div>
-        <button onClick={fetchNoticiasRD} disabled={noticiasRDLoading}
-          style={{ background:noticiasRDLoading?C.border:"#1a6b3c", color:noticiasRDLoading?C.muted:"#fff",
-            border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasRDLoading?"not-allowed":"pointer",
-            fontFamily:F.sans, fontSize:11, fontWeight:700 }}>
-          {noticiasRDLoading ? "⏳ Cargando..." : "🔄 Actualizar"}
-        </button>
-      </div>
 
-      {noticiasRDLoading ? (
-        <div style={{ display:"grid", gap:14, marginBottom:40 }}>
-          {[0,1,2].map(i => <div key={i} className="skeleton-pulse" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, height:110 }} />)}
-        </div>
-      ) : noticiasRD.length === 0 ? (
-        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"32px 24px", textAlign:"center", color:C.muted, marginBottom:40 }}>
-          <div style={{ fontSize:28, marginBottom:10 }}>📡</div>
-          <p style={{ fontFamily:F.sans, fontSize:12 }}>Sin noticias disponibles en este momento.</p>
-        </div>
-      ) : (
-        <div style={{ display:"grid", gap:14, marginBottom:40 }}>
-          {noticiasRD.map((item, i) => (
-            <div key={i} onClick={() => /^https?:\/\//i.test(item.url || "") && window.open(item.url, "_blank", "noopener,noreferrer")}
-              style={cardStyle(item.url)}
-              onMouseEnter={e => { if(item.url) e.currentTarget.style.borderColor="#1a6b3c88"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
-                <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-                  <span style={{ background:"#1a6b3c22", color:"#2ea866", padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:600 }}>🇩🇴 {item.fuente}</span>
-                  {item.fecha && <span style={{ fontSize:11, color:C.muted, fontFamily:F.sans }}>{new Date(item.fecha).toLocaleDateString("es-DO",{day:"numeric",month:"short"})}</span>}
-                </div>
-                {item.url && <span style={{ fontSize:11, color:"#2ea866", fontFamily:F.sans, fontWeight:600 }}>{'>'}</span>}
-              </div>
-              <h3 style={{ fontFamily:F.serif, fontSize:17, fontWeight:700, color:C.text, marginBottom:6, lineHeight:1.4 }}>{item.titulo}</h3>
-              <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{item.resumen}</p>
-            </div>
-          ))}
-        </div>
-      )}
+        {estadoEs === "loading" && (
+          <ul role="list" style={{ listStyle: "none", display: "grid", gap: 16 }}>
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="skeleton-pulse" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, height: 150 }} />
+            ))}
+          </ul>
+        )}
 
-      {/* ── NOTICIAS WALL STREET ── */}
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
-        <div>
-          <SectionTitle nivel={2}>📈 Noticias Wall Street</SectionTitle>
-          <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>{noticiasLoading ? "Cargando noticias..." : "Noticias reales de hoy · Powered by Finnhub"}</p>
+        {estadoEs === "listo" && (
+          <ul role="list" style={{ listStyle: "none", display: "grid", gap: 16 }}>
+            {noticiasEs.map((n, i) => (
+              <TarjetaNoticia key={i}
+                titulo={n.titulo}
+                resumen={n.resumen}
+                fuente={n.fuente}
+                categoria={categoriaNoticia(n.categoria)}
+                fecha={n.datetime ? n.datetime * 1000 : null}
+                url={n.url}
+                procedencia="Resumen en español de FinanzaDR; el artículo original está en inglés" />
+            ))}
+          </ul>
+        )}
+
+        {estadoEs === "sin-traduccion" && (
+          noticiasLoading ? (
+            <ul role="list" style={{ listStyle: "none", display: "grid", gap: 16 }}>
+              {[0, 1, 2].map((i) => (
+                <li key={i} className="skeleton-pulse" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, height: 150 }} />
+              ))}
+            </ul>
+          ) : noticias.length === 0 ? (
+            <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>No hay noticias disponibles ahora mismo.</p>
+          ) : (
+            <ul role="list" style={{ listStyle: "none", display: "grid", gap: 16 }}>
+              {noticias.slice(0, 8).map((n, i) => (
+                <TarjetaNoticia key={i}
+                  titulo={n.titulo}
+                  resumen={n.resumen}
+                  fuente={n.fuente}
+                  categoria={n.categoria}
+                  fecha={null}
+                  url={n.url}
+                  procedencia="Titular y resumen en inglés, tal como los publica la fuente" />
+              ))}
+            </ul>
+          )
+        )}
+      </section>
+
+      <section aria-labelledby="noticias-rd" style={{ marginTop: 64 }}>
+        <div id="noticias-rd">
+          {encabezado(
+            "República Dominicana",
+            "Portada económica de El Dinero y Diario Libre, leída de sus canales RSS. Se guarda en caché unos quince minutos, así que puede ir por detrás de sus portadas.",
+            fetchNoticiasRD,
+            noticiasRDLoading
+          )}
         </div>
-        <button onClick={fetchNoticias} disabled={noticiasLoading}
-          style={{ background:noticiasLoading?C.border:C.gold, color:noticiasLoading?C.muted:"#000",
-            border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasLoading?"not-allowed":"pointer",
-            fontFamily:F.sans, fontSize:11, fontWeight:700 }}>
-          {noticiasLoading ? "⏳ Cargando..." : "🔄 Actualizar"}
-        </button>
-      </div>
-      {noticiasLoading ? (
-        <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-          <div style={{ fontSize:36, marginBottom:14 }}>⚙️</div>
-          <div style={{ fontFamily:F.sans, fontSize:13 }}>Cargando noticias...</div>
-        </div>
-      ) : (
-        <div style={{ display:"grid", gap:14 }}>
-          {noticias.map((item,i) => (
-            <div key={i} onClick={() => item.url && window.open(item.url,"_blank")}
-              style={cardStyle(item.url)}
-              onMouseEnter={e => { if(item.url) e.currentTarget.style.borderColor=C.gold+"66"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
-                <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-                  <span style={{ background:C.goldBg, color:C.gold, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:600 }}>{item.categoria}</span>
-                  <span style={{ fontSize:11, color:C.muted, fontFamily:F.sans }}>{item.tiempo} · {item.fuente}</span>
-                </div>
-                {item.url && <span style={{ fontSize:11, color:C.gold, fontFamily:F.sans, fontWeight:600 }}>{'>'}</span>}
-              </div>
-              <h3 style={{ fontFamily:F.serif, fontSize:18, fontWeight:700, color:C.text, marginBottom:8, lineHeight:1.4 }}>{item.titulo}</h3>
-              <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{item.resumen}</p>
-            </div>
-          ))}
-        </div>
-      )}
+
+        {noticiasRDLoading && (
+          <ul role="list" style={{ listStyle: "none", display: "grid", gap: 16 }}>
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="skeleton-pulse" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, height: 150 }} />
+            ))}
+          </ul>
+        )}
+
+        {!noticiasRDLoading && noticiasRD.length === 0 && (
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px 28px" }}>
+            <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>No se pudieron leer los canales de El Dinero y Diario Libre en este momento.</p>
+            <div style={{ marginTop: 16 }}><Boton onClick={fetchNoticiasRD} variante="secundario">Reintentar</Boton></div>
+          </div>
+        )}
+
+        {!noticiasRDLoading && noticiasRD.length > 0 && (
+          <ul role="list" style={{ listStyle: "none", display: "grid", gap: 16 }}>
+            {noticiasRD.map((n, i) => (
+              <TarjetaNoticia key={i}
+                titulo={n.titulo}
+                resumen={n.resumen}
+                fuente={n.fuente}
+                categoria={null}
+                fecha={n.fecha || null}
+                url={n.url}
+                procedencia="Entradilla del canal RSS de la fuente" />
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
+  );
+}
+
+// Ficha del instrumento citado en una edición. Los datos vienen del payload
+// del agente, que desde el arreglo de identificación financiera ya distingue
+// el ETF de su índice de referencia.
+function BriefingStockCard({ p }) {
+  const { C } = useOutletContext();
+  const disponible = p.precio != null;
+  return (
+    <li style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{p.simbolo}</span>
+        <Variacion c={disponible ? p.cambioPct : null} size={13} />
+      </div>
+      <div style={{ fontSize: 13, color: C.sub, marginTop: 2 }}>{p.corto || p.nombre}{p.tipoActivo ? ` · ${p.tipoActivo}` : ""}</div>
+      <div style={{ fontSize: 18, fontWeight: 600, color: disponible ? C.text : C.muted, marginTop: 6 }}>
+        {disponible ? `${fmtPrecio(p.precio)} ${p.moneda || "USD"}` : "Sin dato"}
+      </div>
+    </li>
+  );
+}
+
+// Plantilla compartida de las ediciones diarias (/apertura y /briefing).
+// Antes eran dos páginas casi idénticas copiadas una de otra, cada una con su
+// propia idea de cómo fechar y firmar lo publicado.
+//
+// Sobre la autoría: se dice exactamente lo que ocurre — lo redacta un modelo
+// de lenguaje y el cron lo publica sin que nadie lo lea antes. No se afirma
+// revisión humana, ni se ofrece historial de ediciones: el blob guarda solo la
+// última, así que no hay datos con los que sostenerlo.
+function EdicionDiaria({ endpoint, etiqueta, tituloGenerico, descripcionMeta, textoCargando }) {
+  const { C } = useOutletContext();
+  useDocumentMeta(`${tituloGenerico} — FinanzaDR`, descripcionMeta);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [intento, setIntento] = useState(0);
+  // El estado se deriva de lo que hay: sin datos ni error, seguimos cargando.
+  // Fijarlo dentro del efecto encadenaria un render extra en cada montaje.
+  const estado = error ? "error" : data ? "listo" : "loading";
+
+  const reintentar = () => { setData(null); setError(null); setIntento((n) => n + 1); };
+
+  useEffect(() => {
+    let cancelado = false;
+    fetch(endpoint)
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body?.error || "No se pudo obtener la edición.");
+        return body;
+      })
+      // Si la edición corresponde a la jornada de hoy se decide aquí, no en el
+      // render: comparar contra el reloj durante el render lo haría impuro.
+      .then((body) => {
+        if (cancelado) return;
+        setData({ ...body, deHoy: claveDiaMercado(body.generadoEn) === claveDiaMercado(Date.now()) });
+      })
+      .catch((err) => { if (!cancelado) setError(err.message); });
+    return () => { cancelado = true; };
+  }, [endpoint, intento]);
+
+  if (estado === "loading") {
+    return (
+      <div className="fade-in">
+        <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>{tituloGenerico}</h1>
+        <p role="status" style={{ fontSize: 16, color: C.sub, marginTop: 12 }}>{textoCargando}</p>
+        <div className="skeleton-pulse" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, height: 320, marginTop: 24 }} aria-hidden="true" />
+      </div>
+    );
+  }
+
+  if (estado === "error") {
+    return (
+      <div className="fade-in">
+        <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>{tituloGenerico}</h1>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "24px 28px", marginTop: 24 }}>
+          <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, maxWidth: "62ch" }}>
+            No se pudo cargar la edición en este momento. {error}
+          </p>
+          <div style={{ marginTop: 16 }}><Boton onClick={reintentar} variante="secundario">Reintentar</Boton></div>
+        </div>
+      </div>
+    );
+  }
+
+  const parrafos = (data.resumen || "").split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  const [titular, ...cuerpo] = parrafos;
+  const claves = cuerpo.slice(0, 3).map(primeraFrase);
+  const precios = Array.isArray(data.precios) ? data.precios : [];
+
+  return (
+    <article className="fade-in">
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <span style={{ background: C.goldBg, color: C.goldText, borderRadius: 999, padding: "4px 12px", fontSize: 13, fontWeight: 700 }}>{etiqueta}</span>
+        <span style={{ fontSize: 14, color: C.sub }}>
+          Sesión del {fmtFechaSesion(data.generadoEn)} · publicado a las {fmtHoraET(data.generadoEn)} (hora de Nueva York)
+        </span>
+      </div>
+
+      <h1 style={{ fontFamily: F.serif, fontSize: 40, fontWeight: 700, color: C.text, lineHeight: 1.2, maxWidth: "20ch" }}>
+        {titular ? renderTextoConNegritas(titular) : tituloGenerico}
+      </h1>
+
+      {!data.deHoy && (
+        <p role="status" style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 16px", fontSize: 15, color: C.sub, lineHeight: 1.55, marginTop: 20, maxWidth: "72ch" }}>
+          Esta es la última edición disponible y corresponde a otra jornada. La de hoy aún no se ha publicado.
+        </p>
+      )}
+
+      {claves.length > 0 && (
+        <section aria-labelledby="lo-esencial" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "22px 26px", marginTop: 28 }}>
+          <h2 id="lo-esencial" style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 12 }}>Lo esencial</h2>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+            {claves.map((clave, i) => (
+              <li key={i} style={{ display: "flex", gap: 12, fontSize: 16, color: C.sub, lineHeight: 1.6 }}>
+                <span aria-hidden="true" style={{ color: C.goldText, fontWeight: 700 }}>—</span>
+                <span>{renderTextoConNegritas(clave)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Ancho de lectura: 18px y ~65-75 caracteres por linea. */}
+      <div style={{ marginTop: 32, maxWidth: "68ch" }}>
+        {cuerpo.map((p, i) => (
+          <p key={i} style={{ fontSize: 18, lineHeight: 1.65, color: C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 20 }}>
+            {renderTextoConNegritas(p)}
+          </p>
+        ))}
+      </div>
+
+      {precios.length > 0 && (
+        <section aria-labelledby="instrumentos" style={{ marginTop: 48 }}>
+          <h2 id="instrumentos" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>Instrumentos de esta edición</h2>
+          <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginBottom: 16, maxWidth: "72ch" }}>
+            Son los datos con los que se redactó el texto. La mayoría son ETFs que siguen a un índice: su precio no es el nivel del índice.
+          </p>
+          <ul role="list" className="portada-grid-3" style={{ listStyle: "none" }}>
+            {precios.map((p) => <BriefingStockCard key={p.simbolo} p={p} />)}
+          </ul>
+          <p style={{ marginTop: 16 }}>
+            <Link to="/mercados" style={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: 15, fontWeight: 600, color: C.goldText, textDecoration: "underline" }}>Ver todas las cotizaciones</Link>
+          </p>
+        </section>
+      )}
+
+      <section aria-labelledby="metodo-edicion" style={{ marginTop: 48, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 14, padding: "22px 26px" }}>
+        <h2 id="metodo-edicion" style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 10 }}>Cómo se elaboró esta edición</h2>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.65, maxWidth: "72ch" }}>
+          La redacta un modelo de lenguaje a partir de las cotizaciones de Finnhub, las noticias del día y el calendario de resultados, siguiendo la línea editorial de FinanzaDR. Se publica de forma automática, sin revisión humana previa a la publicación. Es contenido educativo: no es asesoría de inversión ni una recomendación de comprar o vender.
+        </p>
+      </section>
+    </article>
   );
 }
 
 function BriefingPage() {
-  useDocumentMeta("Resumen de Cierre del Mercado — FinanzaDR", "Análisis diario de cómo cerró Wall Street, con la cadena de causas explicada en español simple.");
-  const { C } = useOutletContext();
-  const [status, setStatus] = useState("loading");
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/briefing")
-      .then(async (res) => {
-        const body = await res.json();
-        if (!res.ok) throw new Error(body?.error || "No se pudo generar el briefing.");
-        return body;
-      })
-      .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
-      .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
-    return () => { cancelled = true; };
-  }, []);
-
-  if (status === "loading") {
-    return (
-      <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-        <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-        <div style={{ fontFamily:F.sans, fontSize:13 }}>Generando el briefing del mercado...</div>
-      </div>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <div className="fade-in">
-        <SectionTitle>🤖 Briefing del Mercado</SectionTitle>
-        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el briefing en este momento. {error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const parrafos = (data.resumen || "").split(/\n+/).map(p => p.trim()).filter(Boolean);
-  const [titulo, ...cuerpo] = parrafos;
-
   return (
-    <div className="fade-in">
-      <Label>── 🤖 Resumen de Cierre</Label>
-      {titulo && (
-        <>
-          <h1 style={{ fontFamily:F.serif, fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:24 }}>
-            <span className="live-dot" style={{ width:7, height:7, borderRadius:"50%", background:C.green, display:"inline-block" }} />
-            <span style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.green }}>Actualizado {formatTiempoRelativo(data.generadoEn)}</span>
-          </div>
-        </>
-      )}
-
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", marginBottom:32 }}>
-        {cuerpo.map((p, i) => (
-          <p key={i} style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
-        ))}
-      </div>
-
-      <Label>── Precios del día · Generado por Agente 1</Label>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12 }}>
-        {data.precios.map((p) => <BriefingStockCard key={p.simbolo} p={p} />)}
-      </div>
-    </div>
+    <EdicionDiaria
+      endpoint="/api/briefing"
+      etiqueta="Cierre de mercado"
+      tituloGenerico="Resumen de cierre"
+      descripcionMeta="Cómo cerró Wall Street y por qué, explicado en español para quien está empezando a invertir."
+      textoCargando="Cargando el resumen de cierre…"
+    />
   );
 }
 
 function AperturaPage() {
-  useDocumentMeta("Resumen de Apertura del Mercado — FinanzaDR", "Qué esperar del mercado hoy: futuros, earnings y noticias overnight, explicados en español.");
-  const { C } = useOutletContext();
-  const [status, setStatus] = useState("loading");
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/apertura")
-      .then(async (res) => {
-        const body = await res.json();
-        if (!res.ok) throw new Error(body?.error || "No se pudo generar el resumen de apertura.");
-        return body;
-      })
-      .then((body) => { if (!cancelled) { setData(body); setStatus("ready"); } })
-      .catch((err) => { if (!cancelled) { setError(err.message); setStatus("error"); } });
-    return () => { cancelled = true; };
-  }, []);
-
-  if (status === "loading") {
-    return (
-      <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-        <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-        <div style={{ fontFamily:F.sans, fontSize:13 }}>Generando el resumen de apertura...</div>
-      </div>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <div className="fade-in">
-        <SectionTitle>🌅 Resumen de Apertura</SectionTitle>
-        <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el resumen de apertura en este momento. {error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const parrafos = (data.resumen || "").split(/\n+/).map(p => p.trim()).filter(Boolean);
-  const [titulo, ...cuerpo] = parrafos;
-
   return (
-    <div className="fade-in">
-      <Label>── 🌅 Resumen de Apertura</Label>
-      {titulo && (
-        <>
-          <h1 style={{ fontFamily:F.serif, fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:24 }}>
-            <span className="live-dot" style={{ width:7, height:7, borderRadius:"50%", background:C.green, display:"inline-block" }} />
-            <span style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.green }}>Actualizado {formatTiempoRelativo(data.generadoEn)}</span>
-          </div>
-        </>
-      )}
-
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px" }}>
-        {cuerpo.map((p, i) => (
-          <p key={i} style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
-        ))}
-      </div>
-    </div>
+    <EdicionDiaria
+      endpoint="/api/apertura"
+      etiqueta="Apertura de mercado"
+      tituloGenerico="Resumen de apertura"
+      descripcionMeta="Qué se espera de la sesión de hoy en Wall Street: contexto, resultados y noticias de la madrugada, en español."
+      textoCargando="Cargando el resumen de apertura…"
+    />
   );
 }
 
@@ -2653,20 +2815,6 @@ function CalculadoraPage() {
   return <div className="fade-in"><CompoundCalc /></div>;
 }
 
-function HeatmapPage() {
-  useDocumentMeta("Heat Map del Mercado — FinanzaDR", "Visualiza de un vistazo qué sectores y activos suben o bajan hoy en Wall Street.");
-  const { C } = useOutletContext();
-  return (
-    <div className="fade-in">
-      <SectionTitle>Heat Map del Mercado</SectionTitle>
-      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Desempeño del S&P 500 por sector, en vivo · Powered by TradingView</p>
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, overflow:"hidden", padding:8 }}>
-        <HeatmapWidget />
-      </div>
-    </div>
-  );
-}
-
 function CompartirPage() {
   useDocumentMeta("Comparte el Mercado de Hoy — FinanzaDR", "Genera una imagen con el resumen del mercado para compartir en tus redes.");
   const { stocks, C } = useOutletContext();
@@ -2734,15 +2882,6 @@ function CompartirPage() {
       {vista === "cierre" && cierreStatus === "ready" && (
         <SnapshotCard stocks={cierreStocks} modo="cierre" fecha={cierreFecha} />
       )}
-    </div>
-  );
-}
-
-function SentimientoPage() {
-  useDocumentMeta("Sentimiento del Mercado Cripto — FinanzaDR", "El índice de miedo y codicia de las criptomonedas, actualizado y explicado en español.");
-  return (
-    <div className="fade-in">
-      <SentimientoMercado />
     </div>
   );
 }
@@ -2947,22 +3086,6 @@ function Label({ children, style: s }) {
   return <div style={{ fontFamily:F.sans, fontSize:10, color:C.gold, letterSpacing:2, textTransform:"uppercase", marginBottom:14, ...s }}>{children}</div>;
 }
 
-function BriefingStockCard({ p }) {
-  const { C } = useOutletContext();
-  const disponible = p.precio != null;
-  const pos = (p.cambioPct ?? 0) >= 0;
-  return (
-    <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${disponible ? (pos?C.green:C.red) : C.muted}` }}>
-      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-        <span style={{ fontFamily:F.sans, fontSize:12, fontWeight:600, color:C.gold }}>{p.simbolo}</span>
-        {disponible && <span style={{ fontFamily:F.sans, fontSize:11, color:clr(p.cambioPct) }}>{arr(p.cambioPct)} {Math.abs(p.cambioPct)}%</span>}
-      </div>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{p.nombre}</div>
-      <div style={{ fontFamily:F.sans, fontSize:20, fontWeight:600, color:C.text }}>{disponible ? fmt(p.precio) : "N/D"}</div>
-    </div>
-  );
-}
-
 function BrokerCard({ b }) {
   const { C } = useOutletContext();
   return (
@@ -2976,161 +3099,6 @@ function BrokerCard({ b }) {
       </div>
       <p style={{ fontSize:13, color:C.sub, lineHeight:1.7, flex:1 }}>{b.desc}</p>
       <button onClick={() => window.open(b.url,"_blank","noopener,noreferrer")} style={{ background:C.gold, color:"#000", border:"none", padding:"11px 18px", borderRadius:7, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:800, width:"100%" }}>{b.cta} →</button>
-    </div>
-  );
-}
-function SentimientoMercado() {
-  const { C } = useOutletContext();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [news, setNews] = useState([]);
-
-  useEffect(() => {
-    fetch("https://api.alternative.me/fng/?limit=7")
-      .then(r => r.json())
-      .then(d => {
-        setData(d.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-
-    fetch("/api/noticias")
-      .then(r => r.json())
-      .then(d => setNews(d.slice(0, 4)))
-      .catch(() => {});
-  }, []);
-
-  const getEmoji = (val) => {
-    if (val >= 75) return { emoji: "🤑", label: "CODICIA EXTREMA", color: "#ff4466" };
-    if (val >= 55) return { emoji: "😊", label: "CODICIA", color: "#ffd60a" };
-    if (val >= 45) return { emoji: "😐", label: "NEUTRAL", color: "#8890b5" };
-    if (val >= 25) return { emoji: "😨", label: "MIEDO", color: "#ff9500" };
-    return { emoji: "😱", label: "MIEDO EXTREMO", color: "#ff4466" };
-  };
-
-  const scoreHeadline = (headline) => {
-    const positive = ["surge", "gain", "rise", "up", "high", "bull", "record", "growth", "profit"];
-    const negative = ["fall", "drop", "crash", "down", "loss", "bear", "risk", "fear", "decline"];
-    const text = (headline || "").toLowerCase();
-    let score = 0;
-    positive.forEach(w => { if (text.includes(w)) score++; });
-    negative.forEach(w => { if (text.includes(w)) score--; });
-    return score;
-  };
-
-  const getNewsSentiment = (score) =>
-    score > 0 ? { label: "Positivo", color: "#00d68f", bg: "#00d68f15" }
-    : score < 0 ? { label: "Negativo", color: "#ff4466", bg: "#ff446615" }
-    : { label: "Neutral", color: "#8890b5", bg: "#8890b515" };
-
-  if (loading) return (
-    <div style={{ textAlign: "center", padding: "60px", color: C.muted }}>
-      <div style={{ fontSize: 36, marginBottom: 16 }}>⏳</div>
-      <div style={{ fontFamily:F.sans, fontSize: 13 }}>Cargando sentimiento del mercado...</div>
-    </div>
-  );
-
-  const current = data?.[0];
-  const val = current ? parseInt(current.value) : 50;
-  const { emoji, label, color } = getEmoji(val);
-  const newsScore = news.reduce((acc, n) => acc + scoreHeadline(n.headline), 0);
-
-  return (
-    <div>
-      <SectionTitle>Sentimiento Cripto (Bitcoin)</SectionTitle>
-      <p style={{ fontSize: 13, color: C.sub, marginTop: 4, marginBottom: 24 }}>
-        Fear & Greed Index del mercado de <strong style={{ color: C.text }}>criptomonedas</strong> en tiempo real — no representa al mercado de acciones tradicional · Powered by Alternative.me
-      </p>
-
-      <div className="sentiment-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
-
-        {/* FEAR & GREED PRINCIPAL */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, textAlign: "center" }}>
-          <Label>── FEAR & GREED INDEX CRIPTO · HOY</Label>
-          <div style={{ fontSize: 72, marginBottom: 8 }}>{emoji}</div>
-          <div style={{ fontFamily:F.sans, fontSize: 64, fontWeight: 900, color, lineHeight: 1, marginBottom: 8 }}>{val}</div>
-          <div style={{ fontFamily:F.sans, fontSize: 16, fontWeight: 800, color, marginBottom: 20, letterSpacing: 2 }}>{label}</div>
-          <div style={{ background: C.border, borderRadius: 99, height: 12, marginBottom: 8, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${val}%`, background: `linear-gradient(90deg, #00d68f, ${color})`, borderRadius: 99, transition: "width 1s ease" }} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, fontFamily:F.sans }}>
-            <span>😱 Miedo Extremo</span>
-            <span>😐 Neutral</span>
-            <span>🤑 Codicia</span>
-          </div>
-          <div style={{ marginTop: 16, padding: "14px 16px", background: C.goldBg, borderRadius: 10, borderLeft: `3px solid ${C.gold}`, textAlign: "left" }}>
-            <div style={{ fontFamily:F.sans, fontSize: 10, color: C.gold, letterSpacing: 2, fontWeight: 700, marginBottom: 6 }}>── CONSEJO FINANZADR</div>
-            <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
-              {val < 25 && "⚠️ Mercado en pánico. Históricamente un buen momento para acumular a precios bajos."}
-              {val >= 25 && val < 45 && "😨 Inversores con miedo. Considera acumular posiciones gradualmente (DCA)."}
-              {val >= 45 && val < 55 && "😐 Mercado neutral. Mantén tu estrategia de largo plazo sin cambios bruscos."}
-              {val >= 55 && val < 75 && "😊 Optimismo en el mercado. Ten cautela con comprar en máximos."}
-              {val >= 75 && "🚨 Codicia extrema. Alto riesgo de corrección. Considera tomar ganancias parciales."}
-            </div>
-          </div>
-        </div>
-
-        {/* HISTÓRICO 7 DÍAS */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28 }}>
-          <Label>── HISTÓRICO 7 DÍAS</Label>
-          {data?.slice(0, 7).map((d, i) => {
-            const v = parseInt(d.value);
-            const { color: c, label: l } = getEmoji(v);
-            const date = new Date(parseInt(d.timestamp) * 1000);
-            const dayName = i === 0 ? "Hoy" : i === 1 ? "Ayer" : date.toLocaleDateString("es-DO", { weekday: "short" });
-            return (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                <div style={{ fontFamily:F.sans, fontSize: 11, color: C.muted, width: 40 }}>{dayName}</div>
-                <div style={{ flex: 1, background: C.border, borderRadius: 99, height: 8, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${v}%`, background: c, borderRadius: 99 }} />
-                </div>
-                <div style={{ fontFamily:F.sans, fontSize: 13, fontWeight: 700, color: c, width: 30, textAlign: "right" }}>{v}</div>
-                <div style={{ fontSize: 10, color: C.muted, width: 90 }}>{l}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* INDICADORES */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
-        {[
-          { label: "Nivel del Índice", valor: val > 50 ? "Positivo" : "Negativo", icon: "📈", color: val > 50 ? "#00d68f" : "#ff4466" },
-          { label: "Sentimiento Noticias", valor: newsScore > 0 ? "Positivo" : newsScore < 0 ? "Negativo" : "Neutral", icon: "🤖", color: newsScore > 0 ? "#00d68f" : newsScore < 0 ? "#ff4466" : "#8890b5" }
-        ].map((ind, i) => (
-          <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, textAlign: "center" }}>
-            <div style={{ fontSize: 24, marginBottom: 8 }}>{ind.icon}</div>
-            <div style={{ fontFamily:F.sans, fontSize: 11, color: C.muted, marginBottom: 4 }}>{ind.label}</div>
-            <div style={{ fontFamily:F.sans, fontSize: 14, fontWeight: 700, color: ind.color }}>{ind.valor}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* NOTICIAS CON SENTIMIENTO */}
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24 }}>
-        <Label>── NOTICIAS CON ANÁLISIS DE SENTIMIENTO IA</Label>
-        <div style={{ display: "grid", gap: 12 }}>
-          {news.map((n, i) => {
-            const score = scoreHeadline(n.headline);
-            const sentiment = getNewsSentiment(score);
-            const sentimentIcon = score > 0 ? "📈" : score < 0 ? "📉" : "➖";
-            const mins = Math.floor((Date.now() / 1000 - n.datetime) / 60);
-            const timeAgo = mins < 60 ? `Hace ${mins}m` : `Hace ${Math.floor(mins / 60)}h`;
-            return (
-              <div key={i} onClick={() => n.url && window.open(n.url, "_blank")}
-                style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: 14, background: C.bg, borderRadius: 10, border: `1px solid ${C.border}`, cursor: n.url ? "pointer" : "default" }}>
-                <div style={{ background: sentiment.bg, border: `1px solid ${sentiment.color}33`, borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, color: sentiment.color, whiteSpace: "nowrap", flexShrink: 0, display: "flex", alignItems: "center", gap: 5 }}>
-                  <span>{sentimentIcon}</span>{sentiment.label}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: C.text, fontWeight: 600, lineHeight: 1.4, marginBottom: 4 }}>{n.headline}</div>
-                  <div style={{ fontSize: 11, color: C.muted }}>{n.source} · {timeAgo}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
@@ -3415,16 +3383,24 @@ function TradingViewCharts({ simbolo, onSimbolo, intervalo: intervaloUrl }) {
   );
 }
 
+// Widget de mapa de calor de TradingView. Hereda el tema del sitio (antes
+// estaba fijo en "dark", así que en tema claro aparecía un bloque negro) y su
+// alto se fija por breakpoint con una clase, nunca en porcentaje.
 function HeatmapWidget() {
-  const containerRef = useRef(null);
+  const { dark } = useOutletContext();
+  const contenedorRef = useRef(null);
+
   useEffect(() => {
-    if (!containerRef.current) return;
-    containerRef.current.innerHTML = "";
-    const widget = document.createElement("div");
-    widget.className = "tradingview-widget-container__widget";
-    widget.style.width = "100%";
-    widget.style.height = "600px";
-    containerRef.current.appendChild(widget);
+    const anfitrion = contenedorRef.current;
+    if (!anfitrion) return;
+    anfitrion.innerHTML = "";
+
+    const caja = document.createElement("div");
+    caja.className = "tradingview-widget-container__widget";
+    caja.style.width = "100%";
+    caja.style.height = "100%";
+    anfitrion.appendChild(caja);
+
     const script = document.createElement("script");
     script.type = "text/javascript";
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js";
@@ -3437,18 +3413,228 @@ function HeatmapWidget() {
       blockColor: "change",
       locale: "es",
       symbolUrl: "",
-      colorTheme: "dark",
+      colorTheme: dark ? "dark" : "light",
       hasTopBar: true,
       isDataSetEnabled: false,
       isZoomEnabled: true,
       hasSymbolTooltip: true,
       isMonoSize: false,
       width: "100%",
-      height: 600,
+      height: "100%",
     });
-    containerRef.current.appendChild(script);
+    anfitrion.appendChild(script);
+
+    return () => { anfitrion.innerHTML = ""; };
+  }, [dark]);
+
+  return <div ref={contenedorRef} className="tradingview-widget-container heatmap-contenedor" />;
+}
+
+function HeatmapPage() {
+  useDocumentMeta(
+    "Mapa de calor del mercado — FinanzaDR",
+    "Qué sectores del S&P 500 suben y cuáles bajan en la sesión, con la explicación de cómo se lee el mapa."
+  );
+  const { C, stocks } = useOutletContext();
+  const conDato = stocks.filter((st) => st.c != null);
+
+  return (
+    <div className="fade-in">
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Mapa de calor del mercado</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, margin: "8px 0 24px", maxWidth: "68ch" }}>
+        Cada rectángulo es una empresa del S&P 500, agrupada por sector. Su <strong style={{ color: C.text }}>tamaño</strong> es la capitalización de mercado —cuánto vale la empresa entera— y su <strong style={{ color: C.text }}>color</strong>, cuánto sube o baja su acción en la sesión en curso: verde arriba, rojo abajo, y más intenso cuanto mayor es el movimiento.
+      </p>
+
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 8, overflow: "hidden" }}>
+        <HeatmapWidget />
+      </div>
+
+      <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.6, marginTop: 12, maxWidth: "72ch" }}>
+        Universo: índice S&P 500. Periodo: la sesión en curso, según los datos del proveedor. Mapa de TradingView, con sus propias fuentes y condiciones de uso.
+      </p>
+
+      <section aria-labelledby="alternativa" style={{ marginTop: 48 }}>
+        <h2 id="alternativa" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>Alternativa en texto</h2>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginBottom: 16, maxWidth: "72ch" }}>
+          El mapa es una imagen interactiva del proveedor y su detalle por empresa no se puede leer con un lector de pantalla. Como equivalente parcial, esta es la variación de los instrumentos que seguimos, que incluyen el ETF del propio S&P 500 y el del sector Utilities. No sustituye al desglose sector por sector del mapa.
+        </p>
+        {conDato.length === 0 ? (
+          <p style={{ fontSize: 15, color: C.sub }}>No hay cotizaciones disponibles ahora mismo.</p>
+        ) : (
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <caption className="sr-only">Variación en la sesión de los instrumentos que sigue FinanzaDR</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "left" }}>Instrumento</th>
+                    <th scope="col" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "right" }}>Variación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {conDato.map((st) => (
+                    <tr key={st.s}>
+                      <th scope="row" style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}`, textAlign: "left", fontWeight: 400 }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{st.s}</span>
+                        <span style={{ display: "block", fontSize: 14, color: C.sub }}>{st.corto} · {st.tipoActivo}</span>
+                      </th>
+                      <td style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}`, textAlign: "right", whiteSpace: "nowrap" }}>
+                        <Variacion c={st.c} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// Clasificación tal como la publica Alternative.me, traducida.
+const CLASIFICACION_FNG_LARGA = {
+  "Extreme Fear": "Miedo extremo",
+  "Fear": "Miedo",
+  "Neutral": "Neutral",
+  "Greed": "Codicia",
+  "Extreme Greed": "Codicia extrema",
+};
+
+// Sentimiento.
+//
+// Lo que se quitó de esta página, a propósito:
+// - El bloque "CONSEJO FINANZADR", que traducía el índice a instrucciones
+//   ("buen momento para acumular", "considera tomar ganancias parciales").
+//   Es una recomendación de inversión en un sitio que declara no darlas.
+// - El "análisis de sentimiento IA" de titulares, que era un conteo de nueve
+//   palabras en inglés sobre titulares en inglés. Ni era IA, ni medía nada
+//   que se pudiera defender.
+// Queda un solo indicador, nombrado por lo que es y con sus límites al lado.
+function SentimientoPage() {
+  useDocumentMeta(
+    "Miedo y codicia cripto — FinanzaDR",
+    "Qué mide el índice de miedo y codicia del mercado cripto, cómo se lee y qué no se puede concluir de él."
+  );
+  const { C, stocks } = useOutletContext();
+  const [estado, setEstado] = useState("loading");
+  const [serie, setSerie] = useState([]);
+
+  useEffect(() => {
+    let cancelado = false;
+    const controlador = new AbortController();
+    fetch("https://api.alternative.me/fng/?limit=7", { signal: controlador.signal })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelado) return;
+        const datos = Array.isArray(d?.data) ? d.data : [];
+        if (datos.length === 0) { setEstado("error"); return; }
+        setSerie(datos.map((x) => ({
+          valor: Number(x.value),
+          clasificacion: CLASIFICACION_FNG_LARGA[x.value_classification] || x.value_classification,
+          fecha: Number(x.timestamp) * 1000,
+        })));
+        setEstado("listo");
+      })
+      .catch(() => { if (!cancelado) setEstado("error"); });
+    return () => { cancelado = true; controlador.abort(); };
   }, []);
-  return <div ref={containerRef} className="tradingview-widget-container" style={{ width:"100%", minHeight:600, height:600 }} />;
+
+  const hoy = serie[0];
+  const conDato = stocks.filter((st) => st.c != null);
+  const enVerde = conDato.filter((st) => st.c > 0).length;
+
+  return (
+    <div className="fade-in">
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Miedo y codicia cripto</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, margin: "8px 0 32px", maxWidth: "68ch" }}>
+        Es un índice de 0 a 100 que publica Alternative.me y resume el ánimo del mercado de <strong style={{ color: C.text }}>criptomonedas</strong>: 0 es miedo extremo y 100, codicia extrema. Lo calcula con la volatilidad, el volumen, las redes sociales y la dominancia de Bitcoin. No mide la bolsa estadounidense.
+      </p>
+
+      {estado === "loading" && <div className="skeleton-pulse" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, height: 220 }} aria-hidden="true" />}
+
+      {estado === "error" && (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "24px 28px" }}>
+          <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6 }}>No se pudo consultar el indicador de Alternative.me en este momento.</p>
+        </div>
+      )}
+
+      {estado === "listo" && (
+        <>
+          <section aria-labelledby="valor-hoy" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "26px 30px" }}>
+            <h2 id="valor-hoy" style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 12 }}>Valor de hoy</h2>
+            <p style={{ fontSize: 40, fontWeight: 700, color: C.text, lineHeight: 1.1 }}>
+              {hoy.valor}<span style={{ fontSize: 20, fontWeight: 500, color: C.sub }}> / 100 · {hoy.clasificacion}</span>
+            </p>
+            <div aria-hidden="true" style={{ background: C.surfaceAlt, borderRadius: 999, height: 8, marginTop: 16 }}>
+              <div style={{ background: C.goldText, borderRadius: 999, height: 8, width: `${Math.min(100, Math.max(0, hoy.valor))}%` }} />
+            </div>
+            <div aria-hidden="true" style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.muted, marginTop: 8 }}>
+              <span>0 · Miedo extremo</span><span>50 · Neutral</span><span>100 · Codicia extrema</span>
+            </div>
+            <p style={{ fontSize: 14, color: C.muted, marginTop: 12 }}>Dato del {fmtFechaSesion(hoy.fecha)}, publicado por Alternative.me.</p>
+          </section>
+
+          <section aria-labelledby="historico" style={{ marginTop: 40 }}>
+            <h2 id="historico" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 16 }}>Últimos siete días</h2>
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <caption className="sr-only">Valor diario del índice de miedo y codicia cripto en los últimos siete días</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "left" }}>Día</th>
+                      <th scope="col" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "right" }}>Valor</th>
+                      <th scope="col" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "left" }}>Clasificación</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {serie.map((d) => (
+                      <tr key={d.fecha}>
+                        <th scope="row" style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}`, textAlign: "left", fontWeight: 400, fontSize: 15, color: C.sub }}>{fmtFechaSesion(d.fecha)}</th>
+                        <td style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}`, textAlign: "right", fontSize: 15, fontWeight: 600, color: C.text }}>{d.valor}</td>
+                        <td style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}`, fontSize: 15, color: C.sub }}>{d.clasificacion}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      <section aria-labelledby="limites" style={{ marginTop: 40, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 14, padding: "22px 26px" }}>
+        <h2 id="limites" style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 10 }}>Qué no dice este indicador</h2>
+        <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+          {[
+            "No es una señal de compra ni de venta. Un valor bajo no significa que el precio vaya a subir, ni uno alto que vaya a caer.",
+            "No mide la bolsa estadounidense. Para el mercado de acciones no publicamos un índice de sentimiento equivalente.",
+            "Resume el ánimo de un mercado muy volátil y puede cambiar de clasificación de un día para otro.",
+          ].map((linea, i) => (
+            <li key={i} style={{ display: "flex", gap: 10, fontSize: 15, color: C.sub, lineHeight: 1.6 }}>
+              <span aria-hidden="true" style={{ color: C.goldText }}>—</span><span>{linea}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="balance" style={{ marginTop: 40 }}>
+        <h2 id="balance" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>Balance de activos seguidos</h2>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.65, maxWidth: "72ch" }}>
+          Es un indicador distinto y nuestro, no un índice de sentimiento: cuenta cuántos de los instrumentos que seguimos suben en la sesión en curso.
+          {conDato.length > 0
+            ? ` Ahora mismo, ${enVerde} de ${conDato.length}.`
+            : " Ahora mismo no hay cotizaciones disponibles para calcularlo."}
+          {" "}Son ocho instrumentos, no el mercado completo.
+        </p>
+        <p style={{ marginTop: 12 }}>
+          <Link to="/mercados" style={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: 15, fontWeight: 600, color: C.goldText, textDecoration: "underline" }}>Ver las cotizaciones</Link>
+        </p>
+      </section>
+    </div>
+  );
 }
 
 function SnapshotCard({ stocks, modo = "vivo", fecha }) {
