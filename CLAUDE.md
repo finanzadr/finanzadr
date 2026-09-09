@@ -17,7 +17,10 @@ NEVER cat, echo, or print `.env.local`, `.env`, or any API key value — not eve
 - `npm run preview` — preview the production build
 - `npm run lint` — ESLint (flat config in `eslint.config.js`, `dist/` ignored)
 
-No test suite exists in this repo.
+No unit-test suite exists in this repo, but there are two verification scripts:
+
+- `node scripts/verificar-estatico.mjs` — no browser needed. Reads `src/App.jsx` and checks WCAG contrast of the real tokens, the calculator and payoff engines, guide/strategy data integrity, and accessibility heuristics (text under 12px, controls under 44px, emoji used as icons, wide tables outside a scroll container). Exits 1 on failure.
+- `node scripts/verificar.mjs` — needs Playwright and a running `npm run preview`; checks horizontal overflow at 360/390/768/1024/1440, single footer, fixed elements, heading order and tab order.
 
 ## Commit Policy
 

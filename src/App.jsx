@@ -300,7 +300,13 @@ const F = { sans: "'Inter',system-ui,-apple-system,'Segoe UI',sans-serif", serif
 // OJO: gold es decorativo y NO cumple para texto pequeno en tema claro
 // (2.46:1 sobre el fondo). Para texto dorado usar siempre goldText.
 const DARK = { bg: "#0B111A", card: "#101823", surfaceAlt: "#161F2C", border: "#253041", gold: "#D6B365", goldText: "#D6B365", goldBg: "#D6B36518", green: "#4ADE80", greenBg: "#4ADE8018", red: "#FB7185", redBg: "#FB718518", text: "#E8EDF5", muted: "#7E8B9D", sub: "#AAB6C6", navBg: "#101823", tickerBg: "#0B111A", hover: "#1B2534", focus: "#D6B365" };
-const LIGHT = { bg: "#F7F8FA", card: "#FFFFFF", surfaceAlt: "#EEF1F5", border: "#DCE1E8", gold: "#C49A3A", goldText: "#8A6A1F", goldBg: "#C49A3A1F", green: "#15803D", greenBg: "#15803D14", red: "#B91C1C", redBg: "#B91C1C14", text: "#14213D", muted: "#68717F", sub: "#526071", navBg: "#FFFFFF", tickerBg: "#FFFFFF", hover: "#EEF1F5", focus: "#14213D" };
+// Tres tokens del tema claro se oscurecen un punto respecto a la paleta de
+// partida porque no llegaban a 4.5:1 sobre surfaceAlt (#EEF1F5), que es la
+// superficie de los pies de tabla, los avisos y las fichas secundarias:
+// muted 4.35, goldText 4.45 y green 4.43. Sobre blanco sí pasaban, y por eso
+// no se veía el problema mirando solo las tarjetas. Los fondos y el texto
+// principal se mantienen tal cual.
+const LIGHT = { bg: "#F7F8FA", card: "#FFFFFF", surfaceAlt: "#EEF1F5", border: "#DCE1E8", gold: "#C49A3A", goldText: "#7F6119", goldBg: "#C49A3A1F", green: "#147038", greenBg: "#15803D14", red: "#B91C1C", redBg: "#B91C1C14", text: "#14213D", muted: "#606975", sub: "#526071", navBg: "#FFFFFF", tickerBg: "#FFFFFF", hover: "#EEF1F5", focus: "#14213D" };
 
 // Tema inicial: preferencia guardada > preferencia del sistema > claro.
 function temaInicial() {
@@ -484,14 +490,81 @@ function ScrollToTop() {
   return null;
 }
 
-function useDocumentMeta(title, description) {
+const SITIO = "https://finanzadr.com";
+
+// Metadatos por página. Antes solo se cambiaban el título y la descripción, y
+// el canonical de index.html —fijo en la portada— se quedaba puesto en todas
+// las rutas: cada página se declaraba a sí misma como duplicado de la home, y
+// al compartir cualquier URL en redes salía siempre la ficha de la portada.
+//
+// `canonical` se pasa cuando la URL canónica no es el propio pathname (por
+// ejemplo una guía, cuya forma canónica lleva ?guia=<slug>).
+function useDocumentMeta(title, description, opciones = {}) {
+  const { pathname, search } = useLocation();
+  const { canonical, tipo = "website" } = opciones;
+
   useEffect(() => {
     document.title = title;
+
+    const url = `${SITIO}${canonical || pathname + (search || "")}`;
+
+    const fijarMeta = (selector, atributo, valor, contenido) => {
+      let etiqueta = document.head.querySelector(selector);
+      if (!etiqueta) {
+        etiqueta = document.createElement("meta");
+        etiqueta.setAttribute(atributo, valor);
+        document.head.appendChild(etiqueta);
+      }
+      etiqueta.setAttribute("content", contenido);
+    };
+
     if (description) {
-      const meta = document.querySelector('meta[name="description"]');
-      if (meta) meta.setAttribute("content", description);
+      fijarMeta('meta[name="description"]', "name", "description", description);
+      fijarMeta('meta[property="og:description"]', "property", "og:description", description);
+      fijarMeta('meta[name="twitter:description"]', "name", "twitter:description", description);
     }
-  }, [title, description]);
+    fijarMeta('meta[property="og:title"]', "property", "og:title", title);
+    fijarMeta('meta[name="twitter:title"]', "name", "twitter:title", title);
+    fijarMeta('meta[property="og:url"]', "property", "og:url", url);
+    fijarMeta('meta[name="twitter:url"]', "name", "twitter:url", url);
+    fijarMeta('meta[property="og:type"]', "property", "og:type", tipo);
+
+    let enlaceCanonico = document.head.querySelector('link[rel="canonical"]');
+    if (!enlaceCanonico) {
+      enlaceCanonico = document.createElement("link");
+      enlaceCanonico.setAttribute("rel", "canonical");
+      document.head.appendChild(enlaceCanonico);
+    }
+    enlaceCanonico.setAttribute("href", url);
+  }, [title, description, canonical, tipo, pathname, search]);
+}
+
+// Datos estructurados. Solo se describe lo que existe de verdad: el sitio y
+// su responsable, y cada guía como Article con su autor y sus fechas reales.
+// Nada de valoraciones, productos ni reseñas.
+function DatosEstructurados({ datos }) {
+  useEffect(() => {
+    if (!datos) return undefined;
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(datos);
+    document.head.appendChild(script);
+    return () => { if (script.parentNode) script.parentNode.removeChild(script); };
+  }, [datos]);
+  return null;
+}
+
+const MESES_ES = { enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05", junio: "06", julio: "07", agosto: "08", septiembre: "09", octubre: "10", noviembre: "11", diciembre: "12" };
+
+// Las guías traen la fecha como "Julio 2026". Se convierte a ISO solo cuando
+// se puede leer; si no, no se emite el campo en vez de inventar una fecha.
+function fechaISOdeTexto(texto) {
+  if (!texto) return null;
+  const partes = String(texto).trim().toLowerCase().split(/\s+/);
+  if (partes.length !== 2) return null;
+  const mes = MESES_ES[partes[0]];
+  const ano = /^\d{4}$/.test(partes[1]) ? partes[1] : null;
+  return mes && ano ? `${ano}-${mes}-01` : null;
 }
 
 export default function FinanzasDR() {
@@ -711,24 +784,24 @@ function Layout() {
           {stocks.map((st,i) => (
             <Link key={i} to={`/mercados?symbol=${encodeURIComponent(st.s)}`} className="market-item"
               style={{ padding:"7px 12px", display:"flex", alignItems:"center", gap:8, textDecoration:"none", color:"inherit", whiteSpace:"nowrap" }}>
-              <span style={{ fontSize:11, fontWeight:700, color:C.text }}>{st.s}</span>
+              <span style={{ fontSize:12, fontWeight:700, color:C.text }}>{st.s}</span>
               {/* Hasta que /api/precios responde no hay precio: se dice, en
                   vez de pintar una cifra de ejemplo que luego cambia sola. */}
               {st.p == null ? (
-                <span style={{ fontSize:11, color:C.muted }}>Sin dato</span>
+                <span style={{ fontSize:12, color:C.muted }}>Sin dato</span>
               ) : (
                 <>
-                  <span style={{ fontSize:11, color:C.sub }}>{fmtPrecio(st.p)}</span>
+                  <span style={{ fontSize:12, color:C.sub }}>{fmtPrecio(st.p)}</span>
                   {/* Signo y flecha ademas del color: el color no puede ser el
                       unico portador de la informacion (WCAG 1.4.1). */}
-                  <span style={{ fontSize:11, fontWeight:600, color:st.c>=0?C.green:C.red }}>
+                  <span style={{ fontSize:12, fontWeight:600, color:st.c>=0?C.green:C.red }}>
                     <span aria-hidden="true">{st.c>=0?"▲":"▼"} </span>{fmtVar(st.c)}
                   </span>
                 </>
               )}
             </Link>
           ))}
-          <span style={{ fontSize:11, color:C.muted, marginLeft:"auto", paddingLeft:16, whiteSpace:"nowrap" }}>
+          <span style={{ fontSize:12, color:C.muted, marginLeft:"auto", paddingLeft:16, whiteSpace:"nowrap" }}>
             {lastUpdate ? `Consultado ${fmtHoraET(lastUpdate)} ET` : "NYSE · NASDAQ"}
           </span>
         </div>
@@ -911,7 +984,7 @@ function FilaInstrumento({ st, borde }) {
       <div style={{ minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <Link to={`/mercados?symbol=${encodeURIComponent(st.s)}`} style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>{st.s}</Link>
-          <span style={{ fontSize: 12, color: C.muted }}>{st.tipoActivo}</span>
+          <span style={{ fontSize: 13, color: C.muted }}>{st.tipoActivo}</span>
         </div>
         <div style={{ fontSize: 13, color: C.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st.corto}</div>
       </div>
@@ -1358,6 +1431,20 @@ function InicioPage() {
   );
   return (
     <div className="fade-in">
+      <DatosEstructurados datos={{
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "FinanzaDR",
+        url: SITIO,
+        inLanguage: "es",
+        description: "Guías en español, contexto del mercado y herramientas para latinos que quieren aprender a invertir.",
+        publisher: {
+          "@type": "Organization",
+          name: "FinanzaDR",
+          url: SITIO,
+          email: "finanzasDR.oficial@gmail.com",
+        },
+      }} />
       <PortadaHero />
       <RutaPrincipiantes />
       <ActualidadDestacada />
@@ -1615,7 +1702,10 @@ function GlosarioInstrumentos() {
 function MercadosPage() {
   useDocumentMeta(
     "Mercados — FinanzaDR",
-    "Cotizaciones de los ETFs e instrumentos que seguimos, con su tipo de activo, la hora del dato y gráficos en español."
+    "Cotizaciones de los ETFs e instrumentos que seguimos, con su tipo de activo, la hora del dato y gráficos en español.",
+    // ?view, ?symbol y ?interval cambian lo que se ve, no el contenido
+    // indexable: la canónica es la ruta limpia.
+    { canonical: "/mercados" }
   );
   const { C } = useOutletContext();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -2121,7 +2211,8 @@ const FORMATOS_CONTENIDO = [
 function ContenidoDiarioPage() {
   useDocumentMeta(
     "Contenido diario — FinanzaDR",
-    "Guiones y textos listos para redes, generados a partir de los resúmenes de apertura y cierre."
+    "Guiones y textos listos para redes, generados a partir de los resúmenes de apertura y cierre.",
+    { canonical: "/contenido-diario" }
   );
   const { C } = useOutletContext();
   const [searchParams] = useSearchParams();
@@ -2293,7 +2384,7 @@ function TablaSimple({ filas }) {
         <thead>
           <tr>
             {columnas.map(col => (
-              <th key={col} style={{ textAlign:"left", padding:"10px 16px", fontFamily:F.sans, fontSize:11, color:C.gold, borderBottom:`1px solid ${C.border}` }}>{col}</th>
+              <th key={col} style={{ textAlign:"left", padding:"10px 16px", fontFamily:F.sans, fontSize:13, color:C.goldText, borderBottom:`1px solid ${C.border}` }}>{col}</th>
             ))}
           </tr>
         </thead>
@@ -2333,8 +2424,7 @@ function MonitoreoReporte({ password }) {
   if (status === "loading") {
     return (
       <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
-        <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-        <div style={{ fontFamily:F.sans, fontSize:13 }}>Generando el reporte de monitoreo...</div>
+        <div style={{ fontFamily:F.sans, fontSize:15 }}>Generando el reporte de monitoreo…</div>
       </div>
     );
   }
@@ -2342,7 +2432,7 @@ function MonitoreoReporte({ password }) {
   if (status === "error") {
     return (
       <div className="fade-in">
-        <SectionTitle>📊 Monitoreo</SectionTitle>
+        <SectionTitle>Monitoreo</SectionTitle>
         <div style={{ background:C.card, border:`1px solid ${C.red}40`, borderRadius:12, padding:"24px 28px", marginTop:16 }}>
           <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>No se pudo generar el reporte en este momento. {error}</p>
         </div>
@@ -2355,8 +2445,8 @@ function MonitoreoReporte({ password }) {
 
   return (
     <div className="fade-in">
-      <SectionTitle>📊 Monitoreo</SectionTitle>
-      <p style={{ fontFamily:F.sans, fontSize:11, color:C.green, marginTop:4, marginBottom:24 }}>
+      <SectionTitle>Monitoreo</SectionTitle>
+      <p style={{ fontFamily:F.sans, fontSize:13, color:C.green, marginTop:4, marginBottom:24 }}>
         ✓ Generado hoy a las {formatHora(data.generadoEn)}
       </p>
 
@@ -2405,7 +2495,7 @@ function MonitoreoPage() {
 
   return (
     <div className="fade-in" style={{ maxWidth:400, margin:"60px auto 0", textAlign:"center" }}>
-      <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
+      <div style={{ color:C.sub, marginBottom:16, display:"flex", justifyContent:"center" }}><Icon name="candado" size={32} titulo="Acceso restringido" /></div>
       <SectionTitle>Monitoreo</SectionTitle>
       <p style={{ fontSize:13, color:C.sub, margin:"8px 0 24px" }}>Esta sección es privada. Ingresa la contraseña para continuar.</p>
       <div style={{ display:"flex", gap:10, marginBottom:12 }}>
@@ -2415,10 +2505,10 @@ function MonitoreoPage() {
           style={{ flex:1, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", color:C.text, fontFamily:F.sans, fontSize:15, outline:"none" }} />
         <button onClick={handleSubmit} disabled={verificando || !password}
           style={{ background:C.gold, color:"#000", border:"none", padding:"14px 24px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:13, fontWeight:700, opacity: verificando||!password?0.6:1 }}>
-          {verificando ? "⏳..." : "Entrar"}
+          {verificando ? "Verificando…" : "Entrar"}
         </button>
       </div>
-      {errorAuth && <p style={{ fontSize:12, color:C.red }}>⚠️ Contraseña incorrecta</p>}
+      {errorAuth && <p style={{ fontSize:12, color:C.red }}>Contraseña incorrecta</p>}
     </div>
   );
 }
@@ -2660,10 +2750,31 @@ function AprendePage() {
   // encima del listado, lo que dejaba la biblioteca enterrada.
   useDocumentMeta(
     post ? `${post.titulo} — FinanzaDR` : "Aprende a invertir — FinanzaDR",
-    post ? post.extracto : "Guías en español sobre ETFs, acciones, cuentas de retiro y primeros pasos para invertir, ordenadas por nivel y tema."
+    post ? post.extracto : "Guías en español sobre ETFs, acciones, cuentas de retiro y primeros pasos para invertir, ordenadas por nivel y tema.",
+    // La forma canónica de una guía es siempre ?guia=<slug>, aunque se haya
+    // llegado por el ?articulo=<n> de los enlaces antiguos.
+    post ? { canonical: `/aprende?guia=${post.slug}`, tipo: "article" } : { canonical: "/aprende" }
   );
 
-  return post ? <LecturaGuia post={post} indice={indice} /> : <BibliotecaAprende />;
+  const datosArticulo = post ? {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.titulo,
+    description: post.extracto,
+    inLanguage: "es",
+    author: { "@type": "Organization", name: post.autor || "FinanzaDR" },
+    publisher: { "@type": "Organization", name: "FinanzaDR", url: SITIO },
+    mainEntityOfPage: `${SITIO}/aprende?guia=${post.slug}`,
+    ...(fechaISOdeTexto(post.fecha) ? { datePublished: fechaISOdeTexto(post.fecha) } : {}),
+    ...(fechaISOdeTexto(post.revisadoEn) ? { dateModified: fechaISOdeTexto(post.revisadoEn) } : {}),
+  } : null;
+
+  return (
+    <>
+      <DatosEstructurados datos={datosArticulo} />
+      {post ? <LecturaGuia post={post} indice={indice} /> : <BibliotecaAprende />}
+    </>
+  );
 }
 
 function ArticuloPasos({ post }) {
@@ -2687,7 +2798,7 @@ function ArticuloPasos({ post }) {
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
         <p style={{ fontSize:17, color:C.text, lineHeight:1.65, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
-      {post.nota && <p style={{ fontSize:11, color:C.muted, lineHeight:1.6, marginTop:16 }}>{post.nota}</p>}
+      {post.nota && <p style={{ fontSize:13, color:C.muted, lineHeight:1.6, marginTop:16 }}>{post.nota}</p>}
     </div>
   );
 }
@@ -2701,7 +2812,7 @@ function ArticuloStats({ post }) {
         {post.stats.map((s,i) => (
           <div key={i} style={{ background:C.goldBg, border:`1px solid ${C.gold}`, borderRadius:10, padding:"18px 14px", textAlign:"center" }}>
             <div style={{ fontFamily:F.serif, fontSize:32, fontWeight:800, color:C.gold, lineHeight:1.1, marginBottom:6 }}>{s.valor}</div>
-            <div style={{ fontFamily:F.sans, fontSize:11, color:C.sub, lineHeight:1.5 }}>{s.label}</div>
+            <div style={{ fontFamily:F.sans, fontSize:13, color:C.sub, lineHeight:1.5 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -2732,9 +2843,9 @@ function ArticuloTabla({ post }) {
         <table style={{ width:"100%", borderCollapse:"collapse", minWidth:520 }}>
           <thead>
             <tr style={{ background:C.goldBg }}>
-              <th style={{ textAlign:"left", padding:"12px 16px", fontFamily:F.sans, fontSize:11, color:C.sub, fontWeight:600 }}></th>
+              <th style={{ textAlign:"left", padding:"12px 16px", fontFamily:F.sans, fontSize:13, color:C.sub, fontWeight:600 }}></th>
               {post.tabla.columnas.map((col,j) => (
-                <th key={j} style={{ textAlign:"center", padding:"12px 12px", fontFamily:F.sans, fontSize:11, color:C.gold, fontWeight:700, letterSpacing:0.5 }}>{col}</th>
+                <th key={j} style={{ textAlign:"center", padding:"12px 12px", fontFamily:F.sans, fontSize:13, color:C.goldText, fontWeight:700, letterSpacing:0.5 }}>{col}</th>
               ))}
             </tr>
           </thead>
@@ -2780,7 +2891,7 @@ function ArticuloTabla({ post }) {
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
         <p style={{ fontSize:17, color:C.text, lineHeight:1.65, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
-      {post.nota && <p style={{ fontSize:11, color:C.muted, lineHeight:1.6, marginTop:16 }}>{post.nota}</p>}
+      {post.nota && <p style={{ fontSize:13, color:C.muted, lineHeight:1.6, marginTop:16 }}>{post.nota}</p>}
     </div>
   );
 }
@@ -2794,15 +2905,15 @@ function ArticuloHerramientas({ post }) {
         {post.herramientas.map((h,i) => (
           <div key={i} style={{ border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 22px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10, flexWrap:"wrap" }}>
-              <span style={{ fontSize:24 }}>{h.icono}</span>
+              <span aria-hidden="true" style={{ fontSize:24 }}>{h.icono}</span>
               <h4 style={{ fontFamily:F.serif, fontSize:18, fontWeight:800, color:C.text, flex:1 }}>{h.nombre}</h4>
-              <Link to={h.ruta} style={{ background:C.gold, color:"#000", padding:"8px 16px", borderRadius:6, fontFamily:F.sans, fontSize:11, fontWeight:800, textDecoration:"none", whiteSpace:"nowrap" }}>{h.cta} →</Link>
+              <Link to={h.ruta} style={{ background:C.text, color:C.bg, padding:"11px 16px", borderRadius:10, fontFamily:F.sans, fontSize:14, fontWeight:600, textDecoration:"none", whiteSpace:"nowrap" }}>{h.cta} →</Link>
             </div>
             <p style={{ fontSize:13, color:C.sub, lineHeight:1.7, marginBottom:16 }}>{h.descripcion}</p>
             <div style={{ display:"grid", gap:12, marginBottom:14 }}>
               {h.puntos.map((p,j) => (
                 <div key={j} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
-                  <span style={{ color:C.gold, fontSize:13, flexShrink:0, marginTop:2 }}>●</span>
+                  <span aria-hidden="true" style={{ color:C.goldText, fontSize:13, flexShrink:0, marginTop:2 }}>●</span>
                   <div>
                     <div style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.text, marginBottom:3 }}>{p.titulo}</div>
                     <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{p.texto}</p>
@@ -2811,7 +2922,7 @@ function ArticuloHerramientas({ post }) {
               ))}
             </div>
             <div style={{ background:C.goldBg, borderRadius:6, padding:"12px 16px" }}>
-              <p style={{ fontSize:12.5, color:C.text, lineHeight:1.65 }}>💡 {h.tip}</p>
+              <p style={{ fontSize:14, color:C.text, lineHeight:1.65 }}><strong>Consejo:</strong> {h.tip}</p>
             </div>
           </div>
         ))}
@@ -2833,7 +2944,7 @@ function ArticuloSimulador({ post }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:12, marginBottom:28 }}>
         {post.ejemplo.filas.map((f,i) => (
           <div key={i} style={{ background:C.goldBg, border:`1px solid ${C.gold}`, borderRadius:10, padding:"14px 10px", textAlign:"center" }}>
-            <div style={{ fontFamily:F.sans, fontSize:10, color:C.sub, marginBottom:6 }}>{f.periodo}</div>
+            <div style={{ fontFamily:F.sans, fontSize:13, color:C.sub, marginBottom:6 }}>{f.periodo}</div>
             <div style={{ fontFamily:F.serif, fontSize:20, fontWeight:800, color:C.gold }}>{f.valor}</div>
           </div>
         ))}
@@ -2844,7 +2955,7 @@ function ArticuloSimulador({ post }) {
         {post.comparacion.casos.map((c,i) => (
           <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"18px 20px" }}>
             <div style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{c.edad}</div>
-            <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, marginBottom:10 }}>Aportando {c.aporte}</div>
+            <div style={{ fontFamily:F.sans, fontSize:13, color:C.muted, marginBottom:10 }}>Aportando {c.aporte}</div>
             <div style={{ fontFamily:F.serif, fontSize:28, fontWeight:800, color:C.green, marginBottom:6 }}>{c.resultado}</div>
             <div style={{ fontSize:12, color:C.sub, lineHeight:1.6 }}>{c.detalle}</div>
           </div>
@@ -2905,17 +3016,17 @@ function SimuladorInteres() {
       </div>
 
       <div style={{ background:`linear-gradient(135deg,${C.card},${C.bg})`, border:`2px solid ${C.gold}`, borderRadius:12, padding:"20px 24px", textAlign:"center", marginBottom:16 }}>
-        <div style={{ fontFamily:F.sans, fontSize:10, color:C.gold, letterSpacing:2, marginBottom:6 }}>VALOR FINAL EN {anos} AÑOS</div>
+        <div style={{ fontFamily:F.sans, fontSize:13, color:C.goldText, letterSpacing:1.5, fontWeight:600, marginBottom:6 }}>VALOR FINAL EN {anos} AÑOS</div>
         <div style={{ fontFamily:F.serif, fontSize:34, fontWeight:800, color:C.gold }}>{fmt$(finalVal)}</div>
       </div>
 
       <div style={{ display:"flex", gap:12, marginBottom:24, flexWrap:"wrap" }}>
         <div style={{ flex:1, minWidth:160, background:C.goldBg, borderRadius:8, padding:"12px 16px" }}>
-          <div style={{ fontSize:11, color:C.muted, marginBottom:4 }}>Total Invertido</div>
+          <div style={{ fontSize:13, color:C.muted, marginBottom:4 }}>Total Invertido</div>
           <div style={{ fontFamily:F.sans, fontSize:16, fontWeight:700, color:C.text }}>{fmt$(aporteTotal)}</div>
         </div>
         <div style={{ flex:1, minWidth:160, background:C.goldBg, borderRadius:8, padding:"12px 16px" }}>
-          <div style={{ fontSize:11, color:C.muted, marginBottom:4 }}>Ganancia Generada</div>
+          <div style={{ fontSize:13, color:C.muted, marginBottom:4 }}>Ganancia Generada</div>
           <div style={{ fontFamily:F.sans, fontSize:16, fontWeight:700, color:C.green }}>{fmt$(gananciaTotal)}</div>
         </div>
       </div>
@@ -2924,10 +3035,10 @@ function SimuladorInteres() {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={filas} margin={{ top:10, right:10, left:0, bottom:0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-            <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:10, fill:C.muted }} />
-            <YAxis stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:9, fill:C.muted }} tickFormatter={fmtK} />
+            <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:12, fill:C.muted }} />
+            <YAxis stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:12, fill:C.muted }} tickFormatter={fmtK} />
             <Tooltip contentStyle={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:F.sans, fontSize:12 }} labelFormatter={v=>`Año ${v}`} formatter={(v,n)=>[fmt$(v), n==="aporteAcum"?"Capital Invertido":"Ganancia Generada"]} />
-            <Legend wrapperStyle={{ fontFamily:F.sans, fontSize:11, paddingTop:12 }} />
+            <Legend wrapperStyle={{ fontFamily:F.sans, fontSize:13, paddingTop:12 }} />
             <Bar dataKey="aporteAcum" stackId="a" fill="#1e4a7a" name="Capital Invertido" />
             <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="Ganancia Generada" radius={[4,4,0,0]} />
           </ComposedChart>
@@ -2945,7 +3056,7 @@ function ArticuloErrores({ post }) {
       <div style={{ display:"grid", gap:14, marginBottom:24 }}>
         {post.errores.map((err,i) => (
           <div key={i} style={{ display:"flex", gap:16, alignItems:"flex-start", background:`${C.red}12`, border:`1px solid ${C.red}30`, borderRadius:10, padding:"16px 20px" }}>
-            <div style={{ width:38, height:38, borderRadius:"50%", background:`${C.red}20`, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:17 }}>⚠️</div>
+            <div style={{ width:38, height:38, borderRadius:"50%", background:`${C.red}20`, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:17 }} aria-hidden="true">⚠️</div>
             <div>
               <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{i+1}. {err.titulo}</div>
               <p style={{ fontSize:17, color:C.sub, lineHeight:1.65 }}>{err.texto}</p>
@@ -3207,7 +3318,8 @@ function OpcionesPage() {
 
   useDocumentMeta(
     post ? `${post.nombre} — Opcionario de FinanzaDR` : "Opcionario — FinanzaDR",
-    post ? post.extracto : "Estrategias de opciones explicadas paso a paso en español, con su riesgo, su ejemplo y su diagrama de resultado."
+    post ? post.extracto : "Estrategias de opciones explicadas paso a paso en español, con su riesgo, su ejemplo y su diagrama de resultado.",
+    post ? { canonical: `/opciones?estrategia=${post.id}`, tipo: "article" } : { canonical: "/opciones" }
   );
 
   return post ? <DetalleEstrategia post={post} /> : <ListadoOpciones />;
@@ -3781,7 +3893,6 @@ function NotFoundPage() {
   const { C } = useOutletContext();
   return (
     <div className="fade-in" style={{ textAlign:"center", padding:"80px 20px" }}>
-      <div style={{ fontSize:64, marginBottom:16 }}>🧭</div>
       <SectionTitle>Página no encontrada</SectionTitle>
       <p style={{ fontSize:14, color:C.sub, margin:"12px 0 28px" }}>La página que buscas no existe o fue movida.</p>
       <Link to="/" style={{ background:C.gold, color:"#000", padding:"12px 24px", borderRadius:8, fontFamily:F.sans, fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>Volver al inicio</Link>
@@ -3797,9 +3908,13 @@ function SectionTitle({ children, nivel = 1 }) {
   return <H style={{ fontFamily:F.serif, fontSize:nivel === 1 ? 32 : 24, fontWeight:700, color:C.text, marginBottom:4, lineHeight:1.2 }}>{children}</H>;
 }
 
+// Rótulo de sección. Los guiones que traían las llamadas ("── TÍTULO") eran
+// texto real y un lector de pantalla los leía uno a uno: se retiran aquí. El
+// color pasa de `gold` (decorativo, 2.6:1 en claro) a `goldText`.
 function Label({ children, style: s }) {
   const { C } = useOutletContext();
-  return <div style={{ fontFamily:F.sans, fontSize:10, color:C.gold, letterSpacing:2, textTransform:"uppercase", marginBottom:14, ...s }}>{children}</div>;
+  const texto = typeof children === "string" ? children.replace(/^[\u2500\-\s]+/, "") : children;
+  return <div style={{ fontFamily:F.sans, fontSize:12, color:C.goldText, letterSpacing:1.5, fontWeight:600, textTransform:"uppercase", marginBottom:14, ...s }}>{texto}</div>;
 }
 
 // ===========================================================================
@@ -5042,7 +5157,8 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
 function CompartirPage() {
   useDocumentMeta(
     "Resumen para compartir — FinanzaDR",
-    "Genera una imagen con las cotizaciones del momento o con el cierre de la sesión, lista para compartir."
+    "Genera una imagen con las cotizaciones del momento o con el cierre de la sesión, lista para compartir.",
+    { canonical: "/compartir" }
   );
   const { stocks, C } = useOutletContext();
   const [searchParams] = useSearchParams();
