@@ -3209,8 +3209,11 @@ function BrokersPage() {
 }
 
 function CalculadoraPage() {
-  useDocumentMeta("Calculadora de Interés Compuesto — FinanzaDR", "Simula cómo crece tu dinero invertido con el tiempo usando interés compuesto.");
-  return <div className="fade-in"><CompoundCalc /></div>;
+  useDocumentMeta(
+    "Calculadora de interés compuesto — FinanzaDR",
+    "Simula cómo crecería un capital con aportes periódicos: tasa, capitalización, plazo y el desglose entre lo aportado y el rendimiento."
+  );
+  return <CompoundCalc />;
 }
 
 function CompartirPage() {
@@ -3536,123 +3539,401 @@ function NewsletterForm() {
   );
 }
 
+// ===========================================================================
+// CALCULADORA DE INTERÉS COMPUESTO
+// ===========================================================================
+
+const PERIODOS_POR_ANO = { Anual: 1, Semestral: 2, Trimestral: 4, Mensual: 12, Semanal: 52 };
+const FRECUENCIAS_APORTE = ["Semanal", "Mensual", "Anual"];
+const CAPITALIZACIONES = ["Anual", "Semestral", "Trimestral", "Mensual"];
+const NOMBRE_PERIODO = { Semanal: "Semana", Mensual: "Mes", Anual: "Año" };
+
+const mcd = (a, b) => (b === 0 ? a : mcd(b, a % b));
+const mcm = (a, b) => (a * b) / mcd(a, b);
+
+// Motor de la simulación, separado de la presentación y sin nada de React:
+// entra un escenario, salen las filas y el resumen. Así se puede probar.
+//
+// Convenciones, que la interfaz también declara:
+// - `tasaAnual` es una tasa NOMINAL anual, capitalizada tantas veces al año
+//   como diga `capitalizacion`. Antes el selector de capitalización existía en
+//   pantalla pero no entraba en ningún cálculo: la tasa se trataba siempre
+//   como efectiva anual y el control no hacía nada.
+// - Los aportes entran al FINAL de cada periodo, así que el aporte de un
+//   periodo no genera intereses dentro de ese mismo periodo.
+// - Cuando una fecha de capitalización coincide con una de aporte, primero se
+//   acreditan los intereses y después entra el aporte.
+function simularInteresCompuesto({ capitalInicial, aporte, frecuenciaAporte, tasaAnual, capitalizacion, anos }) {
+  const capitalizacionesPorAno = PERIODOS_POR_ANO[capitalizacion] ?? 1;
+  const aportesPorAno = PERIODOS_POR_ANO[frecuenciaAporte] ?? 12;
+  const anosEnteros = Math.max(1, Math.floor(anos || 0));
+  const inicial = Math.max(0, capitalInicial || 0);
+  const cuota = Math.max(0, aporte || 0);
+  const tasaPeriodo = (tasaAnual || 0) / 100 / capitalizacionesPorAno;
+
+  // Rejilla común: el mínimo número de pasos por año en el que caen todas las
+  // fechas de capitalización y todas las de aporte.
+  const pasosPorAno = mcm(capitalizacionesPorAno, aportesPorAno);
+  const cadaCapitalizacion = pasosPorAno / capitalizacionesPorAno;
+  const cadaAporte = pasosPorAno / aportesPorAno;
+
+  let saldo = inicial;
+  // Base sobre la que se calculan los intereses del periodo de capitalización
+  // en curso. Es el saldo con el que EMPEZÓ el periodo: si se calculara sobre
+  // el saldo del momento, un aporte hecho dentro del periodo cobraría el
+  // interés íntegro de ese periodo, que es justo lo que la interfaz dice que
+  // no ocurre.
+  let baseCapitalizacion = inicial;
+  let aportadoAcum = 0;
+  let interesAcum = 0;
+
+  const filasAnuales = [];
+  const filasPeriodo = [];
+
+  let saldoInicioAno = saldo;
+  let aportadoAno = 0;
+  let interesAno = 0;
+
+  let saldoInicioPeriodo = saldo;
+  let aportePeriodo = 0;
+  let interesPeriodo = 0;
+
+  const totalPasos = anosEnteros * pasosPorAno;
+  for (let paso = 1; paso <= totalPasos; paso += 1) {
+    const toca = { capitalizar: paso % cadaCapitalizacion === 0, aportar: paso % cadaAporte === 0 };
+
+    if (toca.capitalizar) {
+      const interes = baseCapitalizacion * tasaPeriodo;
+      saldo += interes;
+      interesAcum += interes;
+      interesAno += interes;
+      interesPeriodo += interes;
+    }
+    if (toca.aportar) {
+      saldo += cuota;
+      aportadoAcum += cuota;
+      aportadoAno += cuota;
+      aportePeriodo += cuota;
+
+      filasPeriodo.push({
+        indice: filasPeriodo.length + 1,
+        saldoInicio: saldoInicioPeriodo,
+        aporte: aportePeriodo,
+        interes: interesPeriodo,
+        saldoFin: saldo,
+        aportadoAcum,
+        interesAcum,
+      });
+      saldoInicioPeriodo = saldo;
+      aportePeriodo = 0;
+      interesPeriodo = 0;
+    }
+    // La base del siguiente periodo se fija después de acreditar intereses y
+    // de recibir el aporte: lo aportado empieza a rendir en el periodo
+    // siguiente, no en el que entra.
+    if (toca.capitalizar) baseCapitalizacion = saldo;
+    if (paso % pasosPorAno === 0) {
+      filasAnuales.push({
+        ano: paso / pasosPorAno,
+        saldoInicio: saldoInicioAno,
+        aportadoAno,
+        interesAno,
+        saldoFin: saldo,
+        aportadoAcum,
+        interesAcum,
+      });
+      saldoInicioAno = saldo;
+      aportadoAno = 0;
+      interesAno = 0;
+    }
+  }
+
+  return {
+    aportesPorAno,
+    tasaEfectivaAnual: (Math.pow(1 + tasaPeriodo, capitalizacionesPorAno) - 1) * 100,
+    filasAnuales,
+    filasPeriodo,
+    resumen: {
+      capitalInicial: inicial,
+      aportadoTotal: aportadoAcum,
+      interesTotal: interesAcum,
+      valorFinal: saldo,
+    },
+  };
+}
+
+const FILAS_POR_PAGINA = 24;
+
 function CompoundCalc() {
   const { C } = useOutletContext();
-  const [capital, setCapital] = useState(10000);
+  const [capitalInicial, setCapitalInicial] = useState(10000);
   const [aporte, setAporte] = useState(200);
   const [tasa, setTasa] = useState(10);
   const [anos, setAnos] = useState(15);
   const [moneda, setMoneda] = useState("USD");
   const [frecuencia, setFrecuencia] = useState("Mensual");
-  const [capitaliz, setCapitaliz] = useState("Anual");
+  // Por defecto, capitalización anual: es la lectura más conservadora de la
+  // tasa (10% nominal capitalizado una vez al año = 10% efectivo) y evita que
+  // el escenario por defecto proyecte más de lo que proyectaba antes.
+  const [capitalizacion, setCapitalizacion] = useState("Anual");
   const [vistaTabla, setVistaTabla] = useState("Anual");
-  const sym = moneda==="DOP"?"RD$":"$";
-  const fmtPct = (n) => `${(+n).toFixed(2)}%`;
-  const fmtM = (n) => `${sym}${(+n).toLocaleString("es-DO",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const freqMap = {"Mensual":12,"Semanal":52,"Anual":1};
-  const periodos = freqMap[frecuencia]||12;
-  const tasaPeriodo = Math.pow(1+tasa/100,1/periodos)-1;
-  const filas = [];
-  let saldo = capital, totalInteresAcum = 0;
-  for (let y=1;y<=anos;y++) {
-    let saldoInicio=saldo, aporteAnualReal=0;
-    for (let p=0;p<periodos;p++) { saldo=saldo*(1+tasaPeriodo)+aporte; aporteAnualReal+=aporte; }
-    const interesAnual=saldo-saldoInicio-aporteAnualReal;
-    totalInteresAcum+=interesAnual;
-    filas.push({ano:y,saldo,capitalBase:saldoInicio,aporteBase:aporteAnualReal,aporteAcum:capital+aporte*periodos*y,interesAcum:totalInteresAcum,ganancia:interesAnual});
-  }
-  const totalFinal=filas[filas.length-1]?.saldo??capital;
-  const aporteTotal=capital+aporte*periodos*anos;
-  const interesTotal=totalFinal-aporteTotal;
-  const gananciaPct=aporteTotal>0?(interesTotal/aporteTotal*100):0;
-  const fmtK=v=>v>=1e6?sym+(v/1e6).toFixed(1)+"M":v>=1000?sym+(v/1000).toFixed(0)+"K":sym+Math.round(v);
-  const inputStyle={width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",color:C.text,fontFamily:F.sans,fontSize:15,fontWeight:600,outline:"none"};
-  const labelStyle={fontSize:13,color:C.sub,marginBottom:6,display:"block"};
-  const selStyle={width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",color:C.text,fontFamily:F.sans,fontSize:13,outline:"none",cursor:"pointer"};
-  const stepBtn=(fn,dir)=>(<button onClick={fn} style={{width:40,background:C.border,border:"none",color:C.gold,fontSize:20,cursor:"pointer",borderRadius:dir==="left"?"8px 0 0 8px":"0 8px 8px 0",flexShrink:0}}>{dir==="left"?"−":"+"}</button>);
-  const numInput=(val,setVal,step,min=0)=>(<div style={{display:"flex",border:`1px solid ${C.border}`,borderRadius:8,overflow:"hidden",height:42}}>{stepBtn(()=>setVal(v=>Math.max(min,+(v-step).toFixed(2))),"left")}<input type="number" value={val||""} min={min} onChange={e=>setVal(e.target.value===""?0:Math.max(min,+e.target.value))} style={{flex:1,background:C.card,border:"none",outline:"none",color:C.gold,fontFamily:F.sans,fontSize:15,fontWeight:700,textAlign:"center"}}/>{stepBtn(()=>setVal(v=>+(v+step).toFixed(2)),"right")}</div>);
+  const [pagina, setPagina] = useState(0);
+
+  const simbolo = moneda === "DOP" ? "RD$" : "US$";
+  const fmtMoneda = (n) => `${simbolo} ${Math.round(n).toLocaleString("es-DO")}`;
+  const fmtEjeMoneda = (v) => v >= 1e6 ? `${simbolo}${(v / 1e6).toFixed(1)}M` : v >= 1000 ? `${simbolo}${Math.round(v / 1000)}K` : `${simbolo}${Math.round(v)}`;
+
+  const simulacion = simularInteresCompuesto({
+    capitalInicial, aporte, frecuenciaAporte: frecuencia, tasaAnual: tasa, capitalizacion, anos,
+  });
+  const { resumen, filasAnuales, filasPeriodo, tasaEfectivaAnual } = simulacion;
+
+  const etiquetaFila = NOMBRE_PERIODO[frecuencia] || "Periodo";
+  const filasVisibles = vistaTabla === "Anual" ? filasAnuales : filasPeriodo;
+  const totalPaginas = Math.max(1, Math.ceil(filasVisibles.length / FILAS_POR_PAGINA));
+  const paginaActual = Math.min(pagina, totalPaginas - 1);
+  const filasPagina = filasVisibles.slice(paginaActual * FILAS_POR_PAGINA, (paginaActual + 1) * FILAS_POR_PAGINA);
+
+  const cambiarVista = (vista) => { setVistaTabla(vista); setPagina(0); };
+
+  // --- estilos compartidos del formulario ---
+  const etiqueta = { display: "block", fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 };
+  const ayuda = { fontSize: 13, color: C.sub, lineHeight: 1.5, marginTop: 6 };
+  const campoSelect = {
+    width: "100%", minHeight: 48, background: C.card, border: `1px solid ${C.border}`,
+    borderRadius: 10, padding: "0 12px", color: C.text, fontFamily: F.sans, fontSize: 15, cursor: "pointer",
+  };
+  const celda = { padding: "10px 14px", borderTop: `1px solid ${C.border}`, textAlign: "right", whiteSpace: "nowrap", fontSize: 14 };
+  const cabecera = { padding: "10px 14px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "right", whiteSpace: "nowrap" };
+
+  // Campo numérico con sus dos botones de paso. Los botones llevan nombre
+  // accesible: un lector de pantalla no puede anunciar "más" y "menos" a
+  // secas y esperar que se entienda de qué campo son.
+  const campoNumero = (id, valor, setValor, paso, nombre, minimo = 0) => (
+    <div style={{ display: "flex", border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", height: 48 }}>
+      <button type="button" aria-label={`Reducir ${nombre}`}
+        onClick={() => setValor((v) => Math.max(minimo, +(v - paso).toFixed(2)))}
+        style={{ width: 48, background: C.surfaceAlt, border: "none", color: C.text, fontSize: 20, cursor: "pointer", flexShrink: 0 }}>−</button>
+      <input id={id} type="number" inputMode="decimal" value={valor} min={minimo}
+        onChange={(e) => setValor(e.target.value === "" ? 0 : Math.max(minimo, +e.target.value))}
+        style={{ flex: 1, minWidth: 0, background: C.card, border: "none", outline: "none", color: C.text, fontFamily: F.sans, fontSize: 16, fontWeight: 600, textAlign: "center" }} />
+      <button type="button" aria-label={`Aumentar ${nombre}`}
+        onClick={() => setValor((v) => +(v + paso).toFixed(2))}
+        style={{ width: 48, background: C.surfaceAlt, border: "none", color: C.text, fontSize: 20, cursor: "pointer", flexShrink: 0 }}>+</button>
+    </div>
+  );
+
+  const botonOpcion = (activo) => ({
+    minHeight: 44, padding: "0 16px", borderRadius: 10,
+    border: `1px solid ${activo ? C.text : C.border}`,
+    background: activo ? C.text : C.card, color: activo ? C.bg : C.text,
+    fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer",
+  });
+
   return (
-    <div>
-      <SectionTitle>Calculadora de Inversión</SectionTitle>
-      <p style={{fontSize:13,color:C.sub,marginTop:4,marginBottom:20}}>El S&P 500 ha retornado ~10% anual históricamente.</p>
-      <div style={{display:"flex",gap:8,marginBottom:24,maxWidth:260}}>
-        {["USD","DOP"].map(m=>(<button key={m} onClick={()=>setMoneda(m)} style={{flex:1,padding:"9px",borderRadius:8,border:`1px solid ${moneda===m?C.gold:C.border}`,background:moneda===m?C.goldBg:"none",color:moneda===m?C.gold:C.muted,fontFamily:F.sans,fontSize:13,fontWeight:600,cursor:"pointer"}}>{m==="USD"?"🇺🇸 USD":"🇩🇴 DOP"}</button>))}
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24,alignItems:"start"}} className="calc-grid">
-        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"24px"}}>
-          <div style={{marginBottom:18}}><label style={labelStyle}>Inversión Inicial ({sym})</label>{numInput(capital,setCapital,1000)}</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
-            <div><label style={labelStyle}>Aportes ({sym})</label>{numInput(aporte,setAporte,50)}</div>
-            <div><label style={labelStyle}>Frecuencia</label><select value={frecuencia} onChange={e=>setFrecuencia(e.target.value)} style={selStyle}>{["Mensual","Semanal","Anual"].map(o=><option key={o}>{o}</option>)}</select></div>
+    <div className="fade-in">
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Calculadora de interés compuesto</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, margin: "8px 0 32px", maxWidth: "68ch" }}>
+        Simula cómo crecería un capital con aportes periódicos. Es un escenario con la tasa que tú supongas, no una previsión ni una promesa de rendimiento.
+      </p>
+
+      <div className="calc-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 24, alignItems: "start" }}>
+
+        {/* ENTRADAS */}
+        <section aria-labelledby="datos-simulacion" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "24px 26px" }}>
+          <h2 id="datos-simulacion" style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 20 }}>Tu escenario</h2>
+
+          <fieldset style={{ border: "none", marginBottom: 20 }}>
+            <legend style={{ ...etiqueta, marginBottom: 8 }}>Moneda del escenario</legend>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {["USD", "DOP"].map((m) => (
+                <button key={m} type="button" onClick={() => setMoneda(m)} aria-pressed={moneda === m} style={botonOpcion(moneda === m)}>
+                  {m === "USD" ? "Dólares (US$)" : "Pesos dominicanos (RD$)"}
+                </button>
+              ))}
+            </div>
+            <p style={ayuda}>
+              Solo cambia la denominación: introduces y lees todas las cifras en esta moneda. <strong style={{ color: C.text }}>No se convierte</strong> nada de una moneda a otra.
+            </p>
+          </fieldset>
+
+          <div style={{ marginBottom: 20 }}>
+            <label htmlFor="calc-capital" style={etiqueta}>Inversión inicial ({simbolo})</label>
+            {campoNumero("calc-capital", capitalInicial, setCapitalInicial, 1000, "la inversión inicial")}
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
-            <div><label style={labelStyle}>Retorno Esperado (%)</label>{numInput(tasa,setTasa,0.5,0.1)}</div>
-            <div><label style={labelStyle}>Capitalización</label><select value={capitaliz} onChange={e=>setCapitaliz(e.target.value)} style={selStyle}>{["Anual","Mensual","Trimestral","Semestral"].map(o=><option key={o}>{o}</option>)}</select></div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 12, marginBottom: 20 }}>
+            <div>
+              <label htmlFor="calc-aporte" style={etiqueta}>Aporte por periodo ({simbolo})</label>
+              {campoNumero("calc-aporte", aporte, setAporte, 50, "el aporte")}
+            </div>
+            <div>
+              <label htmlFor="calc-frecuencia" style={etiqueta}>Cada</label>
+              <select id="calc-frecuencia" value={frecuencia} onChange={(e) => { setFrecuencia(e.target.value); setPagina(0); }} style={campoSelect}>
+                {FRECUENCIAS_APORTE.map((o) => <option key={o} value={o}>{o.toLowerCase()}</option>)}
+              </select>
+            </div>
           </div>
-          <div style={{marginBottom:18}}><label style={labelStyle}>Años de Crecimiento</label>{numInput(anos,setAnos,1,1)}</div>
-        </div>
-        <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          <div style={{background:`linear-gradient(135deg,${C.card},${C.bg})`,border:`2px solid ${C.gold}`,borderRadius:12,padding:"20px 24px",textAlign:"center"}}>
-            <div style={{fontFamily:F.sans,fontSize:10,color:C.gold,letterSpacing:2,marginBottom:6}}>VALOR FINAL EN {anos} AÑOS</div>
-            <div style={{fontFamily:F.serif,fontSize:36,fontWeight:800,color:C.gold}}>{fmtM(totalFinal)}</div>
+          <p style={{ ...ayuda, marginTop: -12, marginBottom: 20 }}>Los aportes entran al final de cada periodo, así que no generan intereses dentro del periodo en que se hacen.</p>
+
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 12, marginBottom: 20 }}>
+            <div>
+              <label htmlFor="calc-tasa" style={etiqueta}>Tasa anual supuesta (%)</label>
+              {campoNumero("calc-tasa", tasa, setTasa, 0.5, "la tasa anual")}
+            </div>
+            <div>
+              <label htmlFor="calc-capitalizacion" style={etiqueta}>Capitalización</label>
+              <select id="calc-capitalizacion" value={capitalizacion} onChange={(e) => setCapitalizacion(e.target.value)} style={campoSelect}>
+                {CAPITALIZACIONES.map((o) => <option key={o} value={o}>{o.toLowerCase()}</option>)}
+              </select>
+            </div>
           </div>
-          <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,overflow:"hidden"}}>
-            {[{lbl:"Inversión Total",val:fmtM(aporteTotal),color:C.text},{lbl:"Capital % del Final",val:fmtPct(aporteTotal/totalFinal*100),color:C.muted},{lbl:"Aporte Total",val:fmtM(aporte*periodos*anos),color:C.sub},{lbl:"Ganancia Total",val:fmtM(Math.max(0,interesTotal)),color:C.green},{lbl:"Ganancia Porcentual",val:fmtPct(Math.max(0,gananciaPct)),color:C.green}].map((r,i,arr)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 20px",borderBottom:i<arr.length-1?`1px solid ${C.border}20`:"none"}}><span style={{fontSize:13,color:C.muted}}>{r.lbl}</span><span style={{fontFamily:F.sans,fontSize:15,fontWeight:700,color:r.color}}>{r.val}</span></div>))}
+          <p style={{ ...ayuda, marginTop: -12, marginBottom: 20 }}>
+            La tasa se interpreta como nominal anual, capitalizada {capitalizacion.toLowerCase()}: equivale a una tasa efectiva del <strong style={{ color: C.text }}>{tasaEfectivaAnual.toFixed(2)}% anual</strong>.
+          </p>
+
+          <div>
+            <label htmlFor="calc-anos" style={etiqueta}>Plazo (años)</label>
+            {campoNumero("calc-anos", anos, setAnos, 1, "el plazo en años", 1)}
+            {anos < 1 && <p style={{ ...ayuda, color: C.red }}>El plazo mínimo es un año; se simula con un año.</p>}
+          </div>
+        </section>
+
+        {/* RESULTADOS */}
+        <section aria-labelledby="resultado" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <h2 id="resultado" className="sr-only">Resultado de la simulación</h2>
+
+          <div role="status" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "24px 26px" }}>
+            <p style={{ fontSize: 14, color: C.sub, marginBottom: 6 }}>Valor simulado a {Math.max(1, Math.floor(anos || 1))} años</p>
+            <p style={{ fontFamily: F.serif, fontSize: 40, fontWeight: 700, color: C.text, lineHeight: 1.1 }}>{fmtMoneda(resumen.valorFinal)}</p>
+            <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 10 }}>
+              Simulación, no una previsión: supone una tasa constante del {(+tasa || 0).toFixed(2)}% nominal anual todos los años, algo que ningún mercado hace.
+            </p>
+          </div>
+
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <caption className="sr-only">Desglose del valor final simulado</caption>
+              <tbody>
+                {[
+                  ["Capital inicial", resumen.capitalInicial, C.text],
+                  ["Aportaciones acumuladas", resumen.aportadoTotal, C.text],
+                  ["Rendimiento estimado", resumen.interesTotal, C.green],
+                  ["Valor final", resumen.valorFinal, C.text],
+                ].map(([nombre, valor, color], i) => (
+                  <tr key={nombre}>
+                    <th scope="row" style={{ padding: "13px 20px", textAlign: "left", fontSize: 14, fontWeight: i === 3 ? 700 : 400, color: i === 3 ? C.text : C.sub, borderTop: i === 0 ? "none" : `1px solid ${C.border}` }}>{nombre}</th>
+                    <td style={{ padding: "13px 20px", textAlign: "right", fontSize: 15, fontWeight: i === 3 ? 700 : 600, color, borderTop: i === 0 ? "none" : `1px solid ${C.border}` }}>{fmtMoneda(valor)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 14, padding: "18px 22px" }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 10 }}>Qué supone este cálculo</h3>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                `Tasa del ${(+tasa || 0).toFixed(2)}% nominal anual, capitalizada ${capitalizacion.toLowerCase()} (${tasaEfectivaAnual.toFixed(2)}% efectivo anual), constante durante todo el plazo.`,
+                `Aportes de ${fmtMoneda(aporte)} al final de cada periodo ${frecuencia.toLowerCase()}.`,
+                "No descuenta inflación, impuestos, comisiones ni pérdidas: en el mercado real, ninguno de los tres es cero.",
+              ].map((linea, i) => (
+                <li key={i} style={{ display: "flex", gap: 10, fontSize: 14, color: C.sub, lineHeight: 1.55 }}>
+                  <span aria-hidden="true" style={{ color: C.goldText }}>—</span><span>{linea}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      {/* GRÁFICO */}
+      <section aria-labelledby="proyeccion" style={{ marginTop: 40 }}>
+        <h2 id="proyeccion" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>Cómo se reparte el resultado</h2>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginBottom: 16, maxWidth: "68ch" }}>
+          Cada barra es el saldo al cierre de ese año, separando lo que has puesto tú de lo que aporta el rendimiento. Importes en {moneda === "DOP" ? "pesos dominicanos" : "dólares"}.
+        </p>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 12px 8px" }}>
+          <div style={{ height: 320 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={filasAnuales} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily: F.sans, fontSize: 12, fill: C.muted }} />
+                <YAxis stroke={C.muted} tick={{ fontFamily: F.sans, fontSize: 12, fill: C.muted }} tickFormatter={fmtEjeMoneda} width={80} />
+                <Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, fontFamily: F.sans, fontSize: 13, color: C.text }}
+                  labelFormatter={(v) => `Año ${v}`}
+                  formatter={(v, n) => [fmtMoneda(v), n]} />
+                <Legend wrapperStyle={{ fontFamily: F.sans, fontSize: 13, paddingTop: 12 }} />
+                <Bar dataKey="aportadoAcum" stackId="saldo" fill={C.sub} name="Capital aportado" />
+                <Bar dataKey="interesAcum" stackId="saldo" fill={C.green} name="Rendimiento" radius={[4, 4, 0, 0]} />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
         </div>
-      </div>
-      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"24px",marginTop:24}}>
-        <Label>── Proyección de Crecimiento</Label>
-        <div style={{width:"100%",height:300}}>
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={filas} margin={{top:10,right:30,left:10,bottom:0}}>
-              <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false}/>
-              <XAxis dataKey="ano" stroke={C.muted} tick={{fontFamily:F.sans,fontSize:10,fill:C.muted}}/>
-              <YAxis stroke={C.muted} tick={{fontFamily:F.sans,fontSize:9,fill:C.muted}} tickFormatter={(v)=>v>=1000000?"$"+(v/1000000).toFixed(1)+"M":v>=1000?"$"+(v/1000).toFixed(0)+"K":"$"+Math.round(v)}/>
-              <Tooltip contentStyle={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,fontFamily:F.sans,fontSize:12}} labelFormatter={v=>`Año ${v}`} formatter={(v,n)=>["$"+Math.round(v).toLocaleString(),n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias Acum.":n==="ganancia"?"Ganancia Año":n]}/>
-              <Legend wrapperStyle={{fontFamily:F.sans,fontSize:11,paddingTop:12}}/>
-              <Bar dataKey="aporteAcum" stackId="a" fill="#1e4a7a" name="Capital Base"/>
-              <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="Ganancias Acum." radius={[4,4,0,0]}/>
-              <Line type="monotone" dataKey="ganancia" stroke={C.gold} strokeWidth={2.5} dot={{fill:C.gold,r:3}} name="Ganancia Año"/>
-            </ComposedChart>
-          </ResponsiveContainer>
+        <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginTop: 10 }}>
+          El capital aportado incluye la inversión inicial. Las dos barras suman el saldo de cada año, el mismo que aparece en la tabla.
+        </p>
+      </section>
+
+      {/* TABLA */}
+      <section aria-labelledby="detalle" style={{ marginTop: 40 }}>
+        <h2 id="detalle" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 16 }}>Detalle periodo a periodo</h2>
+
+        <div role="group" aria-label="Detalle de la tabla" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          {[["Anual", "Por año"], ["Periodo", `Por ${etiquetaFila.toLowerCase()}`]].map(([clave, texto]) => (
+            <button key={clave} type="button" onClick={() => cambiarVista(clave)} aria-pressed={vistaTabla === clave} style={botonOpcion(vistaTabla === clave)}>{texto}</button>
+          ))}
         </div>
-      </div>
-      <div style={{display:"flex",alignItems:"center",gap:12,margin:"24px 0 12px"}}>
-        <span style={{fontFamily:F.sans,fontSize:12,color:vistaTabla==="Anual"?C.gold:C.muted}}>Anual</span>
-        <div onClick={()=>setVistaTabla(v=>v==="Anual"?"Mensual":"Anual")} style={{width:44,height:24,borderRadius:12,cursor:"pointer",position:"relative",background:vistaTabla==="Mensual"?C.gold:C.border,transition:"background 0.25s"}}>
-          <div style={{position:"absolute",top:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left 0.25s",left:vistaTabla==="Mensual"?23:3}}/>
+
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640 }}>
+              <caption className="sr-only">
+                Evolución del saldo simulado {vistaTabla === "Anual" ? "año a año" : `por ${etiquetaFila.toLowerCase()}`}, en {moneda === "DOP" ? "pesos dominicanos" : "dólares"}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" style={{ ...cabecera, textAlign: "left" }}>{vistaTabla === "Anual" ? "Año" : etiquetaFila}</th>
+                  <th scope="col" style={cabecera}>Saldo inicial</th>
+                  <th scope="col" style={cabecera}>Aportado</th>
+                  <th scope="col" style={cabecera}>Rendimiento</th>
+                  <th scope="col" style={cabecera}>Saldo final</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filasPagina.map((fila) => {
+                  const clave = vistaTabla === "Anual" ? fila.ano : fila.indice;
+                  return (
+                    <tr key={clave}>
+                      <th scope="row" style={{ ...celda, textAlign: "left", fontWeight: 600, color: C.text }}>
+                        {vistaTabla === "Anual" ? `Año ${fila.ano}` : `${etiquetaFila} ${fila.indice}`}
+                      </th>
+                      <td style={{ ...celda, color: C.sub }}>{fmtMoneda(fila.saldoInicio)}</td>
+                      <td style={{ ...celda, color: C.sub }}>{fmtMoneda(vistaTabla === "Anual" ? fila.aportadoAno : fila.aporte)}</td>
+                      <td style={{ ...celda, color: C.green }}>{fmtMoneda(vistaTabla === "Anual" ? fila.interesAno : fila.interes)}</td>
+                      <td style={{ ...celda, color: C.text, fontWeight: 600 }}>{fmtMoneda(fila.saldoFin)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPaginas > 1 && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: "12px 16px", borderTop: `1px solid ${C.border}`, background: C.surfaceAlt }}>
+              <p role="status" style={{ fontSize: 14, color: C.sub }}>
+                Filas {paginaActual * FILAS_POR_PAGINA + 1}–{Math.min((paginaActual + 1) * FILAS_POR_PAGINA, filasVisibles.length)} de {filasVisibles.length}
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setPagina((n) => Math.max(0, n - 1))} disabled={paginaActual === 0}
+                  style={{ ...botonOpcion(false), opacity: paginaActual === 0 ? 0.5 : 1, cursor: paginaActual === 0 ? "not-allowed" : "pointer" }}>Anterior</button>
+                <button type="button" onClick={() => setPagina((n) => Math.min(totalPaginas - 1, n + 1))} disabled={paginaActual >= totalPaginas - 1}
+                  style={{ ...botonOpcion(false), opacity: paginaActual >= totalPaginas - 1 ? 0.5 : 1, cursor: paginaActual >= totalPaginas - 1 ? "not-allowed" : "pointer" }}>Siguiente</button>
+              </div>
+            </div>
+          )}
         </div>
-        <span style={{fontFamily:F.sans,fontSize:12,color:vistaTabla==="Mensual"?C.gold:C.muted}}>Mensual</span>
-      </div>
-      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"20px 24px",overflowX:"auto"}}>
-        <table style={{width:"100%",borderCollapse:"collapse",fontFamily:F.sans,fontSize:12,minWidth:700}}>
-          <thead><tr style={{background:C.card,borderBottom:`1px solid ${C.border}`}}>{[vistaTabla==="Mensual"?"Mes":"Año","Capital Base","Aporte","Capital Total","Ganancia","% Ganancia","Ganancia Acum.","Valor Final"].map((h,i)=>(<th key={i} style={{padding:"10px 12px",fontWeight:500,textAlign:i===0?"left":"right",color:C.muted,whiteSpace:"nowrap"}}>{h}</th>))}</tr></thead>
-          <tbody>
-            {vistaTabla==="Anual"?filas.map((f,i)=>(<tr key={i} style={{borderBottom:`1px solid ${C.border}20`,background:i%2===0?"transparent":"#ffffff03"}}>
-              <td style={{padding:"10px 12px",color:C.gold}}>Año {f.ano}</td>
-              <td style={{padding:"10px 12px",textAlign:"right",color:C.text}}>{fmtM(f.capitalBase)}</td>
-              <td style={{padding:"10px 12px",textAlign:"right",color:C.muted}}>{fmtM(f.aporteBase)}</td><td style={{padding:"10px 12px",textAlign:"right",color:C.text}}>{fmtM(f.capitalBase+f.aporteBase)}</td>
-              <td style={{padding:"10px 12px",textAlign:"right",color:C.green}}>{fmtM(f.ganancia)}</td><td style={{padding:"10px 12px",textAlign:"right",color:C.gold}}>{f.capitalBase>0?(f.ganancia/(f.capitalBase+f.aporteBase)*100).toFixed(2)+"%":"0%"}</td>
-              <td style={{padding:"10px 12px",textAlign:"right",color:C.sub}}>{fmtM(f.interesAcum)}</td>
-              <td style={{padding:"10px 12px",textAlign:"right",color:C.gold,fontWeight:700}}>{fmtM(f.saldo)}</td>
-            </tr>)):(() => {
-              const rows=[];let saldoM=capital,interesAcumM=0,aporteAcumM=capital;
-              const tasaM=Math.pow(1+tasa/100,1/12)-1;
-              for(let m=1;m<=anos*12;m++){const prev=saldoM;saldoM=saldoM*(1+tasaM)+aporte;const g=saldoM-prev-aporte;interesAcumM+=g;aporteAcumM+=aporte;
-                rows.push(<tr key={m} style={{borderBottom:`1px solid ${C.border}15`,background:m%2===0?"transparent":"#ffffff02"}}>
-                  <td style={{padding:"8px 12px",color:C.gold}}>Mes {m}</td>
-                  <td style={{padding:"8px 12px",textAlign:"right",color:C.text}}>{fmtM(prev)}</td>
-                  <td style={{padding:"8px 12px",textAlign:"right",color:C.muted}}>{fmtM(aporte)}</td>
-                  <td style={{padding:"8px 12px",textAlign:"right",color:C.muted}}>{fmtM(aporteAcumM)}</td>
-                  <td style={{padding:"8px 12px",textAlign:"right",color:C.green}}>{fmtM(g)}</td>
-                  <td style={{padding:"8px 12px",textAlign:"right",color:C.muted}}>{((g/(prev+aporte))*100).toFixed(2)+"%"}</td>
-                  <td style={{padding:"8px 12px",textAlign:"right",color:C.sub}}>{fmtM(interesAcumM)}</td>
-                  <td style={{padding:"8px 12px",textAlign:"right",color:C.gold,fontWeight:700}}>{fmtM(saldoM)}</td>
-                </tr>);}return rows;})()}
-          </tbody>
-        </table>
-      </div>
+      </section>
     </div>
   );
 }
