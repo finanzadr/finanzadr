@@ -68,7 +68,26 @@ export async function fetchPrecios() {
         const data = await res.json();
         if (data.c && data.c > 0) {
           const cambioPct = data.dp ?? ((data.c - data.pc) / data.pc) * 100;
-          return { simbolo: st.s, nombre: st.n, corto: st.corto, tipo: st.tipo, tipoActivo: st.tipoActivo, referencia: st.referencia, moneda: "USD", precio: data.c, cambioPct: +cambioPct.toFixed(2) };
+          // `d` es la variacion absoluta y `t` el instante del quote (en
+          // segundos) que devuelve Finnhub. Hasta ahora se descartaban, y sin
+          // ellos la interfaz no podia distinguir la hora del dato de la hora
+          // en que nosotros lo consultamos, ni mostrar cuanto se movio el
+          // instrumento en unidades de su moneda.
+          const cambioAbs = data.d ?? (data.pc != null ? data.c - data.pc : null);
+          return {
+            simbolo: st.s,
+            nombre: st.n,
+            corto: st.corto,
+            tipo: st.tipo,
+            tipoActivo: st.tipoActivo,
+            referencia: st.referencia,
+            moneda: "USD",
+            precio: data.c,
+            cierreAnterior: data.pc ?? null,
+            cambioPct: +cambioPct.toFixed(2),
+            cambioAbs: cambioAbs != null ? +cambioAbs.toFixed(2) : null,
+            horaCotizacion: data.t ? data.t * 1000 : null,
+          };
         }
         return { simbolo: st.s, nombre: st.n, corto: st.corto, tipo: st.tipo, tipoActivo: st.tipoActivo, referencia: st.referencia, moneda: "USD", precio: null, cambioPct: null };
       } catch {

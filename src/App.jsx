@@ -376,6 +376,39 @@ const fmtHoraET = (d) => new Intl.DateTimeFormat("es-DO", { timeZone: TZ_MERCADO
 // la misma sesion sin arrastrar la hora.
 const claveDiaMercado = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ_MERCADO, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(d));
 
+// --- Estado de la sesion ---------------------------------------------------
+// Derivado del reloj de Nueva York, no del proveedor: Finnhub no dice en que
+// fase esta el mercado. Por eso se etiqueta siempre como "horario regular de
+// NYSE" y se advierte que NO contempla feriados — un 4 de julio esto dira
+// "sesion regular" aunque la bolsa este cerrada.
+// DEPENDENCIA: un calendario de feriados (o el endpoint de market status de
+// Finnhub) permitiria afirmarlo sin ese matiz.
+const APERTURA_MIN = 9 * 60 + 30;
+const CIERRE_MIN = 16 * 60;
+const PREAPERTURA_MIN = 4 * 60;
+const POSTCIERRE_MIN = 20 * 60;
+
+function estadoSesion(ahora = new Date()) {
+  const partes = new Intl.DateTimeFormat("en-US", { timeZone: TZ_MERCADO, weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(ahora);
+  const { weekday, hour, minute } = Object.fromEntries(partes.map((p) => [p.type, p.value]));
+  // Intl con hour12:false devuelve "24" para la medianoche en algunas
+  // implementaciones; normalizarlo evita un minuto fantasma fuera de rango.
+  const minutos = (hour === "24" ? 0 : +hour) * 60 + +minute;
+  const finDeSemana = weekday === "Sat" || weekday === "Sun";
+
+  if (finDeSemana) return { clave: "fin-de-semana", etiqueta: "Mercado cerrado (fin de semana)" };
+  if (minutos < PREAPERTURA_MIN) return { clave: "cerrado", etiqueta: "Mercado cerrado" };
+  if (minutos < APERTURA_MIN) return { clave: "preapertura", etiqueta: "Preapertura" };
+  if (minutos < CIERRE_MIN) return { clave: "regular", etiqueta: "Sesión regular" };
+  if (minutos < POSTCIERRE_MIN) return { clave: "fuera-de-horario", etiqueta: "Fuera de horario" };
+  return { clave: "cerrado", etiqueta: "Mercado cerrado" };
+}
+
+// Un dato se considera atrasado cuando su hora de cotizacion tiene mas de 15
+// minutos y el mercado esta en sesion regular. Fuera de sesion no es atraso:
+// es, correctamente, el ultimo precio negociado.
+const DATO_ATRASADO_MS = 15 * 60 * 1000;
+
 // --- Formato de cifras -----------------------------------------------------
 // Sin dato valido devuelven null: quien llama decide si pinta una raya, un
 // esqueleto o un estado vacio. Nunca se sustituye por un cero ni por un
@@ -532,7 +565,9 @@ function Layout() {
       // setInterval creado una sola vez, con `stocks` congelado en su closure.
       setStocks(prev => prev.map(st => {
         const p = porSimbolo[st.s];
-        return p && p.precio != null ? { ...st, p: p.precio, c: p.cambioPct } : st;
+        return p && p.precio != null
+          ? { ...st, p: p.precio, c: p.cambioPct, abs: p.cambioAbs ?? null, horaCotizacion: p.horaCotizacion ?? null }
+          : st;
       }));
       setLastUpdate(new Date().toISOString());
     } catch(e) { setRealErr("No se pudo conectar."); }
@@ -586,6 +621,15 @@ function Layout() {
       .portada-grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
       .portada-grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:32px; }
       .portada-grid-panorama { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:24px; align-items:start; }
+      /* Tabla y fichas son la misma informacion en dos formas: por debajo de
+         768px la tabla desaparece y aparecen las fichas apiladas. */
+      .mercados-fichas { display:none !important; }
+      .tv-contenedor { height:560px; }
+      @media (max-width:768px) {
+        .mercados-tabla { display:none !important; }
+        .mercados-fichas { display:flex !important; }
+        .tv-contenedor { height:420px; }
+      }
       .tarjeta-enlace { transition:transform 0.2s, border-color 0.2s; }
       .tarjeta-enlace:hover { transform:translateY(-2px); }
       @media (prefers-reduced-motion:reduce) {
@@ -653,7 +697,7 @@ function Layout() {
       <div className="franja-ticker nav-scroll" style={{ background:C.tickerBg, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
         <div style={{ display:"flex", alignItems:"center", minWidth:"max-content", gap:2, maxWidth:1240, margin:"0 auto", padding:"0 24px", width:"100%" }}>
           {stocks.map((st,i) => (
-            <Link key={i} to="/mercados" className="market-item"
+            <Link key={i} to={`/mercados?symbol=${encodeURIComponent(st.s)}`} className="market-item"
               style={{ padding:"7px 12px", display:"flex", alignItems:"center", gap:8, textDecoration:"none", color:"inherit", whiteSpace:"nowrap" }}>
               <span style={{ fontSize:11, fontWeight:700, color:C.text }}>{st.s}</span>
               {/* Hasta que /api/precios responde no hay precio: se dice, en
@@ -854,7 +898,7 @@ function FilaInstrumento({ st, borde }) {
     <li style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, padding: "12px 0", borderTop: borde ? `1px solid ${C.border}` : "none" }}>
       <div style={{ minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{st.s}</span>
+          <Link to={`/mercados?symbol=${encodeURIComponent(st.s)}`} style={{ fontSize: 14, fontWeight: 700, color: C.text, textDecoration: "none" }}>{st.s}</Link>
           <span style={{ fontSize: 12, color: C.muted }}>{st.tipoActivo}</span>
         </div>
         <div style={{ fontSize: 13, color: C.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st.corto}</div>
@@ -1119,7 +1163,7 @@ function PanoramaMercado() {
                 {stocks.slice(0, 6).map((st) => (
                   <tr key={st.s}>
                     <th scope="row" style={{ ...celda, textAlign: "left", fontWeight: 400 }}>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{st.s}</span>
+                      <Link to={`/mercados?symbol=${encodeURIComponent(st.s)}`} style={{ fontSize: 15, fontWeight: 700, color: C.text, textDecoration: "none" }}>{st.s}</Link>
                       <span style={{ marginLeft: 8, fontSize: 12, color: C.muted }}>{st.tipoActivo}</span>
                       <span style={{ display: "block", fontSize: 14, color: C.sub, lineHeight: 1.45 }}>{st.corto}</span>
                     </th>
@@ -1314,55 +1358,312 @@ function InicioPage() {
   );
 }
 
+// ===========================================================================
+// MERCADOS
+// ===========================================================================
+
+// Cabecera de estado: separa las tres horas que antes se confundian en una
+// sola etiqueta de "tiempo real" — el estado de la sesion (derivado del reloj
+// de Nueva York), la hora del dato mas reciente que nos dio el proveedor y la
+// hora en que nosotros consultamos.
+function EstadoMercado({ sesion }) {
+  const { C, stocks, lastUpdate, realLoading, realErr } = useOutletContext();
+  const horas = stocks.map((st) => st.horaCotizacion).filter(Boolean);
+  const horaDato = horas.length ? Math.max(...horas) : null;
+  // Solo es "atrasado" durante la sesion regular: fuera de ella, el ultimo
+  // precio negociado es el dato correcto, no un dato viejo. Se compara contra
+  // lastUpdate (el instante de nuestra ultima consulta, que ya esta en estado)
+  // y no contra Date.now(), que haria impuro el render.
+  const atrasado = horaDato != null && lastUpdate != null && sesion.clave === "regular"
+    && new Date(lastUpdate).getTime() - horaDato > DATO_ATRASADO_MS;
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, fontSize: 14, color: C.sub }}>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: "5px 14px", fontWeight: 600, color: C.text }}>
+        {sesion.etiqueta}
+      </span>
+      <span>
+        {horaDato
+          ? `Último dato del proveedor: ${fmtHoraET(horaDato)}`
+          : "El proveedor no informa la hora de la cotización"}
+        {lastUpdate ? ` · consultado a las ${fmtHoraET(lastUpdate)}` : ""} (hora de Nueva York)
+      </span>
+      {atrasado && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: "5px 12px", color: C.sub }}>
+          Datos con retraso respecto a la sesión en curso
+        </span>
+      )}
+      {realLoading && <span role="status" style={{ color: C.muted }}>Actualizando…</span>}
+      {realErr && !realLoading && <span role="status" style={{ color: C.muted }}>La última actualización falló: se muestra el último dato válido.</span>}
+    </div>
+  );
+}
+
+// Ficha de instrumento para movil. Misma informacion que una fila de la
+// tabla, apilada; se alternan por CSS y solo una de las dos esta en el arbol
+// visible a la vez.
+function FichaMercado({ st, sesion }) {
+  const { C } = useOutletContext();
+  const hayDato = st.p != null;
+  return (
+    <li>
+      <Link to={`/mercados?view=charts&symbol=${encodeURIComponent(st.s)}`} className="tarjeta-enlace"
+        style={{ display: "block", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px", textDecoration: "none" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{st.s}</span>
+          <span style={{ fontSize: 17, fontWeight: 600, color: hayDato ? C.text : C.muted }}>
+            {hayDato ? `${fmtPrecio(st.p)} ${st.moneda}` : "—"}
+          </span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginTop: 4 }}>
+          <span style={{ fontSize: 14, color: C.sub }}>{st.corto} · {st.tipoActivo}</span>
+          <span style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
+            {st.abs != null && <span style={{ fontSize: 13, color: C.muted }}>{st.abs >= 0 ? "+" : "−"}{Math.abs(st.abs).toFixed(2)}</span>}
+            <Variacion c={st.c} size={14} />
+          </span>
+        </div>
+        <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>
+          {st.tipoActivo === "Criptomoneda"
+            ? "Cotiza 24/7"
+            : st.horaCotizacion ? `Dato de las ${fmtHoraET(st.horaCotizacion)} ET` : sesion.etiqueta}
+        </div>
+      </Link>
+    </li>
+  );
+}
+
+function FilaMercado({ st }) {
+  const { C } = useOutletContext();
+  const hayDato = st.p != null;
+  const celda = { padding: "14px 16px", borderTop: `1px solid ${C.border}`, verticalAlign: "top" };
+  const celdaNum = { ...celda, textAlign: "right", whiteSpace: "nowrap" };
+  return (
+    <tr>
+      <th scope="row" style={{ ...celda, textAlign: "left", fontWeight: 400 }}>
+        <Link to={`/mercados?view=charts&symbol=${encodeURIComponent(st.s)}`} style={{ color: C.text, textDecoration: "none", fontSize: 16, fontWeight: 700 }}>
+          {st.s}
+        </Link>
+        <span style={{ display: "block", fontSize: 14, color: C.sub, lineHeight: 1.45 }}>{st.n}</span>
+      </th>
+      <td style={celda}>
+        <span style={{ display: "inline-block", background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: "2px 10px", fontSize: 13, color: C.sub }}>{st.tipoActivo}</span>
+      </td>
+      <td style={celdaNum}>
+        {hayDato
+          ? <><span style={{ fontSize: 16, fontWeight: 600, color: C.text }}>{fmtPrecio(st.p)}</span> <span style={{ fontSize: 13, color: C.muted }}>{st.moneda}</span></>
+          : <span style={{ color: C.muted }}>—</span>}
+      </td>
+      <td style={celdaNum}><Variacion c={st.c} /></td>
+      <td style={celdaNum}>
+        {st.abs == null
+          ? <span style={{ color: C.muted }}>—</span>
+          : <span style={{ fontSize: 14, color: C.sub }}>{st.abs >= 0 ? "+" : "−"}{Math.abs(st.abs).toFixed(2)} {st.moneda}</span>}
+      </td>
+      <td style={{ ...celda, textAlign: "right", fontSize: 13, color: C.muted, whiteSpace: "nowrap" }}>
+        {st.tipoActivo === "Criptomoneda"
+          ? "24/7"
+          : st.horaCotizacion ? `${fmtHoraET(st.horaCotizacion)} ET` : "Sin hora"}
+      </td>
+    </tr>
+  );
+}
+
+// Esqueleto mientras no ha llegado la primera respuesta: ocupa el mismo alto
+// que la tabla real para que la pagina no salte al cargar.
+function EsqueletoMercados() {
+  const { C } = useOutletContext();
+  return (
+    <div aria-hidden="true" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 }}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="skeleton-pulse" style={{ height: 44, borderRadius: 8, background: C.surfaceAlt, marginBottom: i === 5 ? 0 : 12 }} />
+      ))}
+    </div>
+  );
+}
+
+const FILTROS_TIPO = ["Todos", "ETF", "Criptomoneda"];
+
+function TablaMercados({ sesion }) {
+  const { C, stocks, realLoading, realErr, fetchRealPrices } = useOutletContext();
+  const [busqueda, setBusqueda] = useState("");
+  const [tipo, setTipo] = useState("Todos");
+
+  const termino = busqueda.trim().toLowerCase();
+  const visibles = stocks.filter((st) => {
+    const coincideTipo = tipo === "Todos" || st.tipoActivo === tipo;
+    const coincideTexto = !termino || st.s.toLowerCase().includes(termino) || st.n.toLowerCase().includes(termino) || st.corto.toLowerCase().includes(termino);
+    return coincideTipo && coincideTexto;
+  });
+
+  const hayAlgunDato = stocks.some((st) => st.p != null);
+  const cabecera = { padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "left" };
+  const cabeceraNum = { ...cabecera, textAlign: "right" };
+
+  return (
+    <>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-end", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-end" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label htmlFor="buscar-instrumento" style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Buscar instrumento</label>
+            <input id="buscar-instrumento" type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Símbolo o nombre"
+              style={{ minHeight: 44, minWidth: 240, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "0 14px", color: C.text, fontFamily: F.sans, fontSize: 15 }} />
+          </div>
+          <div role="group" aria-label="Filtrar por tipo de activo" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {FILTROS_TIPO.map((t) => {
+              const activo = tipo === t;
+              return (
+                <button key={t} type="button" onClick={() => setTipo(t)} aria-pressed={activo}
+                  style={{ minHeight: 44, padding: "0 16px", borderRadius: 10, border: `1px solid ${activo ? C.text : C.border}`, background: activo ? C.text : C.card, color: activo ? C.bg : C.text, fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                  {t === "Criptomoneda" ? "Cripto" : t}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <button type="button" onClick={fetchRealPrices} disabled={realLoading}
+          style={{ minHeight: 44, padding: "0 18px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, color: realLoading ? C.muted : C.text, fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: realLoading ? "progress" : "pointer" }}>
+          {realLoading ? "Actualizando…" : "Actualizar"}
+        </button>
+      </div>
+
+      {!hayAlgunDato && realLoading && <EsqueletoMercados />}
+
+      {!hayAlgunDato && !realLoading && (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "28px 32px" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>No hay cotizaciones disponibles</h2>
+          <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, maxWidth: "62ch" }}>
+            {realErr
+              ? "No se pudo conectar con el proveedor de datos. Puedes intentarlo de nuevo; el resto del sitio sigue funcionando."
+              : "Todavía no hemos recibido precios del proveedor."}
+          </p>
+          <div style={{ marginTop: 16 }}><Boton onClick={fetchRealPrices} variante="secundario">Reintentar</Boton></div>
+        </div>
+      )}
+
+      {hayAlgunDato && visibles.length === 0 && (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "28px 32px" }}>
+          <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>Ningún instrumento coincide con la búsqueda. Seguimos ocho instrumentos; prueba con SPY, QQQ o BTC-USD.</p>
+        </div>
+      )}
+
+      {hayAlgunDato && visibles.length > 0 && (
+        <>
+          {/* Tabla en escritorio, fichas en movil: la misma informacion, la
+              forma que cada ancho puede leer. Se alternan por CSS. */}
+          <div className="mercados-tabla" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <caption className="sr-only">Cotizaciones de los instrumentos que sigue FinanzaDR</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" style={cabecera}>Instrumento</th>
+                    <th scope="col" style={cabecera}>Tipo</th>
+                    <th scope="col" style={cabeceraNum}>Precio</th>
+                    <th scope="col" style={cabeceraNum}>Variación</th>
+                    <th scope="col" style={cabeceraNum}>Variación absoluta</th>
+                    <th scope="col" style={cabeceraNum}>Hora del dato</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibles.map((st) => <FilaMercado key={st.s} st={st} />)}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <ul role="list" className="mercados-fichas" style={{ listStyle: "none", display: "none", flexDirection: "column", gap: 12 }}>
+            {visibles.map((st) => <FichaMercado key={st.s} st={st} sesion={sesion} />)}
+          </ul>
+        </>
+      )}
+    </>
+  );
+}
+
+// Glosario alimentado por el propio modelo de instrumentos: antes era una
+// lista aparte, escrita a mano, que podia contradecir a la tabla.
+function GlosarioInstrumentos() {
+  const { C, stocks } = useOutletContext();
+  return (
+    <section aria-labelledby="glosario" style={{ marginTop: 48 }}>
+      <h2 id="glosario" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 16 }}>Qué es cada instrumento</h2>
+      <ul role="list" className="portada-grid-2" style={{ listStyle: "none" }}>
+        {stocks.map((st) => (
+          <li key={st.s} style={{ borderLeft: `2px solid ${C.border}`, paddingLeft: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{st.s} · <span style={{ fontWeight: 400, color: C.sub }}>{st.n}</span></h3>
+            <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.6, marginTop: 4 }}>{st.referencia}. Cotiza en {st.mercado}, en {st.moneda}.</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function MercadosPage() {
-  useDocumentMeta("Mercados en Vivo — FinanzaDR", "Precios en tiempo real de los principales índices, sectores y criptomonedas, explicados en español.");
-  const { stocks, C, lastUpdate, realLoading, fetchRealPrices } = useOutletContext();
-  const [searchParams] = useSearchParams();
-  const [mercadosView, setMercadosView] = useState(searchParams.get("view") === "charts" ? "charts" : "cards");
+  useDocumentMeta(
+    "Mercados — FinanzaDR",
+    "Cotizaciones de los ETFs e instrumentos que seguimos, con su tipo de activo, la hora del dato y gráficos en español."
+  );
+  const { C } = useOutletContext();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Vista y simbolo se DERIVAN de la URL, no son estado local sembrado por
+  // ella. Antes el parametro solo servia de semilla inicial, asi que pulsar
+  // una fila de la tabla (o un simbolo del ticker estando ya en esta pagina)
+  // cambiaba la URL pero no la vista: el componente no se vuelve a montar.
+  // Derivandolo, la pagina siempre muestra lo que dice su direccion, y esa
+  // direccion se puede copiar y compartir.
+  const simboloUrl = searchParams.get("symbol");
+  const vista = searchParams.get("view") === "charts" || simboloUrl ? "charts" : "tabla";
+  const sesion = estadoSesion();
+
+  const cambiarVista = (nueva) => {
+    // Al volver a la tabla se limpia el simbolo: el enlace dejaria de
+    // corresponder a lo que se esta viendo.
+    setSearchParams(nueva === "charts" ? { view: "charts" } : {}, { replace: true });
+  };
+
+  const abrirSimbolo = (simbolo) => {
+    const parametros = { view: "charts", symbol: simbolo };
+    const intervalo = searchParams.get("interval");
+    if (intervalo) parametros.interval = intervalo;
+    setSearchParams(parametros);
+  };
 
   return (
     <div className="fade-in">
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
-        <SectionTitle>Mercados Wall Street</SectionTitle>
-        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-          {["cards","charts"].map(v => (
-            <button key={v} onClick={() => setMercadosView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${mercadosView===v?C.gold:C.border}`, background:mercadosView===v?C.goldBg:"none", color:mercadosView===v?C.gold:C.muted, fontFamily:F.sans, fontSize:12, fontWeight:600, cursor:"pointer" }}>
-              {v==="cards"?"📋 Ver Cards":"📈 Ver Charts"}
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Mercados</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, margin: "8px 0 20px", maxWidth: "62ch" }}>
+        Los ocho instrumentos que seguimos a diario, con su tipo de activo y la hora del dato. Los gráficos abren cualquier símbolo.
+      </p>
+
+      <div style={{ marginBottom: 24 }}><EstadoMercado sesion={sesion} /></div>
+
+      <div role="group" aria-label="Forma de ver el mercado" style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+        {[["tabla", "Cotizaciones"], ["charts", "Gráficos"]].map(([clave, etiqueta]) => {
+          const activa = vista === clave;
+          return (
+            <button key={clave} type="button" onClick={() => cambiarVista(clave)} aria-pressed={activa}
+              style={{ minHeight: 44, padding: "0 18px", borderRadius: 10, border: `1px solid ${activa ? C.text : C.border}`, background: activa ? C.text : C.card, color: activa ? C.bg : C.text, fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              {etiqueta}
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
-      {mercadosView === "cards" ? (
-        <div>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8, flexWrap:"wrap", gap:12 }}>
-            <Label style={{ margin:0 }}>── Precios en tiempo real · Powered by Finnhub</Label>
-            <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-              {lastUpdate && <span style={{ fontFamily:F.sans, fontSize:11, color:C.green }}>✓ Consultado {fmtHoraET(lastUpdate)} ET</span>}
-              <button onClick={fetchRealPrices} disabled={realLoading} style={{ background:realLoading?C.border:C.gold, color:realLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:realLoading?"not-allowed":"pointer", fontFamily:F.sans, fontSize:11, fontWeight:700 }}>
-                {realLoading?"⏳ Cargando...":"🔴 Actualizar Precios"}
-              </button>
-            </div>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:12, marginBottom:32 }}>
-            {stocks.map(st => <StockCard key={st.s} st={st} />)}
-          </div>
-          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px" }}>
-            <Label>── ¿Qué es cada activo?</Label>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16 }}>
-              {[{s:"SPY",d:"ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU."},{s:"QQQ",d:"ETF del NASDAQ 100 — dominado por tecnología."},{s:"DIA",d:"ETF del Dow Jones — las 30 empresas más importantes de EE.UU."},{s:"IWM",d:"ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU."},{s:"TLT",d:"ETF de bonos del Tesoro a 20+ años."},{s:"XLU",d:"ETF del sector Utilities — estable en mercados volátiles."},{s:"GLD",d:"ETF del oro — activo refugio por excelencia."},{s:"BTC-USD",d:"Bitcoin — la criptomoneda más importante del mundo."}].map((x,i) => (
-                <div key={i} style={{ borderLeft:`3px solid ${C.gold}`, paddingLeft:16 }}>
-                  <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>{x.s}</div>
-                  <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{x.d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+
+      {vista === "tabla" ? (
+        <>
+          <TablaMercados sesion={sesion} />
+          <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.6, marginTop: 16, maxWidth: "72ch" }}>
+            Cotizaciones de Finnhub. El estado de la sesión se calcula con el horario regular de NYSE (9:30 a 16:00, hora de Nueva York) y no contempla feriados; Bitcoin cotiza sin horario de cierre.
+          </p>
+          <GlosarioInstrumentos />
+        </>
       ) : (
-        <div>
-          <p style={{ fontSize:13, color:C.sub, marginBottom:20 }}>Gráficas en tiempo real powered by TradingView</p>
-          <TradingViewCharts />
-        </div>
+        /* key por simbolo: al abrir otro instrumento desde el ticker estando ya
+           en esta vista, el componente se remonta y el campo de busqueda vuelve a
+           mostrar el simbolo que se esta viendo. */
+        <TradingViewCharts key={simboloUrl || "sin-simbolo"} simbolo={simboloUrl || ""} onSimbolo={abrirSimbolo} intervalo={searchParams.get("interval")} />
       )}
     </div>
   );
@@ -2646,23 +2947,6 @@ function Label({ children, style: s }) {
   return <div style={{ fontFamily:F.sans, fontSize:10, color:C.gold, letterSpacing:2, textTransform:"uppercase", marginBottom:14, ...s }}>{children}</div>;
 }
 
-function StockCard({ st }) {
-  const { C } = useOutletContext();
-  const hayDato = st.p != null && st.c != null;
-  return (
-    <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${hayDato ? (st.c >= 0 ? C.green : C.red) : C.border}` }}>
-      <div style={{ display:"flex", justifyContent:"space-between", gap:8, marginBottom:3 }}>
-        <span style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.text }}>{st.s}</span>
-        <Variacion c={st.c} size={12} />
-      </div>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{st.corto || st.n} · {st.tipoActivo}</div>
-      <div style={{ fontFamily:F.sans, fontSize:20, fontWeight:600, color:hayDato ? C.text : C.muted }}>
-        {hayDato ? `${fmtPrecio(st.p)} ${st.moneda || ""}`.trim() : "—"}
-      </div>
-    </div>
-  );
-}
-
 function BriefingStockCard({ p }) {
   const { C } = useOutletContext();
   const disponible = p.precio != null;
@@ -3007,62 +3291,126 @@ function CompoundCalc() {
   );
 }
 
-function TradingViewCharts() {
-  const { C } = useOutletContext();
-  const [input, setInput] = useState("");
-  const [activeSymbol, setActiveSymbol] = useState("");
-  const [activeInterval, setActiveInterval] = useState("D");
-  const chartRef = useRef(null);
-  const intervals = [{v:"1",l:"1m"},{v:"5",l:"5m"},{v:"15",l:"15m"},{v:"60",l:"1H"},{v:"D",l:"1D"},{v:"W",l:"1W"},{v:"M",l:"1M"}];
-  const loadChart = (sym) => { const s=sym.trim().toUpperCase(); if(!s) return; setActiveSymbol(s); };
+// Gráficos de TradingView.
+//
+// Tres cosas cambian respecto a la versión anterior:
+// 1. El widget hereda el tema del sitio. Antes iba fijo en "dark" con colores
+//    en hexadecimal quemados, así que en tema claro aparecía un rectángulo
+//    negro en medio de la página.
+// 2. Desaparece nuestra fila de intervalos. El widget ya trae su propia barra
+//    con intervalos, símbolo y herramientas: duplicarla obligaba además a
+//    recrear el widget entero en cada clic. El intervalo inicial se siembra
+//    desde la URL y a partir de ahí lo maneja el proveedor.
+// 3. El símbolo entra por ?symbol=, de modo que el ticker, la portada y la
+//    tabla abren el instrumento correspondiente en vez de una pantalla vacía.
+//
+// Sobre la actualidad del dato: el widget muestra lo que TradingView sirva
+// para cada instrumento, que en muchos casos va con retraso y así lo etiqueta
+// el propio gráfico. No lo afirmamos como tiempo real desde aquí.
+const INTERVALOS_VALIDOS = ["1", "5", "15", "60", "D", "W", "M"];
+
+function TradingViewCharts({ simbolo, onSimbolo, intervalo: intervaloUrl }) {
+  const { C, dark, stocks } = useOutletContext();
+  // Lo unico local es el texto que se esta escribiendo; el simbolo elegido
+  // vive en la URL, que es lo que se comparte y lo que abre el ticker.
+  const [input, setInput] = useState(simbolo || "");
+  const intervalo = INTERVALOS_VALIDOS.includes(intervaloUrl) ? intervaloUrl : "D";
+  const contenedorRef = useRef(null);
+
+  const abrir = (valor) => {
+    const limpio = (valor || "").trim().toUpperCase();
+    if (!limpio) return;
+    setInput(limpio);
+    onSimbolo(limpio);
+  };
+
   useEffect(() => {
-    if (!activeSymbol||!chartRef.current) return;
-    chartRef.current.innerHTML="";
-    const container=document.createElement("div");
-    container.id="tv_chart_main";
-    chartRef.current.appendChild(container);
-    const script=document.createElement("script");
-    script.src="https://s3.tradingview.com/tv.js";
-    script.async=true;
-    script.onload=()=>{ if(window.TradingView) new window.TradingView.widget({container_id:"tv_chart_main",symbol:activeSymbol,interval:activeInterval,timezone:"America/New_York",theme:"dark",style:"1",locale:"es",toolbar_bg:"#0d0f1e",enable_publishing:false,hide_top_toolbar:false,save_image:false,backgroundColor:C.bg,gridColor:"#1a1e3540",width:"100%",height:560,studies:["RSI@tv-basicstudies","MACD@tv-basicstudies"],show_popup_button:true}); };
+    if (!simbolo || !contenedorRef.current) return;
+    const anfitrion = contenedorRef.current;
+    anfitrion.innerHTML = "";
+    const caja = document.createElement("div");
+    caja.id = "tv_chart_main";
+    caja.style.height = "100%";
+    anfitrion.appendChild(caja);
+
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.async = true;
+    script.onload = () => {
+      if (!window.TradingView) return;
+      new window.TradingView.widget({
+        container_id: "tv_chart_main",
+        symbol: simbolo,
+        interval: intervalo,
+        timezone: "America/New_York",
+        theme: dark ? "dark" : "light",
+        style: "1",
+        locale: "es",
+        backgroundColor: C.card,
+        enable_publishing: false,
+        save_image: false,
+        autosize: true,
+      });
+    };
     document.head.appendChild(script);
-    return ()=>{ if(script.parentNode) script.parentNode.removeChild(script); };
-  },[activeSymbol,activeInterval]);
+
+    return () => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      anfitrion.innerHTML = "";
+    };
+  }, [simbolo, intervalo, dark, C.card]);
+
   return (
     <div>
-      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"28px 32px",marginBottom:24,textAlign:"center"}}>
-        <div style={{fontFamily:F.sans,fontSize:10,color:C.gold,letterSpacing:3,marginBottom:12}}>BUSCA CUALQUIER ACTIVO</div>
-        <h2 style={{fontFamily:F.serif,fontSize:24,fontWeight:800,color:C.text,marginBottom:8}}>Acciones · ETFs · Cripto · Materias Primas</h2>
-        <p style={{fontSize:13,color:C.sub,marginBottom:24}}>Escribe el símbolo del activo — AAPL, BTC, GLD, EUR/USD.</p>
-        <div style={{display:"flex",gap:10,maxWidth:500,margin:"0 auto",flexWrap:"wrap"}}>
-          <input type="text" placeholder="Ej: AAPL, TSLA, BTC, GLD..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&loadChart(input)}
-            style={{flex:1,minWidth:200,background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 18px",color:C.text,fontFamily:F.sans,fontSize:15,outline:"none"}}/>
-         <button onClick={()=>loadChart(input)} style={{background:C.gold,color:"#000",border:"none",padding:"14px 28px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>Ver Chart {'>'}</button>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 24px", marginBottom: 24 }}>
+        <label htmlFor="buscar-simbolo" style={{ display: "block", fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>
+          Símbolo del instrumento
+        </label>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <input id="buscar-simbolo" type="search" value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") abrir(input); }}
+            placeholder="AAPL, TSLA, BTCUSD, GLD…"
+            style={{ flex: "1 1 240px", minHeight: 48, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "0 14px", color: C.text, fontFamily: F.sans, fontSize: 15 }} />
+          <Boton onClick={() => abrir(input)}>Ver gráfico</Boton>
         </div>
+        <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.6, marginTop: 12 }}>
+          Acciones, ETFs, criptomonedas y divisas. Los que seguimos a diario:
+        </p>
+        <ul role="list" style={{ listStyle: "none", display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+          {stocks.map((st) => (
+            <li key={st.s}>
+              <button type="button" onClick={() => abrir(st.s)}
+                style={{ minHeight: 44, padding: "0 14px", borderRadius: 999, border: `1px solid ${simbolo === st.s ? C.text : C.border}`, background: simbolo === st.s ? C.text : C.card, color: simbolo === st.s ? C.bg : C.text, fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                {st.s}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
-      {activeSymbol ? (
-        <div>
-          <div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}>
-            <span style={{fontFamily:F.sans,fontSize:10,color:C.muted,marginRight:8}}>INTERVALO:</span>
-            {intervals.map(iv=>(<button key={iv.v} onClick={()=>setActiveInterval(iv.v)} style={{padding:"6px 14px",borderRadius:5,border:`1px solid ${activeInterval===iv.v?C.gold:C.border}`,background:activeInterval===iv.v?C.goldBg:"none",color:activeInterval===iv.v?C.gold:C.muted,fontFamily:F.sans,fontSize:11,fontWeight:600,cursor:"pointer"}}>{iv.l}</button>))}
+
+      {simbolo ? (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 20px", borderBottom: `1px solid ${C.border}`, background: C.surfaceAlt }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{simbolo}</h2>
+            <span style={{ fontSize: 13, color: C.sub }}>Gráfico de TradingView</span>
           </div>
-          <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,overflow:"hidden"}}>
-            <div style={{background:"#09091a",padding:"12px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${C.border}`}}>
-              <div style={{fontFamily:F.sans,fontSize:14,fontWeight:700,color:C.gold}}>{activeSymbol}</div>
-              <div style={{fontFamily:F.sans,fontSize:10,color:C.muted}}>Powered by TradingView</div>
-            </div>
-            <div ref={chartRef} style={{width:"100%",minHeight:560}}/>
-          </div>
+          {/* Altura en pixeles explicita por breakpoint (nunca 100%): el widget
+              se dimensiona con autosize dentro de este contenedor. */}
+          <div ref={contenedorRef} className="tv-contenedor" />
         </div>
       ) : (
-        <div style={{textAlign:"center",padding:"60px 32px",background:C.card,border:`1px dashed ${C.border}`,borderRadius:12}}>
-          <div style={{fontSize:48,marginBottom:16}}>📊</div>
-          <p style={{fontFamily:F.sans,fontSize:13,color:C.muted,lineHeight:1.8}}>Escribe el símbolo arriba y presiona <strong style={{color:C.gold}}>Ver Chart</strong></p>
-          <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:20,flexWrap:"wrap"}}>
-            {["SPY","QQQ","AAPL","NVDA","TSLA","BTC","GLD"].map(s=>(<button key={s} onClick={()=>{setInput(s);loadChart(s);}} style={{background:C.goldBg,border:`1px solid ${C.gold}40`,color:C.gold,padding:"6px 14px",borderRadius:6,cursor:"pointer",fontFamily:F.sans,fontSize:12,fontWeight:600}}>{s}</button>))}
-          </div>
+        <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 14, padding: "40px 32px" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>Elige un instrumento</h2>
+          <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, maxWidth: "62ch" }}>
+            Escribe un símbolo o toca uno de los botones de arriba para abrir su gráfico.
+          </p>
         </div>
       )}
+
+      <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.6, marginTop: 16, maxWidth: "72ch" }}>
+        Los gráficos los provee TradingView, con sus propias fuentes de datos y condiciones de uso. Según el instrumento y el mercado, la cotización del gráfico puede ir con retraso; el propio gráfico lo indica cuando así ocurre. No coincide necesariamente con la cotización de la tabla, que viene de Finnhub.
+      </p>
     </div>
   );
 }
