@@ -4867,7 +4867,14 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
 
         ctx.fillStyle = paleta.card;
         ctx.beginPath();
-        ctx.roundRect(x, y, anchoFicha, altoFicha, 14);
+        // roundRect no existe en Safari anterior a 16: sin este respaldo, la
+        // excepción cortaría el dibujado y la imagen saldría en blanco en esos
+        // dispositivos. Se pierde la esquina redondeada, no la tarjeta.
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(x, y, anchoFicha, altoFicha, 14);
+        } else {
+          ctx.rect(x, y, anchoFicha, altoFicha);
+        }
         ctx.fill();
         ctx.strokeStyle = paleta.border;
         ctx.lineWidth = 1;
