@@ -30,23 +30,27 @@ const INSTRUMENTOS = [
   { titulo: "Los bonos del Tesoro a 10 años suben ante señales de desaceleración económica", resumen: "El rendimiento del bono del Tesoro a 10 años cayó al 4.2% mientras los inversores buscan activos más seguros. Los datos de manufactura mostraron una contracción por segundo mes consecutivo.", fuente: "Financial Times", tiempo: "Hace 9 horas", categoria: "Bonos" },
   { titulo: "Dow Jones supera los 42,000 puntos impulsado por sector financiero y salud", resumen: "El Dow Jones Industrial Average superó los 42,000 puntos esta semana, liderado por fuertes ganancias en el sector financiero y de salud.", fuente: "MarketWatch", tiempo: "Hace 11 horas", categoria: "Mercados" },
 ];const ARTICULOS = [
-  { tipo: "pasos", titulo: "Cómo abrir tu primera cuenta de inversión en EE.UU. siendo inmigrante", nivel: "Principiante", tema: "Cuentas y brokers", extracto: "No necesitas ser ciudadano ni tener SSN para invertir en Wall Street. Con un ITIN y tu pasaporte puedes abrir tu cuenta esta misma semana.", intro: "Uno de los mitos más grandes que detiene a los inmigrantes latinos es pensar que hay que ser ciudadano o residente legal permanente para invertir en la bolsa de EE.UU. No es cierto. No necesitas un Social Security Number (SSN) — con un ITIN (Individual Taxpayer Identification Number) y tu pasaporte puedes abrir una cuenta de inversión legalmente, sin importar tu estatus migratorio.", pasos: [
-      { titulo: "Consigue tu ITIN si no tienes SSN", texto: "Si no calificas para un SSN, solicita un ITIN con el formulario W-7 del IRS. Es un número de identificación fiscal que te permite invertir y declarar impuestos sin ser ciudadano. Puedes tramitarlo tú mismo o con ayuda de un Acceptance Agent certificado por el IRS." },
-      { titulo: "Elige tu broker según tu experiencia", texto: "Si eres principiante, Robinhood o Webull tienen las apps más simples y sin comisiones para abrir tu primera cuenta. Si vives fuera de EE.UU. y buscas más flexibilidad, Interactive Brokers acepta clientes internacionales y da acceso a mercados globales." },
-      { titulo: "Verifica tu identidad", texto: "Todos los brokers te van a pedir tu pasaporte vigente y un comprobante de dirección (recibo de servicios, estado de cuenta bancario o contrato de renta) para cumplir con las regulaciones KYC (Know Your Customer)." },
-      { titulo: "Conecta tu cuenta bancaria en EE.UU.", texto: "Necesitas una cuenta bancaria en Estados Unidos para transferir fondos. Si aún no tienes una, bancos como Chase o Bank of America, o cuentas digitales como Chime, aceptan ITIN para abrir una cuenta básica." },
-      { titulo: "Haz tu primer depósito y compra tu primer ETF", texto: "Con $1 dólar ya puedes empezar. Deposita desde tu cuenta bancaria y compra tu primer ETF, como VOO (S&P 500), para tener exposición diversificada a las 500 empresas más grandes de EE.UU. desde el primer día." },
-    ], cierre: "No dejes que la falta de papeles perfectos te detenga. Miles de inmigrantes ya invierten legalmente en Wall Street con un ITIN y un pasaporte — el sistema está diseñado para que puedas participar, solo falta que des el primer paso.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["inmigrantes", "ITIN", "primeros pasos"] },
-  { tipo: "stats", titulo: "Qué es el S&P 500 y por qué deberías empezar ahí", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "500 empresas, un solo clic. Así es como los principiantes más listos empiezan a invertir en Wall Street sin tener que escoger acciones individuales.", intro: "El S&P 500 es el índice bursátil más seguido del mundo: agrupa a las 500 empresas más grandes que cotizan en Estados Unidos, desde Apple y Microsoft hasta Coca-Cola y JPMorgan. Cuando compras un ETF que sigue el S&P 500 (como VOO o SPY), en una sola compra te conviertes en dueño de una pequeña parte de las 500 compañías más importantes del país — sin tener que investigar ni elegir acciones individuales.", stats: [
-      { valor: "10%", label: "Retorno anual histórico promedio" },
-      { valor: "500", label: "Empresas más grandes de EE.UU." },
-      { valor: "94", label: "Años de historia del índice" },
+  { tipo: "pasos", titulo: "Cómo abrir tu primera cuenta de inversión en EE.UU. siendo inmigrante", slug: "abrir-cuenta-inversion-con-itin", nivel: "Principiante", tema: "Cuentas y brokers", extracto: "No necesitas ser ciudadano ni tener SSN para invertir en Wall Street. Con un ITIN y tu pasaporte puedes abrir cuenta en varios brokers: estos son los requisitos y los plazos reales.", intro: "Uno de los mitos más grandes que detiene a los inmigrantes latinos es pensar que hay que ser ciudadano o residente legal permanente para invertir en la bolsa de EE.UU. No es cierto: no hace falta un Social Security Number (SSN), y con un ITIN (Individual Taxpayer Identification Number) y tu pasaporte hay brokers que abren cuenta. Lo que sí cambia según tu situación es qué broker te acepta y qué formulario fiscal te corresponde, porque cada entidad fija su propia política y no todas admiten los mismos perfiles. Esta guía es educativa: antes de abrir una cuenta, confirma los requisitos con el broker y, si tu caso fiscal no es sencillo, con un profesional.", pasos: [
+      { titulo: "Consigue tu ITIN si no tienes SSN", texto: "Si no calificas para un SSN, solicita un ITIN con el formulario W-7 del IRS. Es un número de identificación fiscal para quien tiene una obligación tributaria en EE.UU. y no puede obtener un SSN. Puedes tramitarlo por tu cuenta o con un Acceptance Agent certificado por el IRS. Cuenta con tiempo: el propio IRS pide esperar unas 7 semanas para recibir respuesta, y de 9 a 11 semanas si solicitas entre el 15 de enero y el 30 de abril o desde el extranjero. No es un trámite de una semana." },
+      { titulo: "Elige tu broker y confirma que acepta tu caso", texto: "Entre los más usados por principiantes están Robinhood y Webull, por lo simple de sus apps; Interactive Brokers es el más habitual para quien vive fuera de EE.UU. Ahora bien, cada broker decide a quién acepta y con qué documentos: antes de empezar el trámite, verifica en su propia web si admite clientes con ITIN y tu situación de residencia. Las políticas cambian con el tiempo y no todas las cuentas están disponibles en todos los países." },
+      { titulo: "Prepara los documentos de identidad", texto: "Los brokers están obligados a verificar quién eres (reglas KYC, Know Your Customer). Lo habitual es que pidan pasaporte vigente y un comprobante de dirección —recibo de servicios, estado de cuenta bancario o contrato de renta—, y también el formulario fiscal que corresponda a tu estatus: W-9 si eres residente fiscal en EE.UU., W-8BEN si no lo eres. La lista exacta la fija cada entidad." },
+      { titulo: "Conecta una cuenta desde la que transferir", texto: "Para depositar necesitas una cuenta bancaria que tu broker admita, normalmente en EE.UU. Hay bancos y cuentas digitales que abren cuenta con ITIN, pero la política depende de la entidad, del producto y hasta del estado, y cambia con el tiempo: pregúntalo en el banco antes de darlo por hecho, en vez de guiarte por lo que le funcionó a otra persona." },
+      { titulo: "Haz tu primer depósito y compra tu primer ETF", texto: "Cuánto necesitas depende del broker: si permite comprar fracciones de acción, puedes empezar con unos pocos dólares; si no, harán falta al menos el precio de una participación completa más lo que cobre por la operación. Un ETF que siga al S&P 500, como VOO, te da exposición a 500 grandes empresas estadounidenses en una sola compra. No es una recomendación de compra: es el ejemplo más común para explicar la idea de diversificar." },
+    ], cierre: "Invertir con ITIN y pasaporte es posible y legal, y no depende de tener papeles perfectos. Lo que sí toca es hacer la tarea previa: confirmar que el broker acepta tu caso, tener claro qué formulario fiscal te corresponde y contar con los plazos del IRS si todavía no tienes el ITIN.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", revisadoEn: "Septiembre 2026", fuentes: [
+      { texto: "IRS — Individual Taxpayer Identification Number (requisitos, formulario W-7 y plazos de tramitación)", url: "https://www.irs.gov/individuals/individual-taxpayer-identification-number" },
+    ], tags: ["inmigrantes", "ITIN", "primeros pasos"] },
+  { tipo: "stats", titulo: "Qué es el S&P 500 y por qué deberías empezar ahí", slug: "que-es-el-sp-500", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "500 empresas, un solo clic. Así es como los principiantes más listos empiezan a invertir en Wall Street sin tener que escoger acciones individuales.", intro: "El S&P 500 es el índice bursátil más seguido del mundo: agrupa a las 500 empresas más grandes que cotizan en Estados Unidos, desde Apple y Microsoft hasta Coca-Cola y JPMorgan. Cuando compras un ETF que sigue el S&P 500 (como VOO o SPY), en una sola compra te conviertes en dueño de una pequeña parte de las 500 compañías más importantes del país — sin tener que investigar ni elegir acciones individuales.", stats: [
+      { valor: "≈10%", label: "Retorno medio anual histórico, nominal y con dividendos reinvertidos" },
+      { valor: "500", label: "Grandes empresas estadounidenses en el índice" },
+      { valor: "1957", label: "Año en que nació el índice tal como lo conocemos" },
     ], razones: [
       { titulo: "Diversificación automática", texto: "En vez de apostar tu dinero a una sola empresa, tu inversión se reparte entre las 500 compañías más grandes de EE.UU. Si una cae, las otras 499 amortiguan el golpe." },
-      { titulo: "94 años de historial con 10% de retorno anual", texto: "Desde su creación en 1928, el S&P 500 ha entregado un retorno promedio del 10% anual, incluyendo guerras, recesiones y crisis financieras. El tiempo en el mercado importa más que el momento perfecto para entrar." },
+      { titulo: "Casi setenta años de historial, con un promedio cercano al 10% anual", texto: "S&P Dow Jones Indices lanzó el índice de 500 empresas en marzo de 1957, sobre índices anteriores más pequeños que se remontan a los años veinte. En ese recorrido, atravesando guerras, recesiones y crisis financieras, su retorno medio anual a largo plazo ronda el 10% en términos nominales —es decir, antes de descontar la inflación— y contando los dividendos reinvertidos. Es un promedio de décadas, no lo que rinde cada año: hay años de caídas fuertes, y rendimientos pasados no garantizan rendimientos futuros." },
       { titulo: "No necesitas ser un experto", texto: "No hace falta leer balances financieros ni seguir noticias de empresas todos los días. El índice se ajusta solo: las empresas que crecen ganan más peso, y las que caen salen del índice." },
-    ], cierre: "La estrategia que mejor funciona con el S&P 500 se llama dollar-cost averaging (DCA): invertir una cantidad fija cada mes, sin importar si el mercado sube o baja. Así compras más acciones cuando los precios están bajos y menos cuando están altos, sin tener que adivinar el momento perfecto — y con el tiempo, esa disciplina simple suele superar a quienes intentan predecir el mercado.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["S&P 500", "ETF", "principiantes"] },
-  { tipo: "tabla", titulo: "Acciones vs ETFs vs Fondos Mutuos: cuál te conviene", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "Los tres términos se confunden todo el tiempo, pero no son lo mismo. Aquí la diferencia explicada en una tabla, sin tecnicismos.", intro: "Es normal confundir estos tres términos cuando estás empezando: acciones individuales, ETFs y fondos mutuos son formas distintas de poner tu dinero en el mercado, cada una con sus propias reglas de juego. Entender la diferencia te ayuda a elegir la que mejor se ajusta a tu nivel de experiencia y tolerancia al riesgo.", tabla: {
+    ], cierre: "La estrategia que mejor funciona con el S&P 500 se llama dollar-cost averaging (DCA): invertir una cantidad fija cada mes, sin importar si el mercado sube o baja. Así compras más acciones cuando los precios están bajos y menos cuando están altos, sin tener que adivinar el momento perfecto — y con el tiempo, esa disciplina simple suele superar a quienes intentan predecir el mercado.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", revisadoEn: "Septiembre 2026", fuentes: [
+      { texto: "S&P Dow Jones Indices — historia del S&P 500 (lanzamiento en marzo de 1957 e índices predecesores)" },
+    ], tags: ["S&P 500", "ETF", "principiantes"] },
+  { tipo: "tabla", titulo: "Acciones vs ETFs vs Fondos Mutuos: cuál te conviene", slug: "acciones-etfs-o-fondos-mutuos", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "Los tres términos se confunden todo el tiempo, pero no son lo mismo. Aquí la diferencia explicada en una tabla, sin tecnicismos.", intro: "Es normal confundir estos tres términos cuando estás empezando: acciones individuales, ETFs y fondos mutuos son formas distintas de poner tu dinero en el mercado, cada una con sus propias reglas de juego. Entender la diferencia te ayuda a elegir la que mejor se ajusta a tu nivel de experiencia y tolerancia al riesgo.", tabla: {
       columnas: ["Acciones Individuales", "ETFs", "Fondos Mutuos"],
       filas: [
         { label: "Diversificación instantánea", valores: [false, true, true] },
@@ -61,14 +65,14 @@ const INSTRUMENTOS = [
       { titulo: "ETFs", ventaja: { titulo: "Diversificación instantánea, bajo costo y fácil de comprar", texto: "Con una sola compra tienes exposición a cientos de empresas, con comisiones mínimas (algunas de 0.03% anual), y se compran igual que una acción, en cualquier momento del día de mercado." }, desventaja: { titulo: "No hay ganancias explosivas de una sola empresa", texto: "Como tu dinero está repartido entre muchas compañías, ninguna por sí sola puede disparar el valor de tu inversión de la noche a la mañana." } },
       { titulo: "Fondos Mutuos", texto: "Son parecidos a los ETFs — también diversifican tu dinero entre muchas empresas — pero se compran directo con la empresa administradora del fondo (no en tu app de broker), su precio se actualiza solo una vez al final del día de mercado, y generalmente cobran comisiones más altas que un ETF equivalente." },
     ], cierre: "Para principiantes, los ETFs son la mejor opción: diversificación, bajo costo y simplicidad. Las acciones individuales tienen sentido cuando ya tengas más experiencia y puedas investigar empresas a fondo. Y los fondos mutuos, generalmente, solo valen la pena si tu empleador los ofrece dentro de un plan 401(k) — ahí la elección ya está hecha por ti.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["acciones", "ETFs", "fondos mutuos"] },
-  { tipo: "pasos", titulo: "Qué es un ETF y cómo funciona", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "Descubre qué son los ETFs, por qué son la herramienta favorita de quien empieza a invertir, y cómo comprar tu primero paso a paso.", intro: "Si alguna vez escuchaste a alguien decir \"compré SPY\" o \"invierto en QQQ\", están hablando de ETFs — probablemente la herramienta de inversión más importante para alguien que está empezando, y una de las menos explicadas en español. Un ETF (Exchange-Traded Fund, o fondo cotizado en bolsa) es una \"canasta\" que contiene muchas acciones o activos diferentes, empaquetados en un solo producto que tú compras como si fuera una sola acción. Por ejemplo, cuando compras una acción de SPY, en realidad estás comprando un pedacito de las 500 empresas más grandes de Estados Unidos al mismo tiempo.", pasos: [
+  { tipo: "pasos", titulo: "Qué es un ETF y cómo funciona", slug: "que-es-un-etf", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "Descubre qué son los ETFs, por qué son la herramienta favorita de quien empieza a invertir, y cómo comprar tu primero paso a paso.", intro: "Si alguna vez escuchaste a alguien decir \"compré SPY\" o \"invierto en QQQ\", están hablando de ETFs — probablemente la herramienta de inversión más importante para alguien que está empezando, y una de las menos explicadas en español. Un ETF (Exchange-Traded Fund, o fondo cotizado en bolsa) es una \"canasta\" que contiene muchas acciones o activos diferentes, empaquetados en un solo producto que tú compras como si fuera una sola acción. Por ejemplo, cuando compras una acción de SPY, en realidad estás comprando un pedacito de las 500 empresas más grandes de Estados Unidos al mismo tiempo.", pasos: [
       { titulo: "¿Qué es un ETF?", texto: "Un ETF (Exchange-Traded Fund, o fondo cotizado en bolsa) es una \"canasta\" que contiene muchas acciones o activos diferentes, empaquetados en un solo producto que tú compras como si fuera una sola acción. Por ejemplo, cuando compras una acción de SPY, en realidad estás comprando un pedacito de las 500 empresas más grandes de Estados Unidos al mismo tiempo." },
       { titulo: "Por qué la diversificación importa", texto: "En vez de apostar todo tu dinero a que una sola empresa le vaya bien, tu dinero se reparte entre cientos de empresas a la vez. Si una empresa le va mal, las otras pueden compensarlo. Esto reduce mucho el riesgo comparado con comprar acciones individuales, especialmente cuando estás empezando." },
       { titulo: "Tipos comunes de ETFs", texto: "De índice amplio (como SPY o VOO, que siguen el S&P 500), sectoriales (enfocados en una industria específica, como QQQ para tecnología), de bonos (como TLT, más conservador), e internacionales (que invierten fuera de Estados Unidos)." },
       { titulo: "Cómo comprar tu primer ETF", texto: "Abre una cuenta en un broker (Robinhood o Tastytrade son opciones accesibles), busca el símbolo del ETF que te interesa, decide cuánto invertir (muchos brokers permiten comprar fracciones), y compra pensando en el largo plazo, no en especular día a día." },
       { titulo: "Lo que un ETF no te garantiza", texto: "Ningún ETF está libre de riesgo — si el mercado completo baja, tu ETF también baja, porque está compuesto por ese mismo mercado. Si ya sabes qué es un ETF y quieres comparar ETFs contra acciones individuales o fondos mutuos en detalle, tenemos una guía dedicada a esa comparación." },
     ], cierre: "Los ETFs no son una fórmula mágica, pero sí una de las formas más accesibles y razonables de empezar a invertir sin necesitar ser experto en analizar empresas individuales. Con estos cinco pasos ya tienes lo esencial para dar el primer paso con confianza.", nota: "Este contenido es educativo e informativo. No constituye asesoría financiera personalizada. Considera hablar con un asesor financiero certificado antes de tomar decisiones de inversión.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["ETF", "Principiantes", "Diversificación"] },
-  { tipo: "herramientas", titulo: "Cómo leer el Heat Map y el Sentimiento del Mercado", nivel: "Intermedio", tema: "Herramientas", extracto: "Dos herramientas gratis que ya tienes en FinanzaDR te dicen en segundos cómo está el mercado hoy — aquí cómo interpretarlas.", intro: "No hace falta pagar por un terminal de Bloomberg para saber cómo está el mercado hoy. En FinanzaDR ya tienes dos herramientas gratuitas, disponibles ahora mismo en el menú, que leídas juntas te dan una foto rápida y clara del estado general de Wall Street: el Heat Map y el índice de Sentimiento.", herramientas: [
+  { tipo: "herramientas", titulo: "Cómo leer el Heat Map y el Sentimiento del Mercado", slug: "leer-mapa-de-calor-y-sentimiento", nivel: "Intermedio", tema: "Herramientas", extracto: "Dos herramientas gratis que ya tienes en FinanzaDR te dicen en segundos cómo está el mercado hoy — aquí cómo interpretarlas.", intro: "No hace falta pagar por un terminal de Bloomberg para saber cómo está el mercado hoy. En FinanzaDR ya tienes dos herramientas gratuitas, disponibles ahora mismo en el menú, que leídas juntas te dan una foto rápida y clara del estado general de Wall Street: el Heat Map y el índice de Sentimiento.", herramientas: [
       { icono: "🔲", nombre: "Heat Map", ruta: "/heatmap", cta: "Ver Heat Map en vivo", descripcion: "El Heat Map muestra el S&P 500 completo como un mosaico de bloques de colores, actualizado en vivo.", puntos: [
           { titulo: "El tamaño del bloque = importancia", texto: "Cada bloque representa una empresa. Mientras más grande es el bloque, mayor es su capitalización de mercado (market cap) — por eso Apple o Microsoft ocupan mucho más espacio que una empresa pequeña." },
           { titulo: "El color = si sube o baja", texto: "Verde significa que la acción subió hoy, rojo significa que bajó. No hay ambigüedad: el color te dice la dirección de un vistazo." },
@@ -79,7 +83,7 @@ const INSTRUMENTOS = [
           { titulo: "Número alto = codicia", texto: "Cuando el índice sube hacia 100, significa que todos quieren comprar y el optimismo está por las nubes. Es momento de tener más cautela, no de perseguir subidas con dinero que no puedes permitirte perder." },
         ], tip: "Como dice el dicho de Warren Buffett: sé temeroso cuando otros son codiciosos, y codicioso cuando otros son temerosos. El índice de Sentimiento te dice exactamente en cuál de los dos extremos está el mercado hoy." },
     ], cierre: "Usadas juntas, estas dos herramientas te dan el pulso del mercado en menos de un minuto: el Heat Map te muestra qué está pasando ahora mismo, empresa por empresa, y el Sentimiento te dice si esa reacción es miedo pasajero o codicia peligrosa. Revísalas antes de tomar cualquier decisión de compra o venta importante.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["heat map", "sentimiento", "herramientas"] },
-  { tipo: "simulador", titulo: "Interés compuesto explicado con ejemplos reales", nivel: "Principiante", tema: "Largo plazo y retiro", extracto: "Einstein lo llamó la octava maravilla del mundo. Así es como $200 al mes pueden convertirse en más de un millón de dólares — o en menos de la mitad, dependiendo de cuándo empieces.", intro: "El interés compuesto es el motor detrás de casi cualquier fortuna construida a largo plazo. La idea es simple pero poderosa: no solo ganas intereses sobre tu dinero original, también ganas intereses sobre los intereses que ya generaste. Cada año, la base sobre la que creces es más grande — por eso el crecimiento se acelera con el tiempo, en vez de ser una línea recta.", ejemplo: {
+  { tipo: "simulador", titulo: "Interés compuesto explicado con ejemplos reales", slug: "interes-compuesto", nivel: "Principiante", tema: "Largo plazo y retiro", extracto: "Einstein lo llamó la octava maravilla del mundo. Así es como $200 al mes pueden convertirse en más de un millón de dólares — o en menos de la mitad, dependiendo de cuándo empieces.", intro: "El interés compuesto es el motor detrás de casi cualquier fortuna construida a largo plazo. La idea es simple pero poderosa: no solo ganas intereses sobre tu dinero original, también ganas intereses sobre los intereses que ya generaste. Cada año, la base sobre la que creces es más grande — por eso el crecimiento se acelera con el tiempo, en vez de ser una línea recta.", ejemplo: {
       titulo: "$1,000 invertidos al 10% anual, sin aportes adicionales:",
       filas: [
         { periodo: "Año 1", valor: "$1,100" },
@@ -94,7 +98,7 @@ const INSTRUMENTOS = [
         { edad: "Empezando a los 35 años", aporte: "$200/mes", resultado: "~$452,000", detalle: "a los 65 años — menos de la mitad, por perder solo 10 años" },
       ],
     }, cierre: "Mueve los sliders del simulador de abajo y compruébalo tú mismo: entre más joven empieces, menos dinero necesitas aportar cada mes para llegar al mismo destino. El tiempo, no el monto, es el ingrediente más importante del interés compuesto.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["interés compuesto", "calculadora", "estrategia"] },
-  { tipo: "errores", titulo: "Errores comunes de principiantes al invertir (y cómo evitarlos)", nivel: "Principiante", tema: "Primeros pasos", extracto: "El 80% de los inversores primerizos repiten los mismos 6 errores. Identifícalos antes de que te cuesten dinero.", intro: "Invertir no es solo cuestión de elegir los activos correctos — la mayoría de las pérdidas de los principiantes no vienen de una mala elección de inversión, sino de errores de comportamiento que se repiten una y otra vez. Reconocerlos es el primer paso para evitarlos.", errores: [
+  { tipo: "errores", titulo: "Errores comunes de principiantes al invertir (y cómo evitarlos)", slug: "errores-comunes-al-empezar", nivel: "Principiante", tema: "Primeros pasos", extracto: "El 80% de los inversores primerizos repiten los mismos 6 errores. Identifícalos antes de que te cuesten dinero.", intro: "Invertir no es solo cuestión de elegir los activos correctos — la mayoría de las pérdidas de los principiantes no vienen de una mala elección de inversión, sino de errores de comportamiento que se repiten una y otra vez. Reconocerlos es el primer paso para evitarlos.", errores: [
       { titulo: "Intentar adivinar cuándo comprar y vender (market timing)", texto: "Ni los profesionales que se dedican a esto de tiempo completo aciertan consistentemente el momento perfecto para entrar o salir del mercado. Intentarlo casi siempre te cuesta más de lo que ganas — la estrategia que funciona es invertir de forma constante, sin importar el momento." },
       { titulo: "Invertir dinero que vas a necesitar pronto", texto: "El mercado sube y baja en el corto plazo. Solo invierte el dinero que no vas a necesitar en los próximos 3 a 5 años como mínimo, para no verte obligado a vender en un mal momento." },
       { titulo: "No diversificar", texto: "Poner todo tu dinero en una sola acción, por muy sólida que parezca, es una apuesta. Ni las empresas más grandes están garantizadas — repartir tu inversión entre muchas empresas reduce el riesgo sin sacrificar el potencial de crecimiento." },
@@ -102,7 +106,7 @@ const INSTRUMENTOS = [
       { titulo: "No empezar por miedo a no saber lo suficiente", texto: "Nadie empieza sabiéndolo todo. Empezar con poco dinero mientras aprendes es mucho mejor que esperar el momento en que te sientas \"listo\" — ese momento casi nunca llega, y mientras tanto pierdes años de crecimiento compuesto." },
       { titulo: "Revisar tu portafolio obsesivamente", texto: "Ver tu cuenta todos los días aumenta la ansiedad y la tentación de reaccionar a movimientos que no importan a largo plazo. Para inversiones a largo plazo, revisar tu portafolio una vez al mes es más que suficiente." },
     ], cierre: "Cometer uno de estos errores no te descalifica como inversionista — todos los grandes inversionistas empezaron sin saberlo todo. La diferencia entre quienes tienen éxito a largo plazo y quienes no está en reconocer estos patrones y corregirlos antes de que le cuesten caro a tu patrimonio.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["errores", "principiantes", "psicología"] },
-  { tipo: "tabla", titulo: "Roth IRA vs Traditional IRA: cuál te conviene abrir", nivel: "Intermedio", tema: "Largo plazo y retiro", extracto: "Las dos cuentas de retiro más comunes en Estados Unidos funcionan muy diferente en cuanto a impuestos. Aquí la diferencia explicada simple, para que elijas con más claridad.", intro: "Si trabajas en Estados Unidos y quieres ahorrar para el retiro por tu cuenta (más allá del 401k de tu trabajo, si lo tienes), un IRA (Individual Retirement Account, o cuenta de retiro individual) es una de las herramientas más accesibles. La gran pregunta es cuál abrir: Roth o Traditional — la diferencia no está en dónde inviertes tu dinero, sino en cuándo pagas impuestos sobre él.", tabla: {
+  { tipo: "tabla", titulo: "Roth IRA vs Traditional IRA: cuál te conviene abrir", slug: "roth-ira-o-traditional-ira", nivel: "Intermedio", tema: "Largo plazo y retiro", extracto: "Las dos cuentas de retiro más comunes en Estados Unidos funcionan muy diferente en cuanto a impuestos. Aquí la diferencia explicada simple, para que elijas con más claridad.", intro: "Si trabajas en Estados Unidos y quieres ahorrar para el retiro por tu cuenta (más allá del 401k de tu trabajo, si lo tienes), un IRA (Individual Retirement Account, o cuenta de retiro individual) es una de las herramientas más accesibles. La gran pregunta es cuál abrir: Roth o Traditional — la diferencia no está en dónde inviertes tu dinero, sino en cuándo pagas impuestos sobre él.", tabla: {
       columnas: ["Roth IRA", "Traditional IRA"],
       filas: [
         { label: "Contribuyes con dinero después de haber pagado impuestos", valores: [true, false] },
@@ -118,7 +122,7 @@ const INSTRUMENTOS = [
 ];
 
 const ARTICULOS_OPCIONES = [
-  { tipo: "estrategia", id: "covered-call", nombre: "Covered Call", sesgo: "neutral", nivel: "básico",
+  { tipo: "estrategia", id: "covered-call", nombre: "Covered Call", sesgo: "neutral", nivel: "básico", riesgo: { etiqueta: "Riesgo alto", nota: "Conservas íntegra la caída de la acción; la prima solo amortigua una parte, y renuncias a la subida por encima del strike." },
     extracto: "La estrategia de opciones más común para generar ingreso extra sobre acciones que ya tienes, a cambio de limitar tu ganancia máxima.",
     queEs: "Un Covered Call combina dos posiciones: tienes 100 acciones de una empresa, y vendes una opción Call sobre esas mismas acciones, cobrando una prima de inmediato. Se llama 'covered' (cubierta) porque ya posees las acciones que respaldan la operación — si te asignan (te obligan a vender), simplemente entregas acciones que ya tenías, sin necesidad de comprarlas en el mercado a un precio desfavorable.",
     legs: [
@@ -131,13 +135,16 @@ const ARTICULOS_OPCIONES = [
     cuandoUsarla: "Se usa cuando tienes una opinión neutral a moderadamente alcista sobre una acción que ya posees — no esperas que suba de forma explosiva en el corto plazo, pero tampoco quieres venderla. Es una forma común de generar ingreso mensual extra sobre un portafolio existente, muy usada por inversionistas de largo plazo con acciones 'aburridas' y estables.",
     ejemplo: "Supongamos que compraste 100 acciones de una empresa a $100 cada una ($10,000 total). Vendes una Call con strike $110 a 30-45 días, cobrando una prima de $3 por acción ($300 total). Tu punto de equilibrio baja a $97 (los $100 que pagaste, menos los $3 de prima). Si la acción cierra en $110 o más al vencimiento, te asignan: vendes tus acciones a $110, quedándote con una ganancia total de $1,300 ($1,000 de la subida de la acción + $300 de la prima) — esa es tu ganancia máxima, sin importar cuánto más haya subido la acción. Si la acción se queda entre $97 y $110, conservas las acciones y te quedas con la prima como ingreso extra. Si cae por debajo de $97, empiezas a perder dinero, aunque $3 menos de lo que hubieras perdido sin la estrategia.",
     riesgos: "El riesgo principal no es 'perder más de lo normal' — es el costo de oportunidad: si la acción sube muchísimo más allá de tu strike, dejas esa ganancia extra sobre la mesa, porque estás obligado a vender al precio pactado. También sigues expuesto a la caída del precio de la acción casi en su totalidad, con la prima como único colchón. Además, necesitas aprobación de tu broker para operar opciones (incluso las estrategias 'cubiertas' requieren cierto nivel de autorización).",
-    payoffPoints: [
-      { precio: 70, ganancia: -2700 }, { precio: 80, ganancia: -1700 }, { precio: 90, ganancia: -700 }, { precio: 97, ganancia: 0 },
-      { precio: 100, ganancia: 300 }, { precio: 110, ganancia: 1300 }, { precio: 120, ganancia: 1300 }, { precio: 130, ganancia: 1300 }, { precio: 140, ganancia: 1300 },
-    ],
+    ejemploParams: {
+      precioSubyacente: 100,
+      patas: [
+        { instrumento: "accion", accion: "compra", precioEntrada: 100, acciones: 100 },
+        { instrumento: "call", accion: "venta", strike: 110, prima: 3 },
+      ],
+    },
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Covered Call", "Ingreso", "Básico"],
     nota: "Este contenido es educativo e informativo. Operar opciones conlleva riesgos significativos y requiere aprobación previa de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar opciones." },
-  { tipo: "estrategia", id: "naked-put", nombre: "Naked Put (Put al Descubierto)", sesgo: "alcista", nivel: "avanzado",
+  { tipo: "estrategia", id: "naked-put", nombre: "Naked Put (Put al Descubierto)", sesgo: "alcista", nivel: "avanzado", riesgo: { etiqueta: "Riesgo alto", nota: "Si la acción se desploma puedes acabar comprándola muy por encima de su precio de mercado. La pérdida solo está acotada porque el precio no puede bajar de cero." },
     extracto: "Vender una opción Put sin tener el efectivo completo reservado, apostando a que la acción se mantendrá por encima de un precio determinado. Alto riesgo, no recomendada para principiantes.",
     queEs: "En un Naked Put, vendes una opción Put sin reservar el efectivo completo necesario para comprar las acciones si te asignan — dependes del margen de tu cuenta como respaldo, en vez de tener el dinero completo apartado. Esto la diferencia de un 'Cash-Secured Put', donde sí reservas el 100% del efectivo necesario y el riesgo es más controlado. Cobras la prima de inmediato, apostando a que el precio de la acción se mantendrá por encima de tu strike.",
     legs: [
@@ -149,13 +156,15 @@ const ARTICULOS_OPCIONES = [
     cuandoUsarla: "Se usa cuando tienes una opinión neutral a moderadamente alcista sobre una acción, y estás dispuesto a comprarla al precio strike si cae — pero sin tener necesariamente el efectivo completo reservado, confiando en el margen de tu cuenta. Algunos operadores la usan para 'entrar' a una acción que quieren poseer a un precio más bajo que el actual, cobrando la prima mientras esperan.",
     ejemplo: "Una acción cotiza a $100. Vendes un Put con strike $95 a 30-45 días, cobrando una prima de $2.50 por acción ($250 total por contrato). Tu punto de equilibrio es $92.50. Si la acción cierra en $95 o más al vencimiento, el Put expira sin valor y te quedas con los $250 completos de ganancia. Si cae por debajo de $95, te asignan: estás obligado a comprar 100 acciones a $95 cada una ($9,500), sin importar cuánto haya caído el precio real de mercado. Si la acción se desploma a $40, por ejemplo, tu pérdida sería de aproximadamente $5,250 en ese momento.",
     riesgos: "Esta es una de las estrategias de opciones con mayor riesgo real para un principiante. Como no reservaste el efectivo completo, tu broker puede emitir una 'llamada de margen' (margin call) si la acción cae fuerte, exigiéndote depositar más dinero de inmediato o cerrando la posición de forma forzada, posiblemente en el peor momento. La pérdida potencial es mucho mayor que en un Covered Call, y requiere el nivel más alto de autorización de opciones en la mayoría de brokers. La variante 'Cash-Secured Put' (con el efectivo completo reservado) es considerablemente más segura y suele ser el punto de entrada recomendado antes de intentar esta versión.",
-    payoffPoints: [
-      { precio: 50, ganancia: -4250 }, { precio: 60, ganancia: -3250 }, { precio: 70, ganancia: -2250 }, { precio: 80, ganancia: -1250 },
-      { precio: 90, ganancia: -250 }, { precio: 92.5, ganancia: 0 }, { precio: 95, ganancia: 250 }, { precio: 100, ganancia: 250 }, { precio: 110, ganancia: 250 }, { precio: 140, ganancia: 250 },
-    ],
+    ejemploParams: {
+      precioSubyacente: 100,
+      patas: [
+        { instrumento: "put", accion: "venta", strike: 95, prima: 2.5 },
+      ],
+    },
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Naked Put", "Avanzado", "Riesgo Alto"],
     nota: "Este contenido es educativo e informativo. El Naked Put es una estrategia de alto riesgo que puede generar pérdidas significativas y requiere aprobación de nivel avanzado de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
-  { tipo: "estrategia", id: "put-credit-spread", nombre: "Put Credit Spread (Spread de Crédito con Puts)", sesgo: "alcista", nivel: "intermedio",
+  { tipo: "estrategia", id: "put-credit-spread", nombre: "Put Credit Spread (Spread de Crédito con Puts)", sesgo: "alcista", nivel: "intermedio", riesgo: { etiqueta: "Riesgo definido", nota: "La pata comprada fija de antemano la pérdida máxima: la diferencia entre strikes menos el crédito recibido." },
     extracto: "Una versión más controlada del Naked Put: vendes una Put y compras otra Put más barata como protección, limitando tu riesgo máximo desde el inicio.",
     queEs: "Un Put Credit Spread combina dos opciones Put: vendes una Put con un strike más alto (cobrando una prima mayor) y compras simultáneamente otra Put con un strike más bajo (pagando una prima menor) como protección. La diferencia entre ambas primas es tu ganancia neta ('crédito') recibida de inmediato. A diferencia del Naked Put, tu pérdida máxima queda limitada y definida desde el momento en que abres la posición — ya sabes exactamente cuánto puedes perder en el peor escenario.",
     legs: [
@@ -168,13 +177,16 @@ const ARTICULOS_OPCIONES = [
     cuandoUsarla: "Se usa cuando tienes una opinión neutral a moderadamente alcista, similar al Naked Put, pero prefieres conocer y limitar tu riesgo máximo desde el inicio en vez de exponerte a una pérdida potencialmente mucho mayor. Es una forma común de 'vender opciones' con un perfil de riesgo mucho más controlado, y generalmente requiere menos nivel de autorización de tu broker que un Naked Put.",
     ejemplo: "Una acción cotiza a $100. Vendes una Put con strike $95 cobrando $3.00 por acción ($300), y compras una Put con strike $90 pagando $1.50 por acción ($150). Tu crédito neto es $150 ($300 − $150). Tu punto de equilibrio es $93.50. Si la acción cierra en $95 o más, ambas Puts expiran sin valor y te quedas con los $150 completos. Si cae a $90 o menos, tu pérdida queda topada en $350 ($500 de diferencia entre strikes, menos los $150 de crédito recibido) — sin importar si la acción cae a $80 o a $20, tu pérdida máxima sigue siendo $350.",
     riesgos: "Aunque el riesgo está limitado (a diferencia del Naked Put), sigue siendo una pérdida real y puede ocurrir con relativa frecuencia si subestimas la volatilidad de la acción. Requiere gestionar dos contratos en vez de uno, lo cual implica el doble de comisiones y algo más de complejidad de seguimiento. También sigue requiriendo aprobación de opciones de tu broker, aunque generalmente de un nivel intermedio, no el más alto.",
-    payoffPoints: [
-      { precio: 80, ganancia: -350 }, { precio: 85, ganancia: -350 }, { precio: 90, ganancia: -350 }, { precio: 93.5, ganancia: 0 },
-      { precio: 95, ganancia: 150 }, { precio: 100, ganancia: 150 }, { precio: 110, ganancia: 150 }, { precio: 130, ganancia: 150 },
-    ],
+    ejemploParams: {
+      precioSubyacente: 100,
+      patas: [
+        { instrumento: "put", accion: "venta", strike: 95, prima: 3 },
+        { instrumento: "put", accion: "compra", strike: 90, prima: 1.5 },
+      ],
+    },
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Credit Spread", "Intermedio", "Riesgo Limitado"],
     nota: "Este contenido es educativo e informativo. Los spreads de opciones requieren aprobación de tu broker y conllevan riesgos, aunque limitados y conocidos desde el inicio. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
-  { tipo: "estrategia", id: "call-credit-spread", nombre: "Call Credit Spread (Spread de Crédito con Calls)", sesgo: "bajista", nivel: "intermedio",
+  { tipo: "estrategia", id: "call-credit-spread", nombre: "Call Credit Spread (Spread de Crédito con Calls)", sesgo: "bajista", nivel: "intermedio", riesgo: { etiqueta: "Riesgo definido", nota: "La pata comprada fija de antemano la pérdida máxima: la diferencia entre strikes menos el crédito recibido." },
     extracto: "El espejo bajista del Put Credit Spread: vendes una Call y compras otra Call más cara como protección, apostando a que la acción NO subirá más allá de cierto punto.",
     queEs: "Un Call Credit Spread combina dos opciones Call: vendes una Call con un strike más bajo (cobrando una prima mayor) y compras simultáneamente otra Call con un strike más alto (pagando una prima menor) como protección. La diferencia entre ambas primas es tu crédito neto recibido de inmediato. Tu pérdida máxima queda limitada y conocida desde el momento en que abres la posición, sin importar cuánto suba la acción.",
     legs: [
@@ -187,13 +199,16 @@ const ARTICULOS_OPCIONES = [
     cuandoUsarla: "Se usa cuando tienes una opinión neutral a moderadamente bajista — no necesariamente esperas que la acción se desplome, solo que no suba más allá de cierto nivel en el corto plazo. Es la forma más común de 'apostar a la baja' con riesgo limitado y conocido, sin necesitar vender la acción en corto (short selling), que tiene sus propios riesgos aún mayores.",
     ejemplo: "Una acción cotiza a $100. Vendes una Call con strike $105 cobrando $3.00 por acción ($300), y compras una Call con strike $110 pagando $1.50 por acción ($150). Tu crédito neto es $150. Tu punto de equilibrio es $106.50. Si la acción cierra en $105 o menos, ambas Calls expiran sin valor y te quedas con los $150 completos. Si sube a $110 o más, tu pérdida queda topada en $350 — sin importar si la acción sube a $115 o a $200, tu pérdida máxima sigue siendo $350.",
     riesgos: "El riesgo principal es equivocarse en la dirección: si la acción sube con fuerza (por ejemplo, tras un buen reporte de resultados), tocas tu pérdida máxima rápidamente. Requiere gestionar dos contratos, con el doble de comisiones. También conviene recordar que las acciones tienden a subir más frecuentemente que bajar en el largo plazo, así que esta estrategia suele usarse con una tesis específica de corto plazo, no como apuesta general.",
-    payoffPoints: [
-      { precio: 80, ganancia: 150 }, { precio: 90, ganancia: 150 }, { precio: 100, ganancia: 150 }, { precio: 105, ganancia: 150 },
-      { precio: 106.5, ganancia: 0 }, { precio: 110, ganancia: -350 }, { precio: 120, ganancia: -350 }, { precio: 140, ganancia: -350 },
-    ],
+    ejemploParams: {
+      precioSubyacente: 100,
+      patas: [
+        { instrumento: "call", accion: "venta", strike: 105, prima: 3 },
+        { instrumento: "call", accion: "compra", strike: 110, prima: 1.5 },
+      ],
+    },
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Credit Spread", "Intermedio", "Bajista"],
     nota: "Este contenido es educativo e informativo. Los spreads de opciones requieren aprobación de tu broker y conllevan riesgos, aunque limitados y conocidos desde el inicio. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
-  { tipo: "estrategia", id: "short-strangle", nombre: "Short Strangle (Estrangulamiento Vendido)", sesgo: "neutral", nivel: "avanzado",
+  { tipo: "estrategia", id: "short-strangle", nombre: "Short Strangle (Estrangulamiento Vendido)", sesgo: "neutral", nivel: "avanzado", riesgo: { etiqueta: "Riesgo ilimitado", nota: "El lado de la Call no tiene tope: cuanto más suba la acción, más se pierde, sin límite." },
     extracto: "La estrategia 'madre' del Iron Condor: vendes una Put y una Call al mismo tiempo, sin ninguna protección, apostando a que la acción se mantendrá en un rango. Riesgo muy elevado en ambas direcciones.",
     queEs: "Un Short Strangle combina un Naked Put (que ya conoces) y su espejo, una Call vendida sin cobertura, al mismo tiempo sobre la misma acción. Vendes una Put con strike por debajo del precio actual, y una Call con strike por encima — cobrando dos primas de inmediato. Ganas si la acción se queda dentro de ese rango entre ambos strikes al vencimiento. Es esencialmente la versión 'sin protección' de lo que luego se convierte en un Iron Condor al agregarle alas de protección.",
     legs: [
@@ -206,14 +221,16 @@ const ARTICULOS_OPCIONES = [
     cuandoUsarla: "Se usa cuando esperas que una acción se mantenga dentro de un rango específico, sin movimientos fuertes en ninguna dirección — típicamente en periodos de baja volatilidad esperada. Requiere el nivel más alto de autorización de opciones en prácticamente todos los brokers, precisamente por el riesgo ilimitado del lado de la Call.",
     ejemplo: "Una acción cotiza a $100. Vendes una Put con strike $90 cobrando $2.00 ($200), y una Call con strike $110 cobrando $2.00 ($200). Tu crédito total es $400. Tus puntos de equilibrio son $86 y $114. Si la acción cierra entre $90 y $110, te quedas con los $400 completos. Si sube a $130, por ejemplo, tu pérdida del lado de la Call ya supera los $1,600 y sigue creciendo mientras la acción siga subiendo — sin límite. Si cae a $70, tu pérdida del lado de la Put sería de aproximadamente $1,600 en ese momento.",
     riesgos: "Esta es, junto al Naked Put, de las estrategias de mayor riesgo real en este Opcionario — con el agravante de que el lado de la Call no tiene límite superior de pérdida en absoluto. Requiere una cuenta con margen sustancial, vigilancia constante, y está pensada para operadores experimentados que entienden bien la gestión de riesgo. Es precisamente esta falta de protección la que resuelve la siguiente estrategia que vamos a ver: el Iron Condor.",
-    payoffPoints: [
-      { precio: 60, ganancia: -2600 }, { precio: 70, ganancia: -1600 }, { precio: 80, ganancia: -600 }, { precio: 86, ganancia: 0 },
-      { precio: 90, ganancia: 400 }, { precio: 100, ganancia: 400 }, { precio: 110, ganancia: 400 }, { precio: 114, ganancia: 0 },
-      { precio: 120, ganancia: -600 }, { precio: 130, ganancia: -1600 }, { precio: 140, ganancia: -2600 },
-    ],
+    ejemploParams: {
+      precioSubyacente: 100,
+      patas: [
+        { instrumento: "put", accion: "venta", strike: 90, prima: 2 },
+        { instrumento: "call", accion: "venta", strike: 110, prima: 2 },
+      ],
+    },
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Short Strangle", "Avanzado", "Riesgo Ilimitado"],
     nota: "Este contenido es educativo e informativo. El Short Strangle incluye una pata sin cobertura con riesgo teóricamente ilimitado y requiere el nivel más alto de autorización de tu broker. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
-  { tipo: "estrategia", id: "iron-condor", nombre: "Iron Condor", sesgo: "neutral", nivel: "avanzado",
+  { tipo: "estrategia", id: "iron-condor", nombre: "Iron Condor", sesgo: "neutral", nivel: "avanzado", riesgo: { etiqueta: "Riesgo definido", nota: "Los dos spreads acotan la pérdida por ambos lados, aunque montar y gestionar cuatro patas exige experiencia." },
     extracto: "El Short Strangle, pero con las dos alas de protección de los credit spreads agregadas. Riesgo limitado y conocido en ambas direcciones — probablemente la estrategia más popular entre traders de opciones experimentados.",
     queEs: "Un Iron Condor combina 4 opciones a la vez: es un Short Strangle (Put vendida + Call vendida) al que le agregas dos 'alas' de protección — una Put comprada con strike más bajo, y una Call comprada con strike más alto. En esencia, es un Put Credit Spread y un Call Credit Spread abiertos al mismo tiempo sobre la misma acción. A diferencia del Short Strangle, tu pérdida máxima queda limitada y conocida en ambas direcciones desde el momento en que abres la posición — resolviendo exactamente el problema de riesgo ilimitado del Short Strangle.",
     legs: [
@@ -226,13 +243,17 @@ const ARTICULOS_OPCIONES = [
     maxPerdida: "Limitada al ancho de cualquiera de las dos alas menos el crédito recibido — en nuestro ejemplo, $250 ($500 de ancho de ala − $250 de crédito). A diferencia del Short Strangle, este es un número fijo y conocido, sin importar cuánto suba o baje la acción más allá de las alas.",
     puntoEquilibrio: "Dos puntos: strike de Put vendida menos crédito recibido (ej. $87.50), y strike de Call vendida más crédito recibido (ej. $112.50).",
     cuandoUsarla: "Se usa en el mismo escenario que el Short Strangle — esperas que la acción se mantenga en un rango — pero cuando prefieres saber y limitar tu pérdida máxima exacta desde el inicio, en vez de exponerte al riesgo ilimitado del lado de la Call. Es una de las estrategias favoritas de traders de opciones más experimentados precisamente por esta relación de riesgo conocido, aunque a cambio la ganancia máxima también es menor que en un Short Strangle equivalente.",
-    ejemplo: "Una acción cotiza a $100. Vendes una Put $90 y compras una Put $85 (Put Credit Spread, crédito $150), y vendes una Call $110 y compras una Call $115 (Call Credit Spread, crédito $100). Tu crédito total es $250. Tus puntos de equilibrio son $87.50 y $112.50. Si la acción cierra entre $90 y $110, te quedas con los $250 completos. Si sube a $130 o cae a $60, tu pérdida máxima sigue siendo $250 en cualquiera de los dos casos — nunca más que eso, gracias a las alas de protección.",
+    ejemplo: "Una acción cotiza a $100. Vendes una Put $90 cobrando $2.50 y compras una Put $85 pagando $1.00 (Put Credit Spread, crédito neto $150), y vendes una Call $110 cobrando $2.00 y compras una Call $115 pagando $1.00 (Call Credit Spread, crédito neto $100). Tu crédito total es $250. Tus puntos de equilibrio son $87.50 y $112.50. Si la acción cierra entre $90 y $110, te quedas con los $250 completos. Si sube a $130 o cae a $60, tu pérdida máxima sigue siendo $250 en cualquiera de los dos casos — nunca más que eso, gracias a las alas de protección.",
     riesgos: "Aunque el riesgo es limitado y conocido (a diferencia del Short Strangle), gestionar 4 contratos distintos implica más comisiones y más complejidad de seguimiento. La ganancia máxima suele ser más modesta en proporción al capital en riesgo, comparada con estrategias más simples. Requiere aprobación de nivel avanzado de tu broker, y entender bien las 4 patas antes de operar — un error al armar la posición puede desbalancear la protección que se busca.",
-    payoffPoints: [
-      { precio: 60, ganancia: -250 }, { precio: 80, ganancia: -250 }, { precio: 85, ganancia: -250 }, { precio: 87.5, ganancia: 0 },
-      { precio: 90, ganancia: 250 }, { precio: 100, ganancia: 250 }, { precio: 110, ganancia: 250 }, { precio: 112.5, ganancia: 0 },
-      { precio: 115, ganancia: -250 }, { precio: 130, ganancia: -250 }, { precio: 140, ganancia: -250 },
-    ],
+    ejemploParams: {
+      precioSubyacente: 100,
+      patas: [
+        { instrumento: "put", accion: "venta", strike: 90, prima: 2.5 },
+        { instrumento: "put", accion: "compra", strike: 85, prima: 1 },
+        { instrumento: "call", accion: "venta", strike: 110, prima: 2 },
+        { instrumento: "call", accion: "compra", strike: 115, prima: 1 },
+      ],
+    },
     autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["Opciones", "Iron Condor", "Avanzado", "Riesgo Limitado"],
     nota: "Este contenido es educativo e informativo. El Iron Condor requiere aprobación de nivel avanzado de tu broker y gestionar 4 contratos simultáneamente. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
 ];
@@ -959,7 +980,7 @@ function PortadaHero() {
 
 // B. Ruta para principiantes: tres pasos que enlazan a contenido que ya existe.
 const RUTA_PASOS = [
-  { to: "/aprende?articulo=3", titulo: "Entiende qué son las acciones y los ETFs", texto: "Qué compras exactamente cuando compras un ETF, y por qué es el punto de partida más común." },
+  { to: "/aprende?guia=que-es-un-etf", titulo: "Entiende qué son las acciones y los ETFs", texto: "Qué compras exactamente cuando compras un ETF, y por qué es el punto de partida más común." },
   { to: "/brokers", titulo: "Conoce los requisitos y compara brokers", texto: "Qué documentos piden, qué cobran y a qué perfil de inversor atiende cada uno." },
   { to: "/calculadora", titulo: "Explora el interés compuesto", texto: "Simula cómo crece un aporte mensual sostenido en el tiempo, con tus propias cifras." },
 ];
@@ -1236,7 +1257,7 @@ function GuiasDestacadas() {
           if (!post) return null;
           return (
             <li key={idx} style={{ display: "flex" }}>
-              <Link to={`/aprende?articulo=${idx}`} className="tarjeta-enlace" style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
+              <Link to={`/aprende?guia=${post.slug}`} className="tarjeta-enlace" style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, color: C.muted }}>
                   <span style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: "3px 10px", fontWeight: 600, color: C.sub }}>{post.nivel}</span>
                   <span>{post.tema}</span>
@@ -2328,66 +2349,254 @@ function MonitoreoPage() {
   );
 }
 
-function AprendePage() {
-  useDocumentMeta("Aprende a Invertir Desde Cero — FinanzaDR", "Guías claras en español sobre ETFs, acciones, cuentas de retiro y más, para quien está empezando a invertir.");
-  const { C } = useOutletContext();
-  const [searchParams] = useSearchParams();
-  const articuloParam = parseInt(searchParams.get("articulo"), 10);
-  const articuloInicial = Number.isInteger(articuloParam) && articuloParam >= 0 && articuloParam < ARTICULOS.length ? articuloParam : 0;
-  const [expanded, setExpanded] = useState(articuloInicial);
-  const articuloRefs = useRef([]);
+// ===========================================================================
+// APRENDE
+// ===========================================================================
 
-  useEffect(() => {
-    if (searchParams.get("articulo") !== null && articuloRefs.current[articuloInicial]) {
-      articuloRefs.current[articuloInicial].scrollIntoView({ behavior:"smooth", block:"start" });
-    }
-  }, []);
+// Temas de la biblioteca, en el orden en que tiene sentido recorrerlos.
+const TEMAS_APRENDE = ["Primeros pasos", "Acciones y ETFs", "Cuentas y brokers", "Largo plazo y retiro", "Herramientas"];
+const NIVELES_APRENDE = ["Principiante", "Intermedio"];
+
+// Secuencia recomendada para quien llega sin saber por dónde empezar. Son
+// índices de ARTICULOS: entender el producto, entender el índice más común,
+// abrir la cuenta y, ya con dinero dentro, ver qué hace el tiempo.
+const SECUENCIA_APRENDE = [3, 1, 0, 5];
+
+// Resuelve la guía pedida por la URL. Se aceptan las dos formas: ?guia=<slug>,
+// que es la que enlaza el sitio, y ?articulo=<n>, que es la que llevaban los
+// enlaces anteriores y sigue funcionando.
+function resolverGuia(searchParams) {
+  const slug = searchParams.get("guia");
+  if (slug) {
+    const i = ARTICULOS.findIndex((post) => post.slug === slug);
+    if (i !== -1) return i;
+  }
+  const n = parseInt(searchParams.get("articulo"), 10);
+  if (Number.isInteger(n) && n >= 0 && n < ARTICULOS.length) return n;
+  return null;
+}
+
+const enlaceGuia = (post, i) => `/aprende?guia=${post.slug || i}`;
+
+function CuerpoGuia({ post }) {
+  if (post.tipo === "stats") return <ArticuloStats post={post} />;
+  if (post.tipo === "tabla") return <ArticuloTabla post={post} />;
+  if (post.tipo === "herramientas") return <ArticuloHerramientas post={post} />;
+  if (post.tipo === "simulador") return <ArticuloSimulador post={post} />;
+  if (post.tipo === "errores") return <ArticuloErrores post={post} />;
+  return <ArticuloPasos post={post} />;
+}
+
+function MetaGuia({ post, tamano = 13 }) {
+  const { C } = useOutletContext();
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: tamano, color: C.muted }}>
+      <span style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: "3px 10px", fontWeight: 600, color: C.sub }}>{post.nivel}</span>
+      <span>{post.tema}</span>
+      <span aria-hidden="true">·</span>
+      <span>{tiempoLectura(post)} min de lectura</span>
+    </div>
+  );
+}
+
+function FichaGuia({ post, indice, paso }) {
+  const { C } = useOutletContext();
+  return (
+    <li style={{ display: "flex" }}>
+      <Link to={enlaceGuia(post, indice)} className="tarjeta-enlace"
+        style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
+        {paso && (
+          <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", background: C.goldBg, color: C.goldText, fontSize: 14, fontWeight: 700 }}>{paso}</span>
+        )}
+        <MetaGuia post={post} />
+        <h3 style={{ fontSize: 20, fontWeight: 700, color: C.text, lineHeight: 1.35 }}>
+          {paso ? <span className="sr-only">{`Paso ${paso}: `}</span> : null}{post.titulo}
+        </h3>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{post.extracto}</p>
+        <span style={{ fontSize: 14, fontWeight: 600, color: C.goldText, marginTop: "auto", paddingTop: 6 }}>Leer la guía →</span>
+      </Link>
+    </li>
+  );
+}
+
+function BibliotecaAprende() {
+  const { C } = useOutletContext();
+  const [nivel, setNivel] = useState("Todos");
+  const [tema, setTema] = useState("Todos");
+
+  const visibles = ARTICULOS
+    .map((post, indice) => ({ post, indice }))
+    .filter(({ post }) => (nivel === "Todos" || post.nivel === nivel) && (tema === "Todos" || post.tema === tema));
+
+  const botonFiltro = (activo) => ({
+    minHeight: 44, padding: "0 16px", borderRadius: 10,
+    border: `1px solid ${activo ? C.text : C.border}`,
+    background: activo ? C.text : C.card, color: activo ? C.bg : C.text,
+    fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer",
+  });
 
   return (
     <div className="fade-in">
-      <SectionTitle>Aprende a Invertir</SectionTitle>
-      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Guías completas para inversores principiantes e intermedios</p>
-      <div style={{ display:"grid", gap:24 }}>
-        {ARTICULOS.map((post,i) => (
-          <div key={i} ref={el => articuloRefs.current[i] = el} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
-            <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
-              {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:F.sans }}>#{t}</span>)}
-            </div>
-            <h3 style={{ fontFamily:F.serif, fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.titulo}</h3>
-            <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
-            {expanded===i ? (
-              post.tipo==="stats" ? <ArticuloStats post={post} />
-              : post.tipo==="tabla" ? <ArticuloTabla post={post} />
-              : post.tipo==="herramientas" ? <ArticuloHerramientas post={post} />
-              : post.tipo==="simulador" ? <ArticuloSimulador post={post} />
-              : post.tipo==="errores" ? <ArticuloErrores post={post} />
-              : <ArticuloPasos post={post} />
-            ) : (
-              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
-            )}
-            <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:600 }}>
-             {expanded===i?"Ver menos":"Leer guia completa"}
-            </button>
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Aprende a invertir</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, margin: "8px 0 0", maxWidth: "62ch" }}>
+        Guías en español, ordenadas por nivel y por tema. Cada una dice cuánto se tarda en leerla y de dónde sale lo que afirma.
+      </p>
+
+      <section aria-labelledby="secuencia" style={{ marginTop: 48 }}>
+        <h2 id="secuencia" style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1.25 }}>Por dónde empezar</h2>
+        <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, margin: "8px 0 24px", maxWidth: "62ch" }}>
+          Si es tu primera vez, este es el orden que recomendamos: entender qué compras, entender dónde lo compras y ver qué hace el tiempo con ello.
+        </p>
+        <ol className="portada-grid-2" style={{ listStyle: "none" }}>
+          {SECUENCIA_APRENDE.map((indice, i) => {
+            const post = ARTICULOS[indice];
+            if (!post) return null;
+            return <FichaGuia key={indice} post={post} indice={indice} paso={i + 1} />;
+          })}
+        </ol>
+      </section>
+
+      <section aria-labelledby="biblioteca" style={{ marginTop: 64 }}>
+        <h2 id="biblioteca" style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1.25, marginBottom: 20 }}>Todas las guías</h2>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+          <div role="group" aria-label="Filtrar por nivel" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: C.sub, marginRight: 4 }}>Nivel</span>
+            {["Todos", ...NIVELES_APRENDE].map((n) => (
+              <button key={n} type="button" onClick={() => setNivel(n)} aria-pressed={nivel === n} style={botonFiltro(nivel === n)}>{n}</button>
+            ))}
           </div>
-        ))}
-      </div>
-      <div style={{ marginTop:28, background:C.goldBg, border:`1px solid ${C.gold}40`, borderRadius:8, padding:"20px 24px", display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
-        <span style={{ fontSize:24 }}>🎯</span>
-        <div style={{ flex:1, minWidth:220 }}>
-          <div style={{ fontFamily:F.serif, fontSize:16, fontWeight:800, color:C.text, marginBottom:4 }}>¿Ya dominas lo básico?</div>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>Explora el Opcionario, nuestra guía en crecimiento de estrategias de opciones explicadas paso a paso.</p>
+          <div role="group" aria-label="Filtrar por tema" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: C.sub, marginRight: 4 }}>Tema</span>
+            {["Todos", ...TEMAS_APRENDE].map((t) => (
+              <button key={t} type="button" onClick={() => setTema(t)} aria-pressed={tema === t} style={botonFiltro(tema === t)}>{t}</button>
+            ))}
+          </div>
         </div>
-        <Link to="/opciones" style={{ background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 20px", borderRadius:5, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:600, textDecoration:"none", whiteSpace:"nowrap" }}>Ver Opcionario</Link>
-      </div>
+
+        <p role="status" style={{ fontSize: 14, color: C.muted, marginBottom: 20 }}>
+          {visibles.length === ARTICULOS.length
+            ? `${ARTICULOS.length} guías`
+            : `${visibles.length} de ${ARTICULOS.length} guías`}
+        </p>
+
+        {visibles.length === 0 ? (
+          <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6 }}>No hay guías con esa combinación de nivel y tema todavía.</p>
+        ) : (
+          <ul role="list" className="portada-grid-3" style={{ listStyle: "none" }}>
+            {visibles.map(({ post, indice }) => <FichaGuia key={indice} post={post} indice={indice} />)}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="avanzado" style={{ marginTop: 64, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "26px 30px" }}>
+        <h2 id="avanzado" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 8 }}>Cuando ya domines lo básico</h2>
+        <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, maxWidth: "68ch" }}>
+          El Opcionario reúne estrategias de opciones explicadas paso a paso. Es contenido de <strong style={{ color: C.text }}>nivel avanzado</strong>: las opciones pueden multiplicar tanto las ganancias como las pérdidas, y algunas estrategias pueden costar mucho más de lo que se ingresa por ellas.
+        </p>
+        <div style={{ marginTop: 16 }}><Boton to="/opciones" variante="secundario">Ver el Opcionario</Boton></div>
+      </section>
     </div>
   );
+}
+
+function LecturaGuia({ post, indice }) {
+  const { C } = useOutletContext();
+
+  const relacionadas = ARTICULOS
+    .map((p, i) => ({ post: p, indice: i }))
+    .filter(({ post: p, indice: i }) => i !== indice && p.tema === post.tema)
+    .slice(0, 2);
+
+  const posicionSecuencia = SECUENCIA_APRENDE.indexOf(indice);
+  const siguienteIndice = posicionSecuencia !== -1 && posicionSecuencia < SECUENCIA_APRENDE.length - 1
+    ? SECUENCIA_APRENDE[posicionSecuencia + 1]
+    : null;
+  const siguiente = siguienteIndice != null ? ARTICULOS[siguienteIndice] : null;
+
+  return (
+    <article className="fade-in">
+      <Link to="/aprende" style={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: 15, fontWeight: 600, color: C.goldText, textDecoration: "none" }}>
+        <span aria-hidden="true">← </span>Volver a la biblioteca
+      </Link>
+
+      <h1 style={{ fontFamily: F.serif, fontSize: 40, fontWeight: 700, color: C.text, lineHeight: 1.2, margin: "12px 0 16px", maxWidth: "20ch" }}>{post.titulo}</h1>
+      <MetaGuia post={post} tamano={14} />
+
+      <p style={{ fontSize: 14, color: C.muted, marginTop: 12 }}>
+        {post.autor} · Publicado en {post.fecha}
+        {post.revisadoEn ? ` · Revisado en ${post.revisadoEn}` : ""}
+      </p>
+
+      {/* Ancho de lectura cómodo: el cuerpo de la guía no pasa de ~68ch. */}
+      <div style={{ marginTop: 32, maxWidth: "68ch" }}>
+        <CuerpoGuia post={post} />
+      </div>
+
+      {post.fuentes && post.fuentes.length > 0 && (
+        <section aria-labelledby="fuentes" style={{ marginTop: 48, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 14, padding: "22px 26px", maxWidth: "68ch" }}>
+          <h2 id="fuentes" style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 10 }}>Fuentes</h2>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+            {post.fuentes.map((fuente, i) => (
+              <li key={i} style={{ display: "flex", gap: 10, fontSize: 15, color: C.sub, lineHeight: 1.6 }}>
+                <span aria-hidden="true" style={{ color: C.goldText }}>—</span>
+                <span>
+                  {fuente.url
+                    ? <a href={fuente.url} target="_blank" rel="noopener noreferrer" style={{ color: C.goldText }}>{fuente.texto}<span className="sr-only"> (se abre en una pestaña nueva)</span></a>
+                    : fuente.texto}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 24, maxWidth: "68ch" }}>
+        Contenido educativo de FinanzaDR. No es asesoría de inversión ni una recomendación de comprar o vender ningún producto; los requisitos y las condiciones que menciona cada guía los fija cada entidad y pueden cambiar.
+      </p>
+
+      {siguiente && (
+        <section aria-labelledby="siguiente" style={{ marginTop: 48 }}>
+          <h2 id="siguiente" style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 12 }}>Siguiente paso de la ruta</h2>
+          <ul role="list" style={{ listStyle: "none" }}>
+            <FichaGuia post={siguiente} indice={siguienteIndice} />
+          </ul>
+        </section>
+      )}
+
+      {relacionadas.length > 0 && (
+        <section aria-labelledby="relacionadas" style={{ marginTop: 48 }}>
+          <h2 id="relacionadas" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 16 }}>Más sobre {post.tema.toLowerCase()}</h2>
+          <ul role="list" className="portada-grid-2" style={{ listStyle: "none" }}>
+            {relacionadas.map(({ post: p, indice: i }) => <FichaGuia key={i} post={p} indice={i} />)}
+          </ul>
+        </section>
+      )}
+    </article>
+  );
+}
+
+function AprendePage() {
+  const [searchParams] = useSearchParams();
+  const indice = resolverGuia(searchParams);
+  const post = indice != null ? ARTICULOS[indice] : null;
+
+  // El título y la descripción cambian con la guía abierta; sin guía, los de
+  // la biblioteca. Antes la ruta abría siempre el primer artículo desplegado
+  // encima del listado, lo que dejaba la biblioteca enterrada.
+  useDocumentMeta(
+    post ? `${post.titulo} — FinanzaDR` : "Aprende a invertir — FinanzaDR",
+    post ? post.extracto : "Guías en español sobre ETFs, acciones, cuentas de retiro y primeros pasos para invertir, ordenadas por nivel y tema."
+  );
+
+  return post ? <LecturaGuia post={post} indice={indice} /> : <BibliotecaAprende />;
 }
 
 function ArticuloPasos({ post }) {
   const { C } = useOutletContext();
   return (
     <div>
-      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <p style={{ fontSize:17, color:C.sub, lineHeight:1.65, marginBottom:24 }}>{post.intro}</p>
       <div style={{ display:"grid", gap:18, marginBottom:24 }}>
         {post.pasos.map((paso,i) => (
           <div key={i} style={{ display:"flex", gap:18, alignItems:"flex-start" }}>
@@ -2395,14 +2604,14 @@ function ArticuloPasos({ post }) {
               {String(i+1).padStart(2,"0")}
             </div>
             <div style={{ paddingTop:4 }}>
-              <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, letterSpacing:0.5, marginBottom:6, textTransform:"uppercase" }}>{paso.titulo}</div>
-              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{paso.texto}</p>
+              <h3 style={{ fontSize:19, fontWeight:700, color:C.text, marginBottom:6, lineHeight:1.35 }}>{paso.titulo}</h3>
+              <p style={{ fontSize:17, color:C.sub, lineHeight:1.65 }}>{paso.texto}</p>
             </div>
           </div>
         ))}
       </div>
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
-        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+        <p style={{ fontSize:17, color:C.text, lineHeight:1.65, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
       {post.nota && <p style={{ fontSize:11, color:C.muted, lineHeight:1.6, marginTop:16 }}>{post.nota}</p>}
     </div>
@@ -2413,7 +2622,7 @@ function ArticuloStats({ post }) {
   const { C } = useOutletContext();
   return (
     <div>
-      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <p style={{ fontSize:17, color:C.sub, lineHeight:1.65, marginBottom:24 }}>{post.intro}</p>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:14, marginBottom:28 }}>
         {post.stats.map((s,i) => (
           <div key={i} style={{ background:C.goldBg, border:`1px solid ${C.gold}`, borderRadius:10, padding:"18px 14px", textAlign:"center" }}>
@@ -2428,13 +2637,13 @@ function ArticuloStats({ post }) {
             <div style={{ width:22, height:22, borderRadius:"50%", background:C.gold, color:"#000", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:12, fontWeight:800, marginTop:2 }}>✓</div>
             <div>
               <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{r.titulo}</div>
-              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{r.texto}</p>
+              <p style={{ fontSize:17, color:C.sub, lineHeight:1.65 }}>{r.texto}</p>
             </div>
           </div>
         ))}
       </div>
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
-        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+        <p style={{ fontSize:17, color:C.text, lineHeight:1.65, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
     </div>
   );
@@ -2444,7 +2653,7 @@ function ArticuloTabla({ post }) {
   const { C } = useOutletContext();
   return (
     <div>
-      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <p style={{ fontSize:17, color:C.sub, lineHeight:1.65, marginBottom:24 }}>{post.intro}</p>
       <div style={{ overflowX:"auto", marginBottom:28, border:`1px solid ${C.border}`, borderRadius:8 }}>
         <table style={{ width:"100%", borderCollapse:"collapse", minWidth:520 }}>
           <thead>
@@ -2495,7 +2704,7 @@ function ArticuloTabla({ post }) {
         ))}
       </div>
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
-        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+        <p style={{ fontSize:17, color:C.text, lineHeight:1.65, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
       {post.nota && <p style={{ fontSize:11, color:C.muted, lineHeight:1.6, marginTop:16 }}>{post.nota}</p>}
     </div>
@@ -2506,7 +2715,7 @@ function ArticuloHerramientas({ post }) {
   const { C } = useOutletContext();
   return (
     <div>
-      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <p style={{ fontSize:17, color:C.sub, lineHeight:1.65, marginBottom:24 }}>{post.intro}</p>
       <div style={{ display:"grid", gap:20, marginBottom:24 }}>
         {post.herramientas.map((h,i) => (
           <div key={i} style={{ border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 22px" }}>
@@ -2534,7 +2743,7 @@ function ArticuloHerramientas({ post }) {
         ))}
       </div>
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
-        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+        <p style={{ fontSize:17, color:C.text, lineHeight:1.65, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
     </div>
   );
@@ -2544,7 +2753,7 @@ function ArticuloSimulador({ post }) {
   const { C } = useOutletContext();
   return (
     <div>
-      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <p style={{ fontSize:17, color:C.sub, lineHeight:1.65, marginBottom:24 }}>{post.intro}</p>
 
       <Label>{post.ejemplo.titulo}</Label>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:12, marginBottom:28 }}>
@@ -2572,7 +2781,7 @@ function ArticuloSimulador({ post }) {
       <SimuladorInteres />
 
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px", marginTop:24 }}>
-        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+        <p style={{ fontSize:17, color:C.text, lineHeight:1.65, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
     </div>
   );
@@ -2658,142 +2867,331 @@ function ArticuloErrores({ post }) {
   const { C } = useOutletContext();
   return (
     <div>
-      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.intro}</p>
+      <p style={{ fontSize:17, color:C.sub, lineHeight:1.65, marginBottom:24 }}>{post.intro}</p>
       <div style={{ display:"grid", gap:14, marginBottom:24 }}>
         {post.errores.map((err,i) => (
           <div key={i} style={{ display:"flex", gap:16, alignItems:"flex-start", background:`${C.red}12`, border:`1px solid ${C.red}30`, borderRadius:10, padding:"16px 20px" }}>
             <div style={{ width:38, height:38, borderRadius:"50%", background:`${C.red}20`, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:17 }}>⚠️</div>
             <div>
               <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{i+1}. {err.titulo}</div>
-              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{err.texto}</p>
+              <p style={{ fontSize:17, color:C.sub, lineHeight:1.65 }}>{err.texto}</p>
             </div>
           </div>
         ))}
       </div>
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px" }}>
-        <p style={{ fontSize:14, color:C.text, lineHeight:1.75, fontStyle:"italic" }}>{post.cierre}</p>
+        <p style={{ fontSize:17, color:C.text, lineHeight:1.65, fontStyle:"italic" }}>{post.cierre}</p>
       </div>
     </div>
   );
 }
 
-const SESGO_COLOR = { alcista: "green", bajista: "red", neutral: "gold" };
+// ===========================================================================
+// OPCIONARIO
+// ===========================================================================
 
-function OpcionesPage() {
-  useDocumentMeta("Opcionario: Estrategias de Opciones — FinanzaDR", "Estrategias de trading de opciones explicadas paso a paso, con ejemplos y diagramas de ganancia/pérdida.");
+const SESGOS_OPCIONES = ["alcista", "bajista", "neutral"];
+const NIVELES_OPCIONES = ["básico", "intermedio", "avanzado"];
+
+const enlaceEstrategia = (post) => `/opciones?estrategia=${post.id}`;
+
+// Dos etiquetas distintas, a propósito: la dificultad dice cuánto cuesta
+// entender la estrategia y el riesgo, cuánto puedes perder con ella. Un
+// covered call es de dificultad básica y de riesgo alto; un iron condor es
+// avanzado y de riesgo definido. Mezclarlas en una sola etiqueta hacía leer
+// "básico" como "seguro".
+function EtiquetasEstrategia({ post, tamano = 13 }) {
   const { C } = useOutletContext();
-  const [expanded, setExpanded] = useState(null);
-  const [filtroSesgo, setFiltroSesgo] = useState(null);
-  const [filtroNivel, setFiltroNivel] = useState(null);
-  const filtradas = ARTICULOS_OPCIONES.filter(post =>
-    (!filtroSesgo || post.sesgo === filtroSesgo) &&
-    (!filtroNivel || post.nivel === filtroNivel)
+  const chip = (fondo, color, borde) => ({
+    display: "inline-block", background: fondo, color, border: `1px solid ${borde}`,
+    borderRadius: 999, padding: "3px 10px", fontSize: tamano, fontWeight: 600,
+  });
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+      <span style={chip(C.surfaceAlt, C.sub, C.border)}>Sesgo {post.sesgo}</span>
+      <span style={chip(C.surfaceAlt, C.sub, C.border)}>Dificultad {post.nivel}</span>
+      <span style={chip(C.goldBg, C.goldText, "transparent")}>{post.riesgo.etiqueta}</span>
+    </div>
   );
+}
+
+function FichaEstrategia({ post }) {
+  const { C } = useOutletContext();
+  return (
+    <li style={{ display: "flex" }}>
+      <Link to={enlaceEstrategia(post)} className="tarjeta-enlace"
+        style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
+        <EtiquetasEstrategia post={post} />
+        <h3 style={{ fontSize: 20, fontWeight: 700, color: C.text, lineHeight: 1.35 }}>{post.nombre}</h3>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{post.extracto}</p>
+        <span style={{ fontSize: 14, fontWeight: 600, color: C.goldText, marginTop: "auto", paddingTop: 6 }}>Ver la estrategia →</span>
+      </Link>
+    </li>
+  );
+}
+
+function DetalleEstrategia({ post }) {
+  const { C } = useOutletContext();
+  const fmtDolar = (n) => (n < 0 ? "−" : "") + "$" + Math.abs(Math.round(n)).toLocaleString("en-US");
+  // El diagrama se calcula aquí, a partir del ejemplo de la estrategia.
+  const puntos = puntosPayoff(post.ejemploParams);
+
+  const bloque = { background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px 22px" };
+  const titulo = { fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 };
+
+  return (
+    <article className="fade-in">
+      <Link to="/opciones" style={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: 15, fontWeight: 600, color: C.goldText, textDecoration: "none" }}>
+        <span aria-hidden="true">← </span>Volver al Opcionario
+      </Link>
+
+      <h1 style={{ fontFamily: F.serif, fontSize: 40, fontWeight: 700, color: C.text, lineHeight: 1.2, margin: "12px 0 16px" }}>{post.nombre}</h1>
+      <EtiquetasEstrategia post={post} tamano={14} />
+
+      <p style={{ fontSize: 18, color: C.sub, lineHeight: 1.65, margin: "24px 0 0", maxWidth: "68ch" }}>{post.queEs}</p>
+
+      <section aria-labelledby="riesgo-estrategia" style={{ marginTop: 24, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px 22px", maxWidth: "68ch" }}>
+        <h2 id="riesgo-estrategia" style={titulo}>{post.riesgo.etiqueta}</h2>
+        <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6 }}>{post.riesgo.nota}</p>
+      </section>
+
+      <section aria-labelledby="patas" style={{ marginTop: 40 }}>
+        <h2 id="patas" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 16 }}>Las patas de la operación</h2>
+        <ul role="list" style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12, maxWidth: "68ch" }}>
+          {post.legs.map((leg, i) => (
+            <li key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start", border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 18px" }}>
+              <span style={{ background: C.surfaceAlt, color: C.text, border: `1px solid ${C.border}`, borderRadius: 999, padding: "3px 12px", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>
+                {leg.accion === "compra" ? "Compra" : "Venta"} · {leg.tipo}
+              </span>
+              <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6 }}>{leg.nota}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="limites" style={{ marginTop: 40 }}>
+        <h2 id="limites" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 16 }}>Ganancia, pérdida y equilibrio</h2>
+        <div className="portada-grid-3" style={{ alignItems: "start" }}>
+          <div style={bloque}>
+            <h3 style={titulo}>Ganancia máxima</h3>
+            <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{post.maxGanancia}</p>
+          </div>
+          <div style={bloque}>
+            <h3 style={titulo}>Pérdida máxima</h3>
+            <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{post.maxPerdida}</p>
+          </div>
+          <div style={bloque}>
+            <h3 style={titulo}>Punto de equilibrio</h3>
+            <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{post.puntoEquilibrio}</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="diagrama" style={{ marginTop: 40 }}>
+        <h2 id="diagrama" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>Resultado al vencimiento</h2>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginBottom: 16, maxWidth: "68ch" }}>
+          Calculado con las cifras del ejemplo de más abajo. Eje horizontal: precio del subyacente al vencimiento, en dólares por acción. Eje vertical: resultado de la operación completa, en dólares, contando que cada contrato cubre 100 acciones. No incluye comisiones ni el valor de la posición antes del vencimiento.
+        </p>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 12px 8px" }}>
+          <div style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={puntos} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                <XAxis dataKey="precio" type="number" domain={["dataMin", "dataMax"]} stroke={C.muted}
+                  tick={{ fontFamily: F.sans, fontSize: 12, fill: C.muted }} tickFormatter={(v) => "$" + v} />
+                <YAxis stroke={C.muted} tick={{ fontFamily: F.sans, fontSize: 12, fill: C.muted }} tickFormatter={fmtDolar} width={70} />
+                <ReferenceLine y={0} stroke={C.muted} strokeDasharray="4 4" />
+                <Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, fontFamily: F.sans, fontSize: 13, color: C.text }}
+                  labelFormatter={(v) => `Precio al vencimiento: $${v}`}
+                  formatter={(v) => [fmtDolar(v), v >= 0 ? "Ganancia" : "Pérdida"]} />
+                <Line type="linear" dataKey="ganancia" stroke={C.goldText} strokeWidth={2}
+                  dot={{ r: 3, fill: C.goldText, strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* El gráfico es una imagen para quien puede verlo; la tabla dice lo
+            mismo para quien no. Son los mismos puntos calculados. */}
+        <details style={{ marginTop: 16 }}>
+          <summary style={{ cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center", fontSize: 15, fontWeight: 600, color: C.goldText }}>
+            Ver el diagrama como tabla
+          </summary>
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", marginTop: 12 }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <caption className="sr-only">Resultado de la estrategia al vencimiento según el precio del subyacente</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "right" }}>Precio al vencimiento</th>
+                    <th scope="col" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "right" }}>Resultado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {puntos.map((punto) => (
+                    <tr key={punto.precio}>
+                      <th scope="row" style={{ padding: "10px 16px", borderTop: `1px solid ${C.border}`, textAlign: "right", fontWeight: 400, fontSize: 15, color: C.sub }}>${punto.precio}</th>
+                      <td style={{ padding: "10px 16px", borderTop: `1px solid ${C.border}`, textAlign: "right", fontSize: 15, fontWeight: 600, color: punto.ganancia > 0 ? C.green : punto.ganancia < 0 ? C.red : C.sub }}>
+                        {fmtDolar(punto.ganancia)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section aria-labelledby="cuando" style={{ marginTop: 40, maxWidth: "68ch" }}>
+        <h2 id="cuando" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 12 }}>Cuándo se usa</h2>
+        <p style={{ fontSize: 17, color: C.sub, lineHeight: 1.65 }}>{post.cuandoUsarla}</p>
+      </section>
+
+      <section aria-labelledby="ejemplo" style={{ marginTop: 40, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 26px", maxWidth: "68ch" }}>
+        <h2 id="ejemplo" style={titulo}>Ejemplo educativo</h2>
+        <p style={{ fontSize: 17, color: C.text, lineHeight: 1.65 }}>{post.ejemplo}</p>
+        <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>
+          Cifras inventadas para explicar la mecánica, no una operación recomendada ni un precio de mercado real.
+        </p>
+      </section>
+
+      <section aria-labelledby="riesgos" style={{ marginTop: 40, maxWidth: "68ch" }}>
+        <h2 id="riesgos" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 12 }}>Riesgos</h2>
+        <p style={{ fontSize: 17, color: C.sub, lineHeight: 1.65 }}>{post.riesgos}</p>
+        {post.nota && <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>{post.nota}</p>}
+        <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>
+          Contenido educativo de nivel avanzado. Operar opciones puede hacerte perder más de lo que ingresas por la operación, y algunas estrategias exigen garantías en la cuenta. No es asesoría de inversión.
+        </p>
+      </section>
+    </article>
+  );
+}
+
+function ListadoOpciones() {
+  const { C } = useOutletContext();
+  const [sesgo, setSesgo] = useState("Todos");
+  const [nivel, setNivel] = useState("Todos");
+
+  const visibles = ARTICULOS_OPCIONES.filter((post) =>
+    (sesgo === "Todos" || post.sesgo === sesgo) && (nivel === "Todos" || post.nivel === nivel)
+  );
+
+  const botonFiltro = (activo) => ({
+    minHeight: 44, padding: "0 16px", borderRadius: 10,
+    border: `1px solid ${activo ? C.text : C.border}`,
+    background: activo ? C.text : C.card, color: activo ? C.bg : C.text,
+    fontFamily: F.sans, fontSize: 14, fontWeight: 600, cursor: "pointer", textTransform: "none",
+  });
+
   return (
     <div className="fade-in">
-      <SectionTitle>Opcionario</SectionTitle>
-      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Estrategias de opciones explicadas paso a paso — contenido en crecimiento, empezando por las más comunes</p>
-      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16, flexWrap:"wrap" }}>
-        <span style={{ fontSize:12, color:C.sub, fontFamily:F.sans }}>Mostrando {filtradas.length} de {ARTICULOS_OPCIONES.length} estrategias</span>
-        {(filtroSesgo || filtroNivel) && (
-          <span onClick={() => { setFiltroSesgo(null); setFiltroNivel(null); }} style={{ fontSize:12, color:C.gold, fontFamily:F.sans, textDecoration:"underline", cursor:"pointer" }}>Limpiar filtros</span>
-        )}
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Opcionario</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, margin: "8px 0 0", maxWidth: "68ch" }}>
+        Estrategias de opciones explicadas paso a paso, con su diagrama de resultado calculado a partir del ejemplo. Es material de <strong style={{ color: C.text }}>nivel avanzado</strong>: conviene tener claro lo básico de acciones y ETFs antes de entrar aquí.
+      </p>
+      <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginTop: 12, maxWidth: "68ch" }}>
+        Cada estrategia lleva dos etiquetas distintas: la <strong style={{ color: C.text }}>dificultad</strong> de entenderla y el <strong style={{ color: C.text }}>riesgo</strong> de usarla. No son lo mismo — hay estrategias fáciles de entender que pueden costar mucho dinero.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, margin: "32px 0 20px" }}>
+        <div role="group" aria-label="Filtrar por sesgo de mercado" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.sub, marginRight: 4 }}>Sesgo</span>
+          {["Todos", ...SESGOS_OPCIONES].map((s) => (
+            <button key={s} type="button" onClick={() => setSesgo(s)} aria-pressed={sesgo === s} style={botonFiltro(sesgo === s)}>{s}</button>
+          ))}
+        </div>
+        <div role="group" aria-label="Filtrar por dificultad" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.sub, marginRight: 4 }}>Dificultad</span>
+          {["Todos", ...NIVELES_OPCIONES].map((n) => (
+            <button key={n} type="button" onClick={() => setNivel(n)} aria-pressed={nivel === n} style={botonFiltro(nivel === n)}>{n}</button>
+          ))}
+        </div>
       </div>
-      <div style={{ display:"grid", gap:24 }}>
-        {filtradas.map((post) => (
-          <div key={post.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
-            <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
-              <span onClick={(e) => { e.stopPropagation(); setFiltroSesgo(filtroSesgo===post.sesgo ? null : post.sesgo); }} style={{ background:filtroSesgo===post.sesgo ? C[SESGO_COLOR[post.sesgo]] : C.goldBg, color:filtroSesgo===post.sesgo ? C.bg : C[SESGO_COLOR[post.sesgo]], padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:700, textTransform:"uppercase", cursor:"pointer" }}>{post.sesgo}</span>
-              <span onClick={(e) => { e.stopPropagation(); setFiltroNivel(filtroNivel===post.nivel ? null : post.nivel); }} style={{ background:filtroNivel===post.nivel ? C.gold : C.border, color:filtroNivel===post.nivel ? C.bg : C.sub, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:700, textTransform:"uppercase", cursor:"pointer" }}>{post.nivel}</span>
-              {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:F.sans }}>#{t}</span>)}
-            </div>
-            <h3 style={{ fontFamily:F.serif, fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.nombre}</h3>
-            <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
-            {expanded===post.id ? <ArticuloEstrategia post={post} /> : (
-              <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
-            )}
-            <button onClick={() => setExpanded(expanded===post.id?null:post.id)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:600 }}>
-             {expanded===post.id?"Ver menos":"Ver estrategia completa"}
-            </button>
-          </div>
-        ))}
-      </div>
+
+      <p role="status" style={{ fontSize: 14, color: C.muted, marginBottom: 20 }}>
+        {visibles.length === ARTICULOS_OPCIONES.length
+          ? `${ARTICULOS_OPCIONES.length} estrategias`
+          : `${visibles.length} de ${ARTICULOS_OPCIONES.length} estrategias`}
+      </p>
+
+      {visibles.length === 0 ? (
+        <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6 }}>Ninguna estrategia coincide con esos filtros todavía.</p>
+      ) : (
+        <ul role="list" className="portada-grid-2" style={{ listStyle: "none" }}>
+          {visibles.map((post) => <FichaEstrategia key={post.id} post={post} />)}
+        </ul>
+      )}
     </div>
   );
 }
 
-function ArticuloEstrategia({ post }) {
-  const { C } = useOutletContext();
-  const fmt$ = (n) => (n<0?"-":"") + "$" + Math.abs(Math.round(n)).toLocaleString("en-US");
-  return (
-    <div>
-      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:20 }}>{post.queEs}</p>
+function OpcionesPage() {
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get("estrategia");
+  const post = id ? ARTICULOS_OPCIONES.find((e) => e.id === id) : null;
 
-      <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Las patas de la operación</div>
-      <div style={{ display:"grid", gap:10, marginBottom:24 }}>
-        {post.legs.map((leg,i) => (
-          <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", border:`1px solid ${C.border}`, borderRadius:8, padding:"12px 16px" }}>
-            <span style={{ background:C.goldBg, color:C.gold, padding:"3px 10px", borderRadius:4, fontSize:11, fontFamily:F.sans, fontWeight:700, whiteSpace:"nowrap", flexShrink:0 }}>
-              {leg.accion==="compra"?"+ ":"− "}{leg.tipo.toUpperCase()}
-            </span>
-            <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{leg.nota}</p>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display:"grid", gap:12, marginBottom:24 }}>
-        <div style={{ borderLeft:`3px solid ${C.green}`, background:`${C.green}0f`, borderRadius:6, padding:"12px 18px" }}>
-          <div style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.green, marginBottom:4, textTransform:"uppercase" }}>Ganancia máxima</div>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.maxGanancia}</p>
-        </div>
-        <div style={{ borderLeft:`3px solid ${C.red}`, background:`${C.red}0f`, borderRadius:6, padding:"12px 18px" }}>
-          <div style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.red, marginBottom:4, textTransform:"uppercase" }}>Pérdida máxima</div>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.maxPerdida}</p>
-        </div>
-        <div style={{ borderLeft:`3px solid ${C.gold}`, background:C.goldBg, borderRadius:6, padding:"12px 18px" }}>
-          <div style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.gold, marginBottom:4, textTransform:"uppercase" }}>Punto de equilibrio</div>
-          <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.puntoEquilibrio}</p>
-        </div>
-      </div>
-
-      <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Diagrama de ganancia/pérdida al vencimiento</div>
-      <div style={{ position:"relative", height:260, marginBottom:8, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 8px 4px" }}>
-        <div style={{ position:"absolute", top:14, right:16, fontFamily:F.sans, fontSize:10, color:C.green, fontWeight:700 }}>Ganancia ↑</div>
-        <div style={{ position:"absolute", bottom:24, right:16, fontFamily:F.sans, fontSize:10, color:C.red, fontWeight:700 }}>Pérdida ↓</div>
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={post.payoffPoints} margin={{ top:10, right:10, left:0, bottom:0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-            <XAxis dataKey="precio" stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:10, fill:C.muted }} tickFormatter={v=>"$"+v} />
-            <YAxis stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:9, fill:C.muted }} tickFormatter={fmt$} />
-            <ReferenceLine y={0} stroke={C.muted} strokeDasharray="4 4" />
-            <Tooltip contentStyle={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:F.sans, fontSize:12 }}
-              labelFormatter={v=>`Precio subyacente: $${v}`}
-              formatter={(v)=>[<span style={{ color:v>=0?C.green:C.red, fontWeight:700 }}>{fmt$(v)}</span>, "Ganancia/Pérdida"]} />
-            <Line type="linear" dataKey="ganancia" stroke={C.gold} strokeWidth={2} dot={{ r:3, fill:C.gold, strokeWidth:0 }} activeDot={{ r:5 }} isAnimationActive={false} />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-      <p style={{ fontSize:11, color:C.muted, lineHeight:1.6, marginBottom:24 }}>Puntos calculados al vencimiento de la opción, sin incluir comisiones. No refleja el valor de la posición antes del vencimiento.</p>
-
-      <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Cuándo usarla</div>
-      <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.cuandoUsarla}</p>
-
-      <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px", marginBottom:24 }}>
-        <div style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.gold, marginBottom:6, textTransform:"uppercase" }}>Ejemplo numérico</div>
-        <p style={{ fontSize:14, color:C.text, lineHeight:1.75 }}>{post.ejemplo}</p>
-      </div>
-
-      <div style={{ display:"flex", gap:16, alignItems:"flex-start", background:`${C.red}12`, border:`1px solid ${C.red}30`, borderRadius:10, padding:"16px 20px", marginBottom:16 }}>
-        <div style={{ width:38, height:38, borderRadius:"50%", background:`${C.red}20`, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:17 }}>⚠️</div>
-        <div>
-          <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, marginBottom:6, textTransform:"uppercase" }}>Riesgos</div>
-          <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.riesgos}</p>
-        </div>
-      </div>
-
-      {post.nota && <p style={{ fontSize:11, color:C.muted, lineHeight:1.6 }}>{post.nota}</p>}
-    </div>
+  useDocumentMeta(
+    post ? `${post.nombre} — Opcionario de FinanzaDR` : "Opcionario — FinanzaDR",
+    post ? post.extracto : "Estrategias de opciones explicadas paso a paso en español, con su riesgo, su ejemplo y su diagrama de resultado."
   );
+
+  return post ? <DetalleEstrategia post={post} /> : <ListadoOpciones />;
+}
+
+
+// --- Diagrama de resultado de una estrategia de opciones -------------------
+// El diagrama se calcula a partir del ejemplo de cada estrategia
+// (`ejemploParams`), no de una lista de puntos escrita a mano: así el gráfico
+// nunca puede contradecir al texto que lo acompaña.
+// Unidades: dólares por operación completa, al vencimiento y sin comisiones.
+// Un contrato de opciones cubre 100 acciones.
+const ACCIONES_POR_CONTRATO = 100;
+
+function resultadoPata(pata, precioFinal) {
+  const signo = pata.accion === "compra" ? 1 : -1;
+  if (pata.instrumento === "accion") {
+    return signo * (precioFinal - pata.precioEntrada) * (pata.acciones ?? ACCIONES_POR_CONTRATO);
+  }
+  const intrinseco = pata.instrumento === "call"
+    ? Math.max(0, precioFinal - pata.strike)
+    : Math.max(0, pata.strike - precioFinal);
+  const contratos = pata.contratos ?? 1;
+  return signo * (intrinseco - pata.prima) * ACCIONES_POR_CONTRATO * contratos;
+}
+
+function resultadoEstrategia(ejemplo, precioFinal) {
+  return ejemplo.patas.reduce((total, pata) => total + resultadoPata(pata, precioFinal), 0);
+}
+
+// Al vencimiento el resultado es lineal a trozos y sus únicos quiebres están en
+// los strikes. Basta con incluir strikes, extremos y los cruces por cero: la
+// recta entre dos de esos puntos es exacta, no una aproximación.
+function puntosPayoff(ejemplo) {
+  const strikes = ejemplo.patas.filter((l) => l.strike != null).map((l) => l.strike);
+  const referencias = [...strikes, ejemplo.precioSubyacente];
+  const minimo = Math.min(...referencias);
+  const maximo = Math.max(...referencias);
+  // Margen relativo al precio del subyacente (30%): con margen relativo a la
+  // distancia entre strikes, una estrategia de un solo strike salia con un
+  // rango tan estrecho que no se veia el lado de las perdidas.
+  const margen = Math.max(10, ejemplo.precioSubyacente * 0.3);
+  const extremos = [Math.max(0, minimo - margen), maximo + margen];
+
+  const clave = [...new Set([...extremos, ...strikes, ejemplo.precioSubyacente])].sort((a, b) => a - b);
+
+  const equilibrios = [];
+  for (let i = 0; i < clave.length - 1; i += 1) {
+    const [x1, x2] = [clave[i], clave[i + 1]];
+    const [y1, y2] = [resultadoEstrategia(ejemplo, x1), resultadoEstrategia(ejemplo, x2)];
+    if ((y1 < 0 && y2 > 0) || (y1 > 0 && y2 < 0)) {
+      equilibrios.push(+(x1 + ((0 - y1) * (x2 - x1)) / (y2 - y1)).toFixed(2));
+    }
+  }
+
+  return [...new Set([...clave, ...equilibrios])]
+    .sort((a, b) => a - b)
+    .map((precio) => ({ precio, ganancia: +resultadoEstrategia(ejemplo, precio).toFixed(2) }));
 }
 
 function BrokersPage() {
