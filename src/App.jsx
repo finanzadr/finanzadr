@@ -1950,26 +1950,90 @@ function PrivacidadPage() {
 }
 
 function TerminosPage() {
-  useDocumentMeta("Términos de Uso — FinanzaDR", "Condiciones de uso de la plataforma FinanzaDR.");
+  useDocumentMeta("Términos y Condiciones — FinanzaDR", "Condiciones de uso de FinanzaDR: propiedad intelectual, afiliados, suscripciones, derecho de desistimiento en la UE y ley aplicable.");
   return (
-    <LegalPage title="Términos de Uso" updated="26 de julio de 2026" sections={[
-      { titulo: "Aceptación de los términos", parrafos: [
-        "Al usar FinanzaDR aceptas que el contenido del sitio (precios, noticias, guías, calculadoras y análisis) se ofrece exclusivamente con fines educativos e informativos.",
+    <LegalPage title="Términos y Condiciones" updated="8 de septiembre de 2026" sections={[
+      { titulo: "1. Quiénes somos y aceptación de los términos", parrafos: [
+        "FinanzaDR (finanzadr.com) es un sitio de educación financiera operado por [RAZÓN SOCIAL], sociedad en proceso de constitución en [JURISDICCIÓN] (en adelante, el Operador, nosotros). Puedes contactarnos en cualquier momento en finanzasDR.oficial@gmail.com.",
+        "Al acceder o utilizar el sitio aceptas quedar vinculado por estos Términos y Condiciones, por la Política de Privacidad y por el Aviso Legal, que forman parte integrante de este acuerdo. Si no estás de acuerdo con alguna parte, no utilices el sitio.",
       ] },
-      { titulo: "No somos un broker ni asesor registrado", parrafos: [
-        "FinanzaDR no es un broker, asesor de inversión registrado ni intermediario financiero. No ejecutamos operaciones ni gestionamos dinero de los usuarios — únicamente enlazamos a plataformas de terceros (brokers, servicios de remesas) bajo tu propia responsabilidad.",
+      { titulo: "2. Ámbito territorial y usuarios de la UE, EEE y Reino Unido", parrafos: [
+        "El sitio es accesible desde cualquier país, pero está dirigido principalmente a personas de habla hispana en América Latina, el Caribe y Estados Unidos. Si resides en la Unión Europea, el Espacio Económico Europeo, Suiza o el Reino Unido, te aplican protecciones adicionales que reconocemos expresamente en estos términos: el derecho de desistimiento de 14 días descrito más abajo, las garantías legales de conformidad y los derechos de protección de datos del Reglamento General de Protección de Datos (RGPD).",
+        "Ninguna cláusula de este documento puede interpretarse en el sentido de limitar o excluir derechos que la ley de tu país de residencia te reconozca con carácter irrenunciable como consumidor.",
       ] },
-      { titulo: "Divulgación de enlaces de afiliados", parrafos: [
-        "FinanzaDR participa en programas de afiliados de plataformas como Robinhood y Tastytrade. Esto significa que podemos recibir una comisión si te registras o realizas una acción a través de nuestros enlaces, sin ningún costo adicional para ti. Esta compensación no influye en el contenido editorial ni en nuestras explicaciones — mantenemos el mismo estándar de honestidad en todo el sitio, uses o no nuestros enlaces.",
+      { titulo: "3. Elegibilidad y edad mínima", parrafos: [
+        "Debes tener al menos 18 años para utilizar el sitio y, en particular, para contratar cualquier servicio de pago. El sitio no está dirigido a menores de edad y no recopilamos deliberadamente datos de personas menores de 16 años. Si aceptas estos términos en nombre de una entidad, declaras tener facultades suficientes para obligarla.",
       ] },
-      { titulo: "Uso de las herramientas del sitio", parrafos: [
-        "El uso de las herramientas del sitio, incluyendo la calculadora de interés compuesto y los widgets de TradingView, es bajo tu propio riesgo. No garantizamos que los resultados proyectados se cumplan en la realidad.",
+      { titulo: "4. Naturaleza educativa del servicio", parrafos: [
+        "Todo el contenido del sitio —precios, noticias, guías, calculadoras, análisis, el Opcionario y los boletines— se ofrece con fines exclusivamente educativos e informativos. No constituye asesoría de inversión, fiscal, contable ni legal, ni una recomendación personalizada adaptada a tu situación. Consulta el Aviso Legal para el detalle de los riesgos.",
       ] },
-      { titulo: "Contenido de nivel avanzado (Opcionario)", parrafos: [
+      { titulo: "5. No somos un broker ni un asesor registrado", parrafos: [
+        "El Operador no es un broker, agente de valores, asesor de inversión registrado, gestor de patrimonios ni intermediario financiero. No está registrado ni supervisado por la Superintendencia del Mercado de Valores de la República Dominicana, por la SEC o FINRA en Estados Unidos, ni por ninguna autoridad competente de la Unión Europea bajo la Directiva MiFID II.",
+        "No ejecutamos operaciones, no custodiamos fondos y no gestionamos dinero de los usuarios. Únicamente enlazamos a plataformas de terceros (brokers, servicios de remesas) que utilizas bajo tu propia responsabilidad y cuyos términos y condiciones debes revisar por separado.",
+      ] },
+      { titulo: "6. Propiedad intelectual y licencia de uso", parrafos: [
+        "Todo el contenido original del sitio —textos, guías, análisis, diseño, marca, logotipos y código— es propiedad del Operador o se utiliza con licencia, y está protegido por las leyes de propiedad intelectual aplicables y por los tratados internacionales, incluido el Convenio de Berna.",
+        "Te concedemos una licencia limitada, personal, revocable, no exclusiva e intransferible para acceder al contenido y usarlo con fines personales y no comerciales. Puedes citar fragmentos breves con atribución y enlace a la fuente. Cualquier otro uso —reproducción total, traducción, redistribución, explotación comercial o utilización para entrenar modelos de inteligencia artificial— requiere nuestra autorización previa y por escrito.",
+      ] },
+      { titulo: "7. Conducta prohibida", parrafos: [
+        "Te comprometes a no: (a) extraer datos del sitio mediante scraping, crawlers, bots o cualquier medio automatizado; (b) revender, redistribuir o poner a disposición de terceros los datos de mercado que se muestran en el sitio; (c) intentar acceder a áreas restringidas, endpoints internos o infraestructura del sitio; (d) sobrecargar deliberadamente los servidores o eludir los límites de uso; (e) suplantar identidades o falsear tu relación con el Operador; (f) utilizar el sitio para actividades ilícitas o para promocionar instrumentos financieros.",
+        "Los datos de mercado se muestran al amparo de licencias de terceros que prohíben su redistribución. Su uso indebido puede generar responsabilidad frente a esos proveedores además de frente a nosotros, y da lugar a la revocación inmediata de tu licencia de uso.",
+      ] },
+      { titulo: "8. Contenido y datos de terceros", parrafos: [
+        "El sitio integra datos y servicios de terceros: Finnhub (cotizaciones y noticias), TradingView (gráficos y mapa de calor), Alternative.me (índice de sentimiento cripto), MailerLite (boletín) y Vercel (alojamiento y analítica). Estos datos se ofrecen tal cual, pueden estar retrasados, incompletos o contener errores, y su disponibilidad depende de terceros sobre los que no tenemos control.",
+        "No respaldamos, verificamos ni asumimos responsabilidad por el contenido de sitios externos enlazados desde FinanzaDR.",
+      ] },
+      { titulo: "9. Uso de las herramientas del sitio", parrafos: [
+        "El uso de las herramientas del sitio —incluyendo la calculadora de interés compuesto, el Opcionario, los generadores de imágenes y los widgets de TradingView— es bajo tu propio riesgo. Las proyecciones son simulaciones matemáticas basadas en los supuestos que tú introduces: no son predicciones ni garantías de rendimiento, y no consideran impuestos, comisiones, inflación ni tu situación personal.",
+      ] },
+      { titulo: "10. Contenido de nivel avanzado (Opcionario)", parrafos: [
         "El Opcionario contiene contenido educativo sobre estrategias de opciones de distintos niveles de riesgo, incluyendo algunas con pérdida potencial elevada o ilimitada. Este contenido está dirigido a fines educativos únicamente y no sustituye la evaluación de tu propio perfil de riesgo ni la aprobación de tu broker para operar cada nivel de estrategia.",
       ] },
-      { titulo: "Cambios a estos términos", parrafos: [
-        "Podemos actualizar estos términos en cualquier momento; el uso continuado del sitio después de un cambio implica tu aceptación de los nuevos términos.",
+      { titulo: "11. Servicios de pago y suscripciones", parrafos: [
+        "Podemos ofrecer, ahora o en el futuro, contenido, herramientas, cursos o suscripciones de pago. Cuando lo hagamos, el precio aplicable, la moneda, la periodicidad y las condiciones específicas se mostrarán con claridad antes de que confirmes la compra. El pago se procesará a través de un proveedor externo especializado; no almacenamos los datos completos de tu tarjeta.",
+        "Los precios se indican con los impuestos aplicables cuando la ley lo exija. Para consumidores de la Unión Europea se aplicará el IVA correspondiente a su país de residencia, conforme al régimen europeo de servicios prestados por vía electrónica.",
+        "Las suscripciones se renuevan automáticamente por periodos iguales salvo que las canceles antes de la fecha de renovación. Puedes cancelar en cualquier momento y conservarás el acceso hasta el final del periodo ya pagado, sin cargos posteriores. Cualquier cambio de precio se notificará con al menos 30 días de antelación y solo surtirá efecto en la renovación siguiente; podrás cancelar sin penalización antes de esa fecha.",
+      ] },
+      { titulo: "12. Derecho de desistimiento de 14 días (UE, EEE y Reino Unido)", parrafos: [
+        "Si eres consumidor residente en la Unión Europea, el Espacio Económico Europeo o el Reino Unido, dispones de 14 días naturales desde la contratación para desistir de cualquier servicio de pago, sin necesidad de justificación y sin penalización, conforme a la Directiva 2011/83/UE sobre los derechos de los consumidores.",
+        "Para ejercerlo basta con que nos comuniques tu decisión de forma inequívoca escribiendo a finanzasDR.oficial@gmail.com. Te reembolsaremos todos los pagos recibidos en un plazo máximo de 14 días desde que recibamos tu comunicación, utilizando el mismo medio de pago que empleaste, sin coste alguno para ti.",
+        "Excepción por entrega inmediata: cuando el servicio consista en contenido digital que se pone a tu disposición de forma inmediata, al confirmar la compra se te pedirá que solicites expresamente el inicio inmediato de la prestación y que reconozcas que, una vez ejecutada por completo, pierdes el derecho de desistimiento (Art. 16.m de la Directiva 2011/83/UE). Si el contenido aún no se ha entregado, tu derecho de desistimiento se conserva íntegro.",
+      ] },
+      { titulo: "13. Reembolsos fuera de la Unión Europea", parrafos: [
+        "Si resides fuera de la UE, el EEE o el Reino Unido, y salvo que la ley de tu país disponga otra cosa, los pagos por contenido digital ya entregado no son reembolsables. Evaluaremos de buena fe y caso por caso las solicitudes de reembolso motivadas por fallos técnicos imputables a nosotros, cobros duplicados o imposibilidad de acceder al servicio contratado.",
+      ] },
+      { titulo: "14. Afiliados, patrocinios y contenido comercial", parrafos: [
+        "FinanzaDR participa en programas de afiliados de plataformas como Robinhood y Tastytrade, y puede incorporar en el futuro patrocinios, cursos y productos digitales propios o de terceros. Esto significa que podemos recibir una comisión si te registras o realizas una acción a través de nuestros enlaces, sin ningún costo adicional para ti.",
+        "Todo contenido patrocinado o pagado se identificará como tal de forma visible, conforme a las guías de divulgación de la Comisión Federal de Comercio de Estados Unidos (16 CFR Parte 255) y a la normativa europea sobre prácticas comerciales desleales (Directiva 2005/29/CE).",
+        "Esta compensación no influye en el contenido editorial ni en nuestras explicaciones: mantenemos el mismo estándar de honestidad en todo el sitio, uses o no nuestros enlaces. El sitio puede además mostrar publicidad de terceros; consulta la Política de Privacidad para conocer el tratamiento de datos asociado.",
+      ] },
+      { titulo: "15. Exclusión de garantías y limitación de responsabilidad", parrafos: [
+        "El sitio se ofrece tal cual y según disponibilidad, sin garantías de exactitud, integridad, continuidad, ausencia de errores o adecuación a un fin concreto, en la máxima medida permitida por la ley aplicable.",
+        "En ningún caso el Operador responderá por pérdidas de inversión, lucro cesante, pérdida de oportunidad, pérdida de datos ni por daños indirectos, incidentales o consecuenciales derivados del uso del sitio o de decisiones tomadas a partir de su contenido. Cuando exista un servicio de pago, nuestra responsabilidad total agregada se limitará al importe que hayas abonado en los 12 meses anteriores al hecho que la origine.",
+        "Nada de lo anterior excluye ni limita nuestra responsabilidad por dolo, negligencia grave, fraude, muerte o daños personales, ni cualquier otra responsabilidad que no pueda excluirse o limitarse legalmente. Si resides en la UE, el EEE o el Reino Unido, tus derechos legales imperativos como consumidor permanecen intactos.",
+      ] },
+      { titulo: "16. Indemnización", parrafos: [
+        "Aceptas mantener indemne al Operador, sus colaboradores y sus proveedores frente a cualquier reclamación, daño o gasto razonable (incluidos honorarios legales) derivado de tu uso indebido del sitio, del incumplimiento de estos términos o de la vulneración de derechos de terceros. Esta obligación no aplica en la medida en que la reclamación se deba a nuestra propia culpa o negligencia.",
+      ] },
+      { titulo: "17. Ley aplicable y tribunales competentes", parrafos: [
+        "Estos términos se rigen por las leyes de [JURISDICCIÓN], sin dar efecto a sus normas sobre conflicto de leyes, y los tribunales de [JURISDICCIÓN] serán competentes con carácter general.",
+        "No obstante, si eres consumidor residente en la Unión Europea o el Espacio Económico Europeo, esta cláusula no te priva de la protección que te otorgan las disposiciones imperativas de la ley de tu país de residencia habitual, y podrás demandar y ser demandado ante los tribunales de tu domicilio conforme al Reglamento (UE) 1215/2012. Los consumidores del Reino Unido conservan el derecho equivalente bajo su normativa nacional.",
+      ] },
+      { titulo: "18. Resolución de disputas y plataforma ODR de la UE", parrafos: [
+        "Antes de acudir a los tribunales te invitamos a escribirnos a finanzasDR.oficial@gmail.com para buscar una solución amistosa; responderemos en un plazo razonable.",
+        "Si resides en la Unión Europea, puedes además recurrir a la plataforma de resolución de litigios en línea de la Comisión Europea, disponible en ec.europa.eu/consumers/odr, conforme a la Directiva 2013/11/UE. No estamos obligados ni nos hemos comprometido a someternos a un organismo concreto de resolución alternativa de litigios.",
+      ] },
+      { titulo: "19. Modificaciones de estos términos", parrafos: [
+        "Podemos modificar estos términos para reflejar cambios legales, técnicos o de nuestro modelo de negocio. Los cambios menores o favorables al usuario surtirán efecto al publicarse, con una nueva fecha de última actualización.",
+        "Los cambios sustanciales que afecten a tus derechos o a un servicio de pago ya contratado se notificarán con al menos 30 días de antelación, por correo electrónico si estás suscrito o mediante un aviso visible en el sitio. Si no los aceptas, podrás cancelar tu suscripción antes de su entrada en vigor sin penalización. El uso continuado del sitio después de esa fecha implica la aceptación de los nuevos términos.",
+      ] },
+      { titulo: "20. Divisibilidad, cesión y acuerdo completo", parrafos: [
+        "Si alguna cláusula de estos términos se declara inválida o inejecutable, el resto conservará plena vigencia y la cláusula afectada se interpretará en el sentido más próximo posible a su finalidad original dentro de lo permitido por la ley. La falta de ejercicio de un derecho no supone su renuncia.",
+        "No puedes ceder tus derechos u obligaciones bajo estos términos sin nuestro consentimiento previo. Nosotros podremos cederlos en el marco de una reorganización societaria o transmisión del negocio, notificándotelo previamente.",
+      ] },
+      { titulo: "21. Idioma y contacto", parrafos: [
+        "Estos términos se redactan en español, que será la versión vinculante frente a cualquier traducción. Junto con la Política de Privacidad y el Aviso Legal constituyen el acuerdo completo entre tú y el Operador respecto del uso del sitio.",
+        "Para cualquier consulta sobre estos términos escríbenos a finanzasDR.oficial@gmail.com.",
       ] },
     ]} />
   );
