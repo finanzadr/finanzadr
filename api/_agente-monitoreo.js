@@ -107,7 +107,7 @@ export async function generarMonitoreo() {
 // Agente 3 (Monitoreo): genera el reporte semanal de tráfico y lo guarda en
 // Blob bajo su propio store ("monitoreo"), igual que Agente 1 y Agente 2 con
 // los suyos. Sin cron todavía — se invoca manualmente mientras se prueba.
-export default async function handler(req, res) {
+export async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
   if (!autorizadoParaCron(req)) {

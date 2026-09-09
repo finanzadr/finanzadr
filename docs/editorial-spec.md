@@ -1,7 +1,7 @@
 # Especificación Editorial — FinanzaDR
 
 Fuente única de las reglas editoriales usadas por los agentes de contenido
-(`api/agente-apertura.js`, `api/agente-mercados.js`, `api/agente-contenido.js`).
+(`api/_agente-apertura.js`, `api/_agente-mercados.js`, `api/_agente-contenido.js`, enrutados desde `api/agentes.js`).
 Este documento es la versión legible para humanos; el código vive en
 `api/_editorial-spec.js` y cada endpoint importa de ahí en vez de repetir el
 texto de las reglas.

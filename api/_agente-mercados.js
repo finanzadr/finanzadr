@@ -336,7 +336,7 @@ export async function generarBriefing() {
 // el briefing y lo guarda en Blob para que /api/briefing lo sirva sin
 // regenerar en cada visita. Sigue siendo invocable manualmente para forzar
 // una regeneración (por ejemplo, para probar cambios en el prompt).
-export default async function handler(req, res) {
+export async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
   if (!autorizadoParaCron(req)) {

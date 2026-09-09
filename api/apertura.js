@@ -1,5 +1,5 @@
 import { get } from "@vercel/blob";
-import { generarApertura, BLOB_PATHNAME } from "./agente-apertura.js";
+import { generarApertura, BLOB_PATHNAME } from "./_agente-apertura.js";
 
 export async function leerAperturaGuardado() {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return null;

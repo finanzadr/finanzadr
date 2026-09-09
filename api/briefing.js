@@ -1,5 +1,5 @@
 import { get } from "@vercel/blob";
-import { generarBriefing, BLOB_PATHNAME } from "./agente-mercados.js";
+import { generarBriefing, BLOB_PATHNAME } from "./_agente-mercados.js";
 
 export async function leerBriefingGuardado() {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return null;

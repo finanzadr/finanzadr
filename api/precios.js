@@ -1,4 +1,4 @@
-import { fetchPrecios } from "./agente-mercados.js";
+import { fetchPrecios } from "./_agente-mercados.js";
 
 // Caché en memoria a nivel de módulo: sobrevive entre invocaciones "calientes"
 // de la misma instancia serverless, no entre instancias distintas. No es
@@ -8,7 +8,7 @@ const CACHE_TTL_MS = 25_000;
 let cache = { data: null, at: 0 };
 
 // Endpoint de solo lectura: siempre devuelve el quote de los 8 símbolos fijos
-// de WS_STOCKS (agente-mercados.js), sin parámetros — el frontend nunca pide
+// de WS_STOCKS (_agente-mercados.js), sin parámetros — el frontend nunca pide
 // símbolos distintos, así que aceptar símbolos por query abriría esto como
 // proxy genérico hacia Finnhub con nuestra key.
 export default async function handler(req, res) {

@@ -1,4 +1,4 @@
-import { fetchNoticiasCrudas } from "./agente-mercados.js";
+import { fetchNoticiasCrudas } from "./_agente-mercados.js";
 
 // Mismo criterio de caché en memoria que /api/precios, pero con TTL más
 // largo: las noticias generales no cambian segundo a segundo.

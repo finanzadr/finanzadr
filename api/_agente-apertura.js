@@ -92,7 +92,7 @@ export async function generarApertura() {
 
 // Endpoint invocable manualmente para generar el Resumen de Apertura y
 // guardarlo en Blob. Sin cron todavía — se activa a mano mientras se prueba.
-export default async function handler(req, res) {
+export async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
   if (!autorizadoParaCron(req)) {

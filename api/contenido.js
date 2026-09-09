@@ -1,5 +1,5 @@
 import { get } from "@vercel/blob";
-import { generarContenido, BLOB_PATHNAME, BLOB_PATHNAME_APERTURA } from "./agente-contenido.js";
+import { generarContenido, BLOB_PATHNAME, BLOB_PATHNAME_APERTURA } from "./_agente-contenido.js";
 
 async function leerContenidoGuardado(pathname) {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return null;

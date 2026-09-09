@@ -97,7 +97,7 @@ export async function generarContenido(fuente = "cierre") {
 // ?fuente=apertura usa el resumen de Apertura y guarda en su propio blob;
 // cualquier otro valor (incluido ausente) se comporta igual que siempre:
 // usa el briefing de Cierre y contenido/latest.json.
-export default async function handler(req, res) {
+export async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
   if (!autorizadoParaCron(req)) {

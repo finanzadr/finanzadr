@@ -1,5 +1,5 @@
 import { get } from "@vercel/blob";
-import { generarMonitoreo, BLOB_PATHNAME } from "./agente-monitoreo.js";
+import { generarMonitoreo, BLOB_PATHNAME } from "./_agente-monitoreo.js";
 
 export async function leerMonitoreoGuardado() {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
