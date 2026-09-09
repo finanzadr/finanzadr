@@ -258,22 +258,6 @@ const ARTICULOS_OPCIONES = [
     nota: "Este contenido es educativo e informativo. El Iron Condor requiere aprobación de nivel avanzado de tu broker y gestionar 4 contratos simultáneamente. No constituye asesoría financiera personalizada — considera hablar con un asesor certificado antes de operar esta estrategia." },
 ];
 
-const CONSEJOS = [
-  { icono: "🎯", nivel: "Principiante", consejo: "Empieza con ETFs, no acciones individuales", detalle: "Un ETF del S&P 500 te da exposición a 500 empresas con una sola compra." },
-  { icono: "📅", nivel: "Principiante", consejo: "Invierte una cantidad fija cada mes", detalle: "La estrategia DCA consiste en invertir la misma cantidad cada mes." },
-  { icono: "⏳", nivel: "Principiante", consejo: "Piensa en años, no en días", detalle: "Los inversores exitosos mantienen su estrategia por años." },
-  { icono: "🏦", nivel: "Principiante", consejo: "Abre una cuenta en Fidelity o Interactive Brokers", detalle: "Ambas plataformas aceptan clientes de Latinoamérica sin comisiones." },
-];
-
-const BROKERS = [
-  { name: "Robinhood", initial: "R", nivel: "Principiante", desc: "Sin comisiones y la app más simple para abrir tu primera cuenta de inversión en EE.UU.", cta: "Abrir cuenta", url: "https://join.robinhood.com/juliocr-f91f36" },
-  { name: "Webull", initial: "W", nivel: "Principiante", desc: "Sin comisiones, gráficas profesionales y datos en tiempo real gratis desde el día uno.", cta: "Abrir cuenta", url: "https://webull.com" },
-  { name: "Tastytrade", initial: "T", nivel: "Intermedio", desc: "La plataforma preferida para operar opciones y futuros, con herramientas de análisis avanzadas.", cta: "Abrir cuenta", url: "https://open.tastytrade.com/signup/?referralCode=6TNXH2EVQ8" },
-  { name: "Interactive Brokers", initial: "IB", nivel: "Avanzado", desc: "Acceso a mercados globales y acepta clientes de República Dominicana y toda Latinoamérica.", cta: "Abrir cuenta", url: "https://interactivebrokers.com" },
-  { name: "Wise", initial: "W", nivel: "Remesas", desc: "Envía dinero a Latinoamérica con tasas de cambio reales y comisiones bajas y transparentes.", cta: "Enviar remesa", url: "https://wise.com" },
-  { name: "Remitly", initial: "R", nivel: "Remesas", desc: "Remesas rápidas y seguras a República Dominicana y toda Latinoamérica, con tu primer envío gratis.", cta: "Enviar remesa", url: "https://remitly.com" },
-];
-
 const formatHora = (iso) => {
   const d = new Date(iso);
   let h = d.getHours();
@@ -3194,16 +3178,344 @@ function puntosPayoff(ejemplo) {
     .map((precio) => ({ precio, ganancia: +resultadoEstrategia(ejemplo, precio).toFixed(2) }));
 }
 
-function BrokersPage() {
-  useDocumentMeta("Brokers Recomendados — FinanzaDR", "Compara plataformas para invertir desde Estados Unidos, con guías para abrir tu cuenta.");
+// ===========================================================================
+// BROKERS Y REMESAS
+// ===========================================================================
+//
+// Dos catálogos separados y con criterios propios: un broker y un servicio de
+// remesas no se comparan entre sí. Antes compartían rejilla y hasta el campo
+// `nivel`, donde convivían "Principiante", "Avanzado" y "Remesas".
+//
+// Sobre los datos: cada campo comparable es `{ valor, nota }`. Con `valor` en
+// null, la interfaz dice "sin verificar" y remite a la web oficial, en vez de
+// rellenar el hueco con una cifra recordada. Comisiones, requisitos y países
+// admitidos cambian y dependen de dónde resida cada persona: afirmarlos sin
+// comprobarlos era el problema de la versión anterior ("acepta clientes de
+// República Dominicana y toda Latinoamérica", "tu primer envío gratis").
+//
+// `urlAfiliado` es un enlace de referido: si alguien abre cuenta por ahí,
+// FinanzaDR puede cobrar una comisión. Siempre se muestra junto al enlace
+// oficial sin referido, y la ficha lo dice.
+
+const PENDIENTE = { valor: null, nota: "Sin verificar por FinanzaDR. Consúltalo en su web oficial." };
+
+const BROKERS = [
+  {
+    id: "robinhood",
+    nombre: "Robinhood",
+    queEs: "Broker estadounidense con una aplicación pensada para empezar desde el móvil.",
+    perfil: "Primera cuenta, cartera sencilla de acciones y ETFs",
+    disponibilidad: PENDIENTE,
+    requisitos: PENDIENTE,
+    tiposCuenta: PENDIENTE,
+    comisiones: PENDIENTE,
+    depositoMinimo: PENDIENTE,
+    urlOficial: "https://robinhood.com",
+    urlAfiliado: "https://join.robinhood.com/juliocr-f91f36",
+    revisadoEn: null,
+  },
+  {
+    id: "webull",
+    nombre: "Webull",
+    queEs: "Broker estadounidense con herramientas de gráficos más completas que la media de las apps.",
+    perfil: "Quien ya se maneja y quiere analizar antes de comprar",
+    disponibilidad: PENDIENTE,
+    requisitos: PENDIENTE,
+    tiposCuenta: PENDIENTE,
+    comisiones: PENDIENTE,
+    depositoMinimo: PENDIENTE,
+    urlOficial: "https://www.webull.com",
+    urlAfiliado: null,
+    revisadoEn: null,
+  },
+  {
+    id: "tastytrade",
+    nombre: "Tastytrade",
+    queEs: "Broker estadounidense orientado a derivados: opciones y futuros.",
+    perfil: "Uso avanzado, con las opciones como eje",
+    disponibilidad: PENDIENTE,
+    requisitos: PENDIENTE,
+    tiposCuenta: PENDIENTE,
+    comisiones: PENDIENTE,
+    depositoMinimo: PENDIENTE,
+    urlOficial: "https://tastytrade.com",
+    urlAfiliado: "https://open.tastytrade.com/signup/?referralCode=6TNXH2EVQ8",
+    revisadoEn: null,
+  },
+  {
+    id: "interactive-brokers",
+    nombre: "Interactive Brokers",
+    queEs: "Broker con presencia internacional y acceso a mercados de varios países.",
+    perfil: "Residencia fuera de EE.UU. o necesidad de mercados globales",
+    disponibilidad: PENDIENTE,
+    requisitos: PENDIENTE,
+    tiposCuenta: PENDIENTE,
+    comisiones: PENDIENTE,
+    depositoMinimo: PENDIENTE,
+    urlOficial: "https://www.interactivebrokers.com",
+    urlAfiliado: null,
+    revisadoEn: null,
+  },
+];
+
+const REMESAS = [
+  {
+    id: "wise",
+    nombre: "Wise",
+    queEs: "Servicio de transferencias internacionales que muestra por separado el tipo de cambio y su comisión.",
+    destinos: PENDIENTE,
+    coste: PENDIENTE,
+    tiempo: PENDIENTE,
+    condiciones: PENDIENTE,
+    urlOficial: "https://wise.com",
+    urlAfiliado: null,
+    revisadoEn: null,
+  },
+  {
+    id: "remitly",
+    nombre: "Remitly",
+    queEs: "Servicio de remesas centrado en envíos a América Latina, con entrega en efectivo o a cuenta según el destino.",
+    destinos: PENDIENTE,
+    coste: PENDIENTE,
+    tiempo: PENDIENTE,
+    condiciones: PENDIENTE,
+    urlOficial: "https://www.remitly.com",
+    urlAfiliado: null,
+    revisadoEn: null,
+  },
+];
+
+const CRITERIOS_BROKERS = [
+  ["disponibilidad", "Disponibilidad geográfica"],
+  ["requisitos", "Requisitos de apertura"],
+  ["tiposCuenta", "Tipos de cuenta"],
+  ["comisiones", "Comisiones relevantes"],
+  ["depositoMinimo", "Depósito mínimo"],
+];
+
+const CRITERIOS_REMESAS = [
+  ["destinos", "Destinos"],
+  ["coste", "Coste del envío"],
+  ["tiempo", "Tiempo estimado"],
+  ["condiciones", "Condiciones"],
+];
+
+function ValorCriterio({ dato }) {
+  const { C } = useOutletContext();
+  if (!dato || dato.valor == null) {
+    return <span style={{ color: C.muted }}>Sin verificar<span className="sr-only">. {dato?.nota || "Consúltalo en su web oficial."}</span></span>;
+  }
+  return <span style={{ color: C.text }}>{dato.valor}</span>;
+}
+
+// Enlace externo: dice a dónde va, se abre en otra pestaña y, cuando es de
+// referido, lo declara en su propio nombre accesible.
+function EnlaceExterno({ href, children, variante = "secundario", afiliado = false }) {
+  const { C } = useOutletContext();
+  const dominio = (() => { try { return new URL(href).hostname.replace(/^www\./, ""); } catch { return href; } })();
+  const base = {
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+    minHeight: 48, padding: "0 18px", borderRadius: 10, fontFamily: F.sans,
+    fontSize: 15, fontWeight: 600, textDecoration: "none",
+    border: `1px solid ${variante === "primario" ? "transparent" : C.border}`,
+    background: variante === "primario" ? C.text : C.card,
+    color: variante === "primario" ? C.bg : C.text,
+  };
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer nofollow sponsored" style={base}>
+      {children}
+      <span className="sr-only">
+        {` — ${dominio}, se abre en una pestaña nueva${afiliado ? ", enlace de afiliado" : ""}`}
+      </span>
+      <Icon name="externo" size={16} />
+    </a>
+  );
+}
+
+function EtiquetaAfiliado() {
   const { C } = useOutletContext();
   return (
-    <div className="fade-in">
-      <SectionTitle>Brokers y Remesas para Latinos</SectionTitle>
-      <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Las plataformas recomendadas para invertir en Wall Street y enviar dinero a Latinoamérica</p>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:16 }}>
-        {BROKERS.map((b,i) => <BrokerCard key={i} b={b} />)}
+    <span style={{ display: "inline-block", background: C.goldBg, color: C.goldText, borderRadius: 999, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
+      Enlace de afiliado
+    </span>
+  );
+}
+
+function EnlacesFicha({ entrada }) {
+  const { C } = useOutletContext();
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <EnlaceExterno href={entrada.urlOficial}>Web oficial</EnlaceExterno>
+        {entrada.urlAfiliado && (
+          <EnlaceExterno href={entrada.urlAfiliado} afiliado>Abrir cuenta con nuestro enlace</EnlaceExterno>
+        )}
       </div>
+      {entrada.urlAfiliado && (
+        <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.55 }}>
+          El segundo enlace es de afiliado: si abres cuenta por ahí, FinanzaDR puede cobrar una comisión, sin coste adicional para ti. El primero va a su web sin referido.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function FichaComparativa({ entrada, criterios }) {
+  const { C } = useOutletContext();
+  return (
+    <li style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "22px 24px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 8 }}>
+        <h3 style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text }}>{entrada.nombre}</h3>
+        {entrada.urlAfiliado && <EtiquetaAfiliado />}
+      </div>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6 }}>{entrada.queEs}</p>
+      {entrada.perfil && <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, marginTop: 8 }}><strong style={{ color: C.text }}>Perfil de uso:</strong> {entrada.perfil}</p>}
+
+      {/* div dentro de dl es HTML5 valido y evita necesitar React.Fragment,
+          que aqui no esta importado (solo se importan los hooks). */}
+      <dl style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+        {criterios.map(([clave, etiqueta]) => (
+          <div key={clave} style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <dt style={{ fontSize: 14, color: C.sub, fontWeight: 600, minWidth: 170 }}>{etiqueta}</dt>
+            <dd style={{ fontSize: 14 }}><ValorCriterio dato={entrada[clave]} /></dd>
+          </div>
+        ))}
+      </dl>
+
+      <p style={{ fontSize: 13, color: C.muted, marginTop: 12 }}>
+        {entrada.revisadoEn ? `Ficha revisada en ${entrada.revisadoEn}.` : "Ficha sin revisión de datos todavía."}
+      </p>
+
+      <div style={{ marginTop: 16 }}><EnlacesFicha entrada={entrada} /></div>
+    </li>
+  );
+}
+
+// Tabla comparativa para escritorio: los criterios en filas y cada plataforma
+// en su columna, que es como se comparan de un vistazo.
+function TablaComparativa({ entradas, criterios, titulo }) {
+  const { C } = useOutletContext();
+  const celda = { padding: "12px 16px", borderTop: `1px solid ${C.border}`, fontSize: 14, verticalAlign: "top" };
+  return (
+    <div className="mercados-tabla" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640 }}>
+          <caption className="sr-only">{titulo}</caption>
+          <thead>
+            <tr>
+              <th scope="col" style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "left" }}>Criterio</th>
+              {entradas.map((entrada) => (
+                <th key={entrada.id} scope="col" style={{ padding: "12px 16px", fontSize: 16, fontWeight: 700, color: C.text, textAlign: "left" }}>
+                  {entrada.nombre}
+                  {entrada.urlAfiliado && <span style={{ display: "block", fontSize: 12, fontWeight: 600, color: C.goldText, marginTop: 4 }}>Enlace de afiliado</span>}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" style={{ ...celda, textAlign: "left", fontWeight: 600, color: C.sub }}>Qué es</th>
+              {entradas.map((entrada) => <td key={entrada.id} style={{ ...celda, color: C.sub }}>{entrada.queEs}</td>)}
+            </tr>
+            {criterios.map(([clave, etiqueta]) => (
+              <tr key={clave}>
+                <th scope="row" style={{ ...celda, textAlign: "left", fontWeight: 600, color: C.sub }}>{etiqueta}</th>
+                {entradas.map((entrada) => <td key={entrada.id} style={celda}><ValorCriterio dato={entrada[clave]} /></td>)}
+              </tr>
+            ))}
+            <tr>
+              <th scope="row" style={{ ...celda, textAlign: "left", fontWeight: 600, color: C.sub }}>Revisión</th>
+              {entradas.map((entrada) => (
+                <td key={entrada.id} style={{ ...celda, color: C.muted }}>{entrada.revisadoEn || "Pendiente"}</td>
+              ))}
+            </tr>
+            <tr>
+              <th scope="row" style={{ ...celda, textAlign: "left", fontWeight: 600, color: C.sub }}>Enlaces</th>
+              {entradas.map((entrada) => (
+                <td key={entrada.id} style={celda}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+                    <a href={entrada.urlOficial} target="_blank" rel="noopener noreferrer"
+                      style={{ display: "inline-flex", alignItems: "center", minHeight: 44, color: C.goldText, fontSize: 14, fontWeight: 600 }}>
+                      Web oficial<span className="sr-only"> de {entrada.nombre}, se abre en una pestaña nueva</span>
+                    </a>
+                    {entrada.urlAfiliado && (
+                      <a href={entrada.urlAfiliado} target="_blank" rel="noopener noreferrer nofollow sponsored"
+                        style={{ display: "inline-flex", alignItems: "center", minHeight: 44, color: C.goldText, fontSize: 14, fontWeight: 600 }}>
+                        Enlace de afiliado<span className="sr-only"> de {entrada.nombre}, se abre en una pestaña nueva</span>
+                      </a>
+                    )}
+                  </div>
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function BrokersPage() {
+  useDocumentMeta(
+    "Brokers y remesas — FinanzaDR",
+    "Comparación de plataformas para invertir y para enviar dinero, con los criterios que usamos, la fecha de revisión y los enlaces oficiales."
+  );
+  const { C } = useOutletContext();
+
+  return (
+    <div className="fade-in">
+      <h1 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>Brokers y remesas</h1>
+      <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, margin: "8px 0 0", maxWidth: "68ch" }}>
+        Dos cosas distintas, comparadas por separado: dónde abrir una cuenta para invertir y por dónde enviar dinero. No hay ranking ni "mejor plataforma": cada perfil y cada país cambian la respuesta.
+      </p>
+
+      <section aria-labelledby="aviso-afiliados" style={{ marginTop: 24, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 24px", maxWidth: "72ch" }}>
+        <h2 id="aviso-afiliados" style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>Enlaces de afiliado</h2>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>
+          Algunas fichas incluyen un enlace de afiliado, señalado como tal. Si abres cuenta a través de él, FinanzaDR puede cobrar una comisión de la plataforma, sin coste adicional para ti. Eso <strong style={{ color: C.text }}>no determina el orden de esta página</strong> ni implica recomendación, y junto a cada uno tienes el enlace oficial sin referido.
+        </p>
+      </section>
+
+      <section aria-labelledby="brokers" style={{ marginTop: 56 }}>
+        <h2 id="brokers" style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1.25 }}>Brokers para invertir</h2>
+        <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, margin: "8px 0 24px", maxWidth: "68ch" }}>
+          Plataformas donde se compran acciones y ETFs. Lo que decide cuál te sirve es dónde resides, qué documentos tienes y qué vas a operar.
+        </p>
+        <TablaComparativa entradas={BROKERS} criterios={CRITERIOS_BROKERS} titulo="Comparación de brokers según los criterios de FinanzaDR" />
+        <ul role="list" className="mercados-fichas" style={{ listStyle: "none", display: "none", flexDirection: "column", gap: 16 }}>
+          {BROKERS.map((entrada) => <FichaComparativa key={entrada.id} entrada={entrada} criterios={CRITERIOS_BROKERS} />)}
+        </ul>
+      </section>
+
+      <section aria-labelledby="remesas" style={{ marginTop: 64 }}>
+        <h2 id="remesas" style={{ fontFamily: F.serif, fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1.25 }}>Servicios de remesas</h2>
+        <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, margin: "8px 0 24px", maxWidth: "68ch" }}>
+          Enviar dinero no es invertir: aquí lo que importa es cuánto llega al otro lado, en cuánto tiempo y con qué condiciones. Por eso se comparan con criterios propios y no junto a los brokers.
+        </p>
+        <TablaComparativa entradas={REMESAS} criterios={CRITERIOS_REMESAS} titulo="Comparación de servicios de remesas según los criterios de FinanzaDR" />
+        <ul role="list" className="mercados-fichas" style={{ listStyle: "none", display: "none", flexDirection: "column", gap: 16 }}>
+          {REMESAS.map((entrada) => <FichaComparativa key={entrada.id} entrada={entrada} criterios={CRITERIOS_REMESAS} />)}
+        </ul>
+      </section>
+
+      <section aria-labelledby="metodologia" style={{ marginTop: 64, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "26px 30px", maxWidth: "72ch" }}>
+        <h2 id="metodologia" style={{ fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 12 }}>Cómo comparamos</h2>
+        <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+          {[
+            "Los brokers se comparan por disponibilidad geográfica, requisitos de apertura, tipos de cuenta, comisiones relevantes, depósito mínimo y perfil de uso. Las remesas, por destinos, coste, tiempo y condiciones.",
+            "Cuando un dato dice “sin verificar” es que no lo hemos comprobado en la fuente oficial. Preferimos decirlo a rellenarlo de memoria: las comisiones y los países admitidos cambian, y dependen de dónde residas.",
+            "No publicamos rankings ni “el mejor broker”. Tampoco prometemos que una plataforma vaya a aceptar tu solicitud: eso lo decide cada entidad con sus propios criterios.",
+            "El orden de las listas no se vende ni depende de los enlaces de afiliado.",
+          ].map((linea, i) => (
+            <li key={i} style={{ display: "flex", gap: 10, fontSize: 15, color: C.sub, lineHeight: 1.6 }}>
+              <span aria-hidden="true" style={{ color: C.goldText }}>—</span><span>{linea}</span>
+            </li>
+          ))}
+        </ul>
+        <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 16 }}>
+          ¿Ves un dato desactualizado o quieres que verifiquemos uno concreto? Escríbenos a <a href="mailto:finanzasDR.oficial@gmail.com" style={{ color: C.goldText }}>finanzasDR.oficial@gmail.com</a>.
+        </p>
+      </section>
     </div>
   );
 }
@@ -3487,22 +3799,6 @@ function Label({ children, style: s }) {
   return <div style={{ fontFamily:F.sans, fontSize:10, color:C.gold, letterSpacing:2, textTransform:"uppercase", marginBottom:14, ...s }}>{children}</div>;
 }
 
-function BrokerCard({ b }) {
-  const { C } = useOutletContext();
-  return (
-    <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"22px 20px", display:"flex", flexDirection:"column", gap:14 }}>
-      <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-        <div style={{ width:48, height:48, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:F.serif, fontSize:18, fontWeight:800, color:C.gold }}>{b.initial}</div>
-        <div>
-          <div style={{ fontFamily:F.sans, fontSize:14, fontWeight:700, color:C.text }}>{b.name}</div>
-          <div style={{ background:C.goldBg, color:C.gold, display:"inline-block", padding:"2px 8px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:600, marginTop:4 }}>{b.nivel}</div>
-        </div>
-      </div>
-      <p style={{ fontSize:13, color:C.sub, lineHeight:1.7, flex:1 }}>{b.desc}</p>
-      <button onClick={() => window.open(b.url,"_blank","noopener,noreferrer")} style={{ background:C.gold, color:"#000", border:"none", padding:"11px 18px", borderRadius:7, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:800, width:"100%" }}>{b.cta} →</button>
-    </div>
-  );
-}
 function NewsletterForm() {
   const { C } = useOutletContext();
   const [email, setEmail] = useState("");
