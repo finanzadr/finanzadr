@@ -2,16 +2,27 @@ import { useState, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, Link, Outlet, useOutletContext, useSearchParams, useLocation } from "react-router-dom";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from "recharts";
 
-const WS_STOCKS = [
-  { s: "SPY",     n: "S&P 500",       p: 528.40,  c:  0.43, icon: "📊" },
-  { s: "QQQ",     n: "NASDAQ",        p: 446.82,  c:  0.71, icon: "💻" },
-  { s: "DIA",     n: "Dow Jones",     p: 391.27,  c: -0.12, icon: "🏦" },
-  { s: "IWM",     n: "Russell 2000",  p: 198.54,  c: -0.34, icon: "📈" },
-  { s: "GLD",     n: "Oro",           p: 224.80,  c:  0.38, icon: "🥇" },
-  { s: "TLT",     n: "Bonos T. 20Y",  p: 88.45,   c: -0.22, icon: "📋" },
-  { s: "XLU",     n: "Utilities",     p: 71.20,   c:  0.15, icon: "⚡" },
-  { s: "BTC-USD", n: "Bitcoin",       p: 94500.00,c:  1.45, icon: "₿"  },
-];const NOTICIAS = [
+// Modelo de instrumento. Separa simbolo, nombre del producto que realmente
+// cotiza, tipo de activo, referencia subyacente, moneda y mercado.
+// SPY, QQQ, DIA, IWM y GLD son ETFs: llamarlos "S&P 500", "Dow Jones" u "Oro"
+// hacia pasar el precio del ETF por el nivel del indice o del metal — el
+// resumen de cierre llego a publicar el precio de DIA como nivel del Dow.
+// `corto` es la referencia en lenguaje llano para titulares; no sustituye a
+// `tipoActivo` en la ficha del instrumento.
+// p y c arrancan en null a proposito: hasta que responde /api/precios no hay
+// dato real, y una cifra semilla renderizada durante un segundo se lee como
+// cotizacion verdadera. Ese era el origen de los precios que "cambiaban solos"
+// al terminar de cargar la pagina.
+const INSTRUMENTOS = [
+  { s: "SPY",     n: "SPDR S&P 500 ETF Trust",                  corto: "S&P 500",                    tipoActivo: "ETF",          referencia: "Sigue el índice S&P 500",                                     moneda: "USD", mercado: "NYSE Arca", p: null, c: null },
+  { s: "QQQ",     n: "Invesco QQQ Trust",                       corto: "NASDAQ 100",                 tipoActivo: "ETF",          referencia: "Sigue el índice NASDAQ 100",                                  moneda: "USD", mercado: "NASDAQ",    p: null, c: null },
+  { s: "DIA",     n: "SPDR Dow Jones Industrial Average ETF",   corto: "Dow Jones",                  tipoActivo: "ETF",          referencia: "Sigue el índice Dow Jones Industrial Average",                moneda: "USD", mercado: "NYSE Arca", p: null, c: null },
+  { s: "IWM",     n: "iShares Russell 2000 ETF",                corto: "Russell 2000",               tipoActivo: "ETF",          referencia: "Sigue el índice Russell 2000, de empresas pequeñas de EE.UU.", moneda: "USD", mercado: "NYSE Arca", p: null, c: null },
+  { s: "GLD",     n: "SPDR Gold Shares",                        corto: "Oro",                        tipoActivo: "ETF",          referencia: "Respaldado por oro físico; su precio no es la onza de oro",   moneda: "USD", mercado: "NYSE Arca", p: null, c: null },
+  { s: "TLT",     n: "iShares 20+ Year Treasury Bond ETF",      corto: "Bonos del Tesoro a 20+ años", tipoActivo: "ETF",         referencia: "Cesta de bonos del Tesoro de EE.UU. a más de 20 años",        moneda: "USD", mercado: "NASDAQ",    p: null, c: null },
+  { s: "XLU",     n: "Utilities Select Sector SPDR Fund",       corto: "Sector Utilities",           tipoActivo: "ETF",          referencia: "Empresas de servicios públicos del S&P 500",                  moneda: "USD", mercado: "NYSE Arca", p: null, c: null },
+  { s: "BTC-USD", n: "Bitcoin",                                 corto: "Bitcoin",                    tipoActivo: "Criptomoneda", referencia: "Cotización BTC/USDT en Binance, sin horario de cierre",       moneda: "USD", mercado: "Cripto · 24/7", p: null, c: null },
+];;const NOTICIAS = [
   { titulo: "S&P 500 cierra en máximo histórico mientras mercados celebran pausa de la Fed", resumen: "El S&P 500 alcanzó un nuevo récord cerrando por encima de 5,800 puntos este viernes, impulsado por datos de empleo más fuertes de lo esperado. La Reserva Federal señaló que mantendría las tasas sin cambios hasta tener mayor claridad sobre la inflación.", fuente: "Reuters", tiempo: "Hace 1 hora", categoria: "Mercados" },
   { titulo: "NVIDIA supera los $1,000 por acción por primera vez en su historia", resumen: "Las acciones de NVIDIA cruzaron la barrera de los $1,000 por primera vez impulsadas por una demanda récord de chips para inteligencia artificial. La compañía reportó ingresos trimestrales de $44 mil millones, un 78% más que el año anterior.", fuente: "Bloomberg", tiempo: "Hace 3 horas", categoria: "Acciones" },
   { titulo: "El oro alcanza nuevos máximos históricos ante la incertidumbre geopolítica global", resumen: "El precio del oro superó los $3,400 por onza este mes, estableciendo un nuevo récord histórico. Los inversores buscan refugio en metales preciosos ante las tensiones geopolíticas y el debilitamiento del dólar.", fuente: "WSJ", tiempo: "Hace 5 horas", categoria: "Materias Primas" },
@@ -19,14 +30,14 @@ const WS_STOCKS = [
   { titulo: "Los bonos del Tesoro a 10 años suben ante señales de desaceleración económica", resumen: "El rendimiento del bono del Tesoro a 10 años cayó al 4.2% mientras los inversores buscan activos más seguros. Los datos de manufactura mostraron una contracción por segundo mes consecutivo.", fuente: "Financial Times", tiempo: "Hace 9 horas", categoria: "Bonos" },
   { titulo: "Dow Jones supera los 42,000 puntos impulsado por sector financiero y salud", resumen: "El Dow Jones Industrial Average superó los 42,000 puntos esta semana, liderado por fuertes ganancias en el sector financiero y de salud.", fuente: "MarketWatch", tiempo: "Hace 11 horas", categoria: "Mercados" },
 ];const ARTICULOS = [
-  { tipo: "pasos", titulo: "Cómo abrir tu primera cuenta de inversión en EE.UU. siendo inmigrante", extracto: "No necesitas ser ciudadano ni tener SSN para invertir en Wall Street. Con un ITIN y tu pasaporte puedes abrir tu cuenta esta misma semana.", intro: "Uno de los mitos más grandes que detiene a los inmigrantes latinos es pensar que hay que ser ciudadano o residente legal permanente para invertir en la bolsa de EE.UU. No es cierto. No necesitas un Social Security Number (SSN) — con un ITIN (Individual Taxpayer Identification Number) y tu pasaporte puedes abrir una cuenta de inversión legalmente, sin importar tu estatus migratorio.", pasos: [
+  { tipo: "pasos", titulo: "Cómo abrir tu primera cuenta de inversión en EE.UU. siendo inmigrante", nivel: "Principiante", tema: "Cuentas y brokers", extracto: "No necesitas ser ciudadano ni tener SSN para invertir en Wall Street. Con un ITIN y tu pasaporte puedes abrir tu cuenta esta misma semana.", intro: "Uno de los mitos más grandes que detiene a los inmigrantes latinos es pensar que hay que ser ciudadano o residente legal permanente para invertir en la bolsa de EE.UU. No es cierto. No necesitas un Social Security Number (SSN) — con un ITIN (Individual Taxpayer Identification Number) y tu pasaporte puedes abrir una cuenta de inversión legalmente, sin importar tu estatus migratorio.", pasos: [
       { titulo: "Consigue tu ITIN si no tienes SSN", texto: "Si no calificas para un SSN, solicita un ITIN con el formulario W-7 del IRS. Es un número de identificación fiscal que te permite invertir y declarar impuestos sin ser ciudadano. Puedes tramitarlo tú mismo o con ayuda de un Acceptance Agent certificado por el IRS." },
       { titulo: "Elige tu broker según tu experiencia", texto: "Si eres principiante, Robinhood o Webull tienen las apps más simples y sin comisiones para abrir tu primera cuenta. Si vives fuera de EE.UU. y buscas más flexibilidad, Interactive Brokers acepta clientes internacionales y da acceso a mercados globales." },
       { titulo: "Verifica tu identidad", texto: "Todos los brokers te van a pedir tu pasaporte vigente y un comprobante de dirección (recibo de servicios, estado de cuenta bancario o contrato de renta) para cumplir con las regulaciones KYC (Know Your Customer)." },
       { titulo: "Conecta tu cuenta bancaria en EE.UU.", texto: "Necesitas una cuenta bancaria en Estados Unidos para transferir fondos. Si aún no tienes una, bancos como Chase o Bank of America, o cuentas digitales como Chime, aceptan ITIN para abrir una cuenta básica." },
       { titulo: "Haz tu primer depósito y compra tu primer ETF", texto: "Con $1 dólar ya puedes empezar. Deposita desde tu cuenta bancaria y compra tu primer ETF, como VOO (S&P 500), para tener exposición diversificada a las 500 empresas más grandes de EE.UU. desde el primer día." },
     ], cierre: "No dejes que la falta de papeles perfectos te detenga. Miles de inmigrantes ya invierten legalmente en Wall Street con un ITIN y un pasaporte — el sistema está diseñado para que puedas participar, solo falta que des el primer paso.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["inmigrantes", "ITIN", "primeros pasos"] },
-  { tipo: "stats", titulo: "Qué es el S&P 500 y por qué deberías empezar ahí", extracto: "500 empresas, un solo clic. Así es como los principiantes más listos empiezan a invertir en Wall Street sin tener que escoger acciones individuales.", intro: "El S&P 500 es el índice bursátil más seguido del mundo: agrupa a las 500 empresas más grandes que cotizan en Estados Unidos, desde Apple y Microsoft hasta Coca-Cola y JPMorgan. Cuando compras un ETF que sigue el S&P 500 (como VOO o SPY), en una sola compra te conviertes en dueño de una pequeña parte de las 500 compañías más importantes del país — sin tener que investigar ni elegir acciones individuales.", stats: [
+  { tipo: "stats", titulo: "Qué es el S&P 500 y por qué deberías empezar ahí", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "500 empresas, un solo clic. Así es como los principiantes más listos empiezan a invertir en Wall Street sin tener que escoger acciones individuales.", intro: "El S&P 500 es el índice bursátil más seguido del mundo: agrupa a las 500 empresas más grandes que cotizan en Estados Unidos, desde Apple y Microsoft hasta Coca-Cola y JPMorgan. Cuando compras un ETF que sigue el S&P 500 (como VOO o SPY), en una sola compra te conviertes en dueño de una pequeña parte de las 500 compañías más importantes del país — sin tener que investigar ni elegir acciones individuales.", stats: [
       { valor: "10%", label: "Retorno anual histórico promedio" },
       { valor: "500", label: "Empresas más grandes de EE.UU." },
       { valor: "94", label: "Años de historia del índice" },
@@ -35,7 +46,7 @@ const WS_STOCKS = [
       { titulo: "94 años de historial con 10% de retorno anual", texto: "Desde su creación en 1928, el S&P 500 ha entregado un retorno promedio del 10% anual, incluyendo guerras, recesiones y crisis financieras. El tiempo en el mercado importa más que el momento perfecto para entrar." },
       { titulo: "No necesitas ser un experto", texto: "No hace falta leer balances financieros ni seguir noticias de empresas todos los días. El índice se ajusta solo: las empresas que crecen ganan más peso, y las que caen salen del índice." },
     ], cierre: "La estrategia que mejor funciona con el S&P 500 se llama dollar-cost averaging (DCA): invertir una cantidad fija cada mes, sin importar si el mercado sube o baja. Así compras más acciones cuando los precios están bajos y menos cuando están altos, sin tener que adivinar el momento perfecto — y con el tiempo, esa disciplina simple suele superar a quienes intentan predecir el mercado.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["S&P 500", "ETF", "principiantes"] },
-  { tipo: "tabla", titulo: "Acciones vs ETFs vs Fondos Mutuos: cuál te conviene", extracto: "Los tres términos se confunden todo el tiempo, pero no son lo mismo. Aquí la diferencia explicada en una tabla, sin tecnicismos.", intro: "Es normal confundir estos tres términos cuando estás empezando: acciones individuales, ETFs y fondos mutuos son formas distintas de poner tu dinero en el mercado, cada una con sus propias reglas de juego. Entender la diferencia te ayuda a elegir la que mejor se ajusta a tu nivel de experiencia y tolerancia al riesgo.", tabla: {
+  { tipo: "tabla", titulo: "Acciones vs ETFs vs Fondos Mutuos: cuál te conviene", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "Los tres términos se confunden todo el tiempo, pero no son lo mismo. Aquí la diferencia explicada en una tabla, sin tecnicismos.", intro: "Es normal confundir estos tres términos cuando estás empezando: acciones individuales, ETFs y fondos mutuos son formas distintas de poner tu dinero en el mercado, cada una con sus propias reglas de juego. Entender la diferencia te ayuda a elegir la que mejor se ajusta a tu nivel de experiencia y tolerancia al riesgo.", tabla: {
       columnas: ["Acciones Individuales", "ETFs", "Fondos Mutuos"],
       filas: [
         { label: "Diversificación instantánea", valores: [false, true, true] },
@@ -50,14 +61,14 @@ const WS_STOCKS = [
       { titulo: "ETFs", ventaja: { titulo: "Diversificación instantánea, bajo costo y fácil de comprar", texto: "Con una sola compra tienes exposición a cientos de empresas, con comisiones mínimas (algunas de 0.03% anual), y se compran igual que una acción, en cualquier momento del día de mercado." }, desventaja: { titulo: "No hay ganancias explosivas de una sola empresa", texto: "Como tu dinero está repartido entre muchas compañías, ninguna por sí sola puede disparar el valor de tu inversión de la noche a la mañana." } },
       { titulo: "Fondos Mutuos", texto: "Son parecidos a los ETFs — también diversifican tu dinero entre muchas empresas — pero se compran directo con la empresa administradora del fondo (no en tu app de broker), su precio se actualiza solo una vez al final del día de mercado, y generalmente cobran comisiones más altas que un ETF equivalente." },
     ], cierre: "Para principiantes, los ETFs son la mejor opción: diversificación, bajo costo y simplicidad. Las acciones individuales tienen sentido cuando ya tengas más experiencia y puedas investigar empresas a fondo. Y los fondos mutuos, generalmente, solo valen la pena si tu empleador los ofrece dentro de un plan 401(k) — ahí la elección ya está hecha por ti.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["acciones", "ETFs", "fondos mutuos"] },
-  { tipo: "pasos", titulo: "Qué es un ETF y cómo funciona", extracto: "Descubre qué son los ETFs, por qué son la herramienta favorita de quien empieza a invertir, y cómo comprar tu primero paso a paso.", intro: "Si alguna vez escuchaste a alguien decir \"compré SPY\" o \"invierto en QQQ\", están hablando de ETFs — probablemente la herramienta de inversión más importante para alguien que está empezando, y una de las menos explicadas en español. Un ETF (Exchange-Traded Fund, o fondo cotizado en bolsa) es una \"canasta\" que contiene muchas acciones o activos diferentes, empaquetados en un solo producto que tú compras como si fuera una sola acción. Por ejemplo, cuando compras una acción de SPY, en realidad estás comprando un pedacito de las 500 empresas más grandes de Estados Unidos al mismo tiempo.", pasos: [
+  { tipo: "pasos", titulo: "Qué es un ETF y cómo funciona", nivel: "Principiante", tema: "Acciones y ETFs", extracto: "Descubre qué son los ETFs, por qué son la herramienta favorita de quien empieza a invertir, y cómo comprar tu primero paso a paso.", intro: "Si alguna vez escuchaste a alguien decir \"compré SPY\" o \"invierto en QQQ\", están hablando de ETFs — probablemente la herramienta de inversión más importante para alguien que está empezando, y una de las menos explicadas en español. Un ETF (Exchange-Traded Fund, o fondo cotizado en bolsa) es una \"canasta\" que contiene muchas acciones o activos diferentes, empaquetados en un solo producto que tú compras como si fuera una sola acción. Por ejemplo, cuando compras una acción de SPY, en realidad estás comprando un pedacito de las 500 empresas más grandes de Estados Unidos al mismo tiempo.", pasos: [
       { titulo: "¿Qué es un ETF?", texto: "Un ETF (Exchange-Traded Fund, o fondo cotizado en bolsa) es una \"canasta\" que contiene muchas acciones o activos diferentes, empaquetados en un solo producto que tú compras como si fuera una sola acción. Por ejemplo, cuando compras una acción de SPY, en realidad estás comprando un pedacito de las 500 empresas más grandes de Estados Unidos al mismo tiempo." },
       { titulo: "Por qué la diversificación importa", texto: "En vez de apostar todo tu dinero a que una sola empresa le vaya bien, tu dinero se reparte entre cientos de empresas a la vez. Si una empresa le va mal, las otras pueden compensarlo. Esto reduce mucho el riesgo comparado con comprar acciones individuales, especialmente cuando estás empezando." },
       { titulo: "Tipos comunes de ETFs", texto: "De índice amplio (como SPY o VOO, que siguen el S&P 500), sectoriales (enfocados en una industria específica, como QQQ para tecnología), de bonos (como TLT, más conservador), e internacionales (que invierten fuera de Estados Unidos)." },
       { titulo: "Cómo comprar tu primer ETF", texto: "Abre una cuenta en un broker (Robinhood o Tastytrade son opciones accesibles), busca el símbolo del ETF que te interesa, decide cuánto invertir (muchos brokers permiten comprar fracciones), y compra pensando en el largo plazo, no en especular día a día." },
       { titulo: "Lo que un ETF no te garantiza", texto: "Ningún ETF está libre de riesgo — si el mercado completo baja, tu ETF también baja, porque está compuesto por ese mismo mercado. Si ya sabes qué es un ETF y quieres comparar ETFs contra acciones individuales o fondos mutuos en detalle, tenemos una guía dedicada a esa comparación." },
     ], cierre: "Los ETFs no son una fórmula mágica, pero sí una de las formas más accesibles y razonables de empezar a invertir sin necesitar ser experto en analizar empresas individuales. Con estos cinco pasos ya tienes lo esencial para dar el primer paso con confianza.", nota: "Este contenido es educativo e informativo. No constituye asesoría financiera personalizada. Considera hablar con un asesor financiero certificado antes de tomar decisiones de inversión.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["ETF", "Principiantes", "Diversificación"] },
-  { tipo: "herramientas", titulo: "Cómo leer el Heat Map y el Sentimiento del Mercado", extracto: "Dos herramientas gratis que ya tienes en FinanzaDR te dicen en segundos cómo está el mercado hoy — aquí cómo interpretarlas.", intro: "No hace falta pagar por un terminal de Bloomberg para saber cómo está el mercado hoy. En FinanzaDR ya tienes dos herramientas gratuitas, disponibles ahora mismo en el menú, que leídas juntas te dan una foto rápida y clara del estado general de Wall Street: el Heat Map y el índice de Sentimiento.", herramientas: [
+  { tipo: "herramientas", titulo: "Cómo leer el Heat Map y el Sentimiento del Mercado", nivel: "Intermedio", tema: "Herramientas", extracto: "Dos herramientas gratis que ya tienes en FinanzaDR te dicen en segundos cómo está el mercado hoy — aquí cómo interpretarlas.", intro: "No hace falta pagar por un terminal de Bloomberg para saber cómo está el mercado hoy. En FinanzaDR ya tienes dos herramientas gratuitas, disponibles ahora mismo en el menú, que leídas juntas te dan una foto rápida y clara del estado general de Wall Street: el Heat Map y el índice de Sentimiento.", herramientas: [
       { icono: "🔲", nombre: "Heat Map", ruta: "/heatmap", cta: "Ver Heat Map en vivo", descripcion: "El Heat Map muestra el S&P 500 completo como un mosaico de bloques de colores, actualizado en vivo.", puntos: [
           { titulo: "El tamaño del bloque = importancia", texto: "Cada bloque representa una empresa. Mientras más grande es el bloque, mayor es su capitalización de mercado (market cap) — por eso Apple o Microsoft ocupan mucho más espacio que una empresa pequeña." },
           { titulo: "El color = si sube o baja", texto: "Verde significa que la acción subió hoy, rojo significa que bajó. No hay ambigüedad: el color te dice la dirección de un vistazo." },
@@ -68,7 +79,7 @@ const WS_STOCKS = [
           { titulo: "Número alto = codicia", texto: "Cuando el índice sube hacia 100, significa que todos quieren comprar y el optimismo está por las nubes. Es momento de tener más cautela, no de perseguir subidas con dinero que no puedes permitirte perder." },
         ], tip: "Como dice el dicho de Warren Buffett: sé temeroso cuando otros son codiciosos, y codicioso cuando otros son temerosos. El índice de Sentimiento te dice exactamente en cuál de los dos extremos está el mercado hoy." },
     ], cierre: "Usadas juntas, estas dos herramientas te dan el pulso del mercado en menos de un minuto: el Heat Map te muestra qué está pasando ahora mismo, empresa por empresa, y el Sentimiento te dice si esa reacción es miedo pasajero o codicia peligrosa. Revísalas antes de tomar cualquier decisión de compra o venta importante.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["heat map", "sentimiento", "herramientas"] },
-  { tipo: "simulador", titulo: "Interés compuesto explicado con ejemplos reales", extracto: "Einstein lo llamó la octava maravilla del mundo. Así es como $200 al mes pueden convertirse en más de un millón de dólares — o en menos de la mitad, dependiendo de cuándo empieces.", intro: "El interés compuesto es el motor detrás de casi cualquier fortuna construida a largo plazo. La idea es simple pero poderosa: no solo ganas intereses sobre tu dinero original, también ganas intereses sobre los intereses que ya generaste. Cada año, la base sobre la que creces es más grande — por eso el crecimiento se acelera con el tiempo, en vez de ser una línea recta.", ejemplo: {
+  { tipo: "simulador", titulo: "Interés compuesto explicado con ejemplos reales", nivel: "Principiante", tema: "Largo plazo y retiro", extracto: "Einstein lo llamó la octava maravilla del mundo. Así es como $200 al mes pueden convertirse en más de un millón de dólares — o en menos de la mitad, dependiendo de cuándo empieces.", intro: "El interés compuesto es el motor detrás de casi cualquier fortuna construida a largo plazo. La idea es simple pero poderosa: no solo ganas intereses sobre tu dinero original, también ganas intereses sobre los intereses que ya generaste. Cada año, la base sobre la que creces es más grande — por eso el crecimiento se acelera con el tiempo, en vez de ser una línea recta.", ejemplo: {
       titulo: "$1,000 invertidos al 10% anual, sin aportes adicionales:",
       filas: [
         { periodo: "Año 1", valor: "$1,100" },
@@ -83,7 +94,7 @@ const WS_STOCKS = [
         { edad: "Empezando a los 35 años", aporte: "$200/mes", resultado: "~$452,000", detalle: "a los 65 años — menos de la mitad, por perder solo 10 años" },
       ],
     }, cierre: "Mueve los sliders del simulador de abajo y compruébalo tú mismo: entre más joven empieces, menos dinero necesitas aportar cada mes para llegar al mismo destino. El tiempo, no el monto, es el ingrediente más importante del interés compuesto.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["interés compuesto", "calculadora", "estrategia"] },
-  { tipo: "errores", titulo: "Errores comunes de principiantes al invertir (y cómo evitarlos)", extracto: "El 80% de los inversores primerizos repiten los mismos 6 errores. Identifícalos antes de que te cuesten dinero.", intro: "Invertir no es solo cuestión de elegir los activos correctos — la mayoría de las pérdidas de los principiantes no vienen de una mala elección de inversión, sino de errores de comportamiento que se repiten una y otra vez. Reconocerlos es el primer paso para evitarlos.", errores: [
+  { tipo: "errores", titulo: "Errores comunes de principiantes al invertir (y cómo evitarlos)", nivel: "Principiante", tema: "Primeros pasos", extracto: "El 80% de los inversores primerizos repiten los mismos 6 errores. Identifícalos antes de que te cuesten dinero.", intro: "Invertir no es solo cuestión de elegir los activos correctos — la mayoría de las pérdidas de los principiantes no vienen de una mala elección de inversión, sino de errores de comportamiento que se repiten una y otra vez. Reconocerlos es el primer paso para evitarlos.", errores: [
       { titulo: "Intentar adivinar cuándo comprar y vender (market timing)", texto: "Ni los profesionales que se dedican a esto de tiempo completo aciertan consistentemente el momento perfecto para entrar o salir del mercado. Intentarlo casi siempre te cuesta más de lo que ganas — la estrategia que funciona es invertir de forma constante, sin importar el momento." },
       { titulo: "Invertir dinero que vas a necesitar pronto", texto: "El mercado sube y baja en el corto plazo. Solo invierte el dinero que no vas a necesitar en los próximos 3 a 5 años como mínimo, para no verte obligado a vender en un mal momento." },
       { titulo: "No diversificar", texto: "Poner todo tu dinero en una sola acción, por muy sólida que parezca, es una apuesta. Ni las empresas más grandes están garantizadas — repartir tu inversión entre muchas empresas reduce el riesgo sin sacrificar el potencial de crecimiento." },
@@ -91,7 +102,7 @@ const WS_STOCKS = [
       { titulo: "No empezar por miedo a no saber lo suficiente", texto: "Nadie empieza sabiéndolo todo. Empezar con poco dinero mientras aprendes es mucho mejor que esperar el momento en que te sientas \"listo\" — ese momento casi nunca llega, y mientras tanto pierdes años de crecimiento compuesto." },
       { titulo: "Revisar tu portafolio obsesivamente", texto: "Ver tu cuenta todos los días aumenta la ansiedad y la tentación de reaccionar a movimientos que no importan a largo plazo. Para inversiones a largo plazo, revisar tu portafolio una vez al mes es más que suficiente." },
     ], cierre: "Cometer uno de estos errores no te descalifica como inversionista — todos los grandes inversionistas empezaron sin saberlo todo. La diferencia entre quienes tienen éxito a largo plazo y quienes no está en reconocer estos patrones y corregirlos antes de que le cuesten caro a tu patrimonio.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["errores", "principiantes", "psicología"] },
-  { tipo: "tabla", titulo: "Roth IRA vs Traditional IRA: cuál te conviene abrir", extracto: "Las dos cuentas de retiro más comunes en Estados Unidos funcionan muy diferente en cuanto a impuestos. Aquí la diferencia explicada simple, para que elijas con más claridad.", intro: "Si trabajas en Estados Unidos y quieres ahorrar para el retiro por tu cuenta (más allá del 401k de tu trabajo, si lo tienes), un IRA (Individual Retirement Account, o cuenta de retiro individual) es una de las herramientas más accesibles. La gran pregunta es cuál abrir: Roth o Traditional — la diferencia no está en dónde inviertes tu dinero, sino en cuándo pagas impuestos sobre él.", tabla: {
+  { tipo: "tabla", titulo: "Roth IRA vs Traditional IRA: cuál te conviene abrir", nivel: "Intermedio", tema: "Largo plazo y retiro", extracto: "Las dos cuentas de retiro más comunes en Estados Unidos funcionan muy diferente en cuanto a impuestos. Aquí la diferencia explicada simple, para que elijas con más claridad.", intro: "Si trabajas en Estados Unidos y quieres ahorrar para el retiro por tu cuenta (más allá del 401k de tu trabajo, si lo tienes), un IRA (Individual Retirement Account, o cuenta de retiro individual) es una de las herramientas más accesibles. La gran pregunta es cuál abrir: Roth o Traditional — la diferencia no está en dónde inviertes tu dinero, sino en cuándo pagas impuestos sobre él.", tabla: {
       columnas: ["Roth IRA", "Traditional IRA"],
       filas: [
         { label: "Contribuyes con dinero después de haber pagado impuestos", valores: [true, false] },
@@ -353,6 +364,85 @@ function Icon({ name, size = 20, titulo, style }) {
   );
 }
 
+// --- Fechas de mercado -----------------------------------------------------
+// Toda fecha u hora de sesion se calcula en la zona horaria de Nueva York con
+// Intl, que aplica el cambio de horario de verano por si solo. No usar
+// desplazamientos fijos (-4/-5) ni la zona del navegador: el lector puede
+// estar en Santo Domingo, Madrid o California y la sesion es la misma.
+const TZ_MERCADO = "America/New_York";
+const fmtFechaSesion = (d) => new Intl.DateTimeFormat("es-DO", { timeZone: TZ_MERCADO, weekday: "long", day: "numeric", month: "long" }).format(new Date(d));
+const fmtHoraET = (d) => new Intl.DateTimeFormat("es-DO", { timeZone: TZ_MERCADO, hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(d));
+// Clave YYYY-MM-DD del dia de mercado, para comparar si dos momentos caen en
+// la misma sesion sin arrastrar la hora.
+const claveDiaMercado = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ_MERCADO, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(d));
+
+// --- Formato de cifras -----------------------------------------------------
+// Sin dato valido devuelven null: quien llama decide si pinta una raya, un
+// esqueleto o un estado vacio. Nunca se sustituye por un cero ni por un
+// valor de ejemplo.
+const fmtPrecio = (p) => p == null ? null : p >= 1000 ? p.toLocaleString("en-US", { maximumFractionDigits: 0 }) : p.toFixed(2);
+const fmtVar = (c) => c == null ? null : `${c >= 0 ? "+" : "−"}${Math.abs(c).toFixed(2)}%`;
+
+// Variacion porcentual: signo, flecha y texto alternativo ademas del color,
+// porque el color no puede ser el unico portador del dato (WCAG 1.4.1).
+function Variacion({ c, size = 14 }) {
+  const { C } = useOutletContext();
+  if (c == null) return <span style={{ fontSize: size, color: C.muted }}>Sin dato</span>;
+  const pos = c >= 0;
+  return (
+    <span style={{ fontSize: size, fontWeight: 600, color: pos ? C.green : C.red, whiteSpace: "nowrap" }}>
+      <span aria-hidden="true">{pos ? "▲" : "▼"} </span>{fmtVar(c)}
+      <span className="sr-only">{pos ? " al alza" : " a la baja"}</span>
+    </span>
+  );
+}
+
+// Boton de accion unico para toda la interfaz. Como Link cuando el destino es
+// una ruta interna, como <a> para destinos externos y como <button> cuando
+// dispara una accion. Altura minima 48px (criterio del proyecto: 44px).
+function Boton({ to, href, onClick, variante = "primario", ancho, children, ...resto }) {
+  const { C } = useOutletContext();
+  const base = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 48, padding: "0 22px", borderRadius: 10, fontFamily: F.sans, fontSize: 15, fontWeight: 600, textDecoration: "none", cursor: "pointer", border: "1px solid transparent", width: ancho || "auto" };
+  const estilo = variante === "primario"
+    ? { ...base, background: C.text, color: C.bg }
+    : { ...base, background: C.card, color: C.text, borderColor: C.border };
+  if (to) return <Link to={to} style={estilo} {...resto}>{children}</Link>;
+  if (href) return <a href={href} style={estilo} {...resto}>{children}</a>;
+  return <button type="button" onClick={onClick} style={estilo} {...resto}>{children}</button>;
+}
+
+// Cabecera de bloque de portada: H2, descripcion opcional y enlace de salida
+// a la seccion completa. Todo alineado a la izquierda.
+function BloqueSeccion({ id, titulo, descripcion, enlace, children }) {
+  const { C } = useOutletContext();
+  return (
+    <section aria-labelledby={id} style={{ marginTop: 64 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 24, flexWrap: "wrap", marginBottom: 24 }}>
+        <div style={{ maxWidth: "58ch" }}>
+          <h2 id={id} style={{ fontFamily: F.serif, fontSize: 30, fontWeight: 700, color: C.text, lineHeight: 1.25 }}>{titulo}</h2>
+          {descripcion && <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.6, marginTop: 8 }}>{descripcion}</p>}
+        </div>
+        {enlace && <Link to={enlace[0]} style={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: 14, fontWeight: 600, color: C.goldText, textDecoration: "underline" }}>{enlace[1]}</Link>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// Tiempo de lectura calculado, no declarado a mano: recorre todos los campos
+// de texto del articulo (esten anidados donde esten) y divide entre 200
+// palabras por minuto. Si el articulo crece, el dato crece con el.
+function tiempoLectura(post) {
+  let palabras = 0;
+  const contar = (v) => {
+    if (typeof v === "string") palabras += v.trim().split(/\s+/).filter(Boolean).length;
+    else if (Array.isArray(v)) v.forEach(contar);
+    else if (v && typeof v === "object") Object.values(v).forEach(contar);
+  };
+  contar(post);
+  return Math.max(2, Math.round(palabras / 200));
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
@@ -401,7 +491,7 @@ export default function FinanzasDR() {
 }
 
 function Layout() {
-  const [stocks, setStocks] = useState(WS_STOCKS);
+  const [stocks, setStocks] = useState(INSTRUMENTOS);
   const [dark, setDark] = useState(temaInicial);
   const [realLoading, setRealLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -434,12 +524,17 @@ function Layout() {
       const res = await fetch("/api/precios");
       const data = await res.json();
       const porSimbolo = Object.fromEntries(data.map(p => [p.simbolo, p]));
-      const updated = WS_STOCKS.map(st => {
+      // La identidad del instrumento (nombre, tipo de activo, referencia,
+      // moneda) la manda el modelo local; de la API solo se toman precio y
+      // variacion. Si un simbolo llega sin precio se conserva la entrada
+      // anterior: se mantiene el ultimo dato valido en vez de vaciarlo.
+      // Actualizacion funcional porque esta funcion tambien corre desde un
+      // setInterval creado una sola vez, con `stocks` congelado en su closure.
+      setStocks(prev => prev.map(st => {
         const p = porSimbolo[st.s];
-        return p && p.precio != null ? { ...st, p: p.precio, c: p.cambioPct, tipo: p.tipo ?? st.tipo } : st;
-      });
-      setStocks(updated);
-      setLastUpdate(new Date().toLocaleTimeString("es-DO"));
+        return p && p.precio != null ? { ...st, p: p.precio, c: p.cambioPct } : st;
+      }));
+      setLastUpdate(new Date().toISOString());
     } catch(e) { setRealErr("No se pudo conectar."); }
     setRealLoading(false);
   };
@@ -482,6 +577,32 @@ function Layout() {
       .market-item { transition:all 0.15s; border-radius:6px; }
       .market-item:hover { text-decoration:underline; }
       .saltar-contenido:focus { left:16px !important; }
+      .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+      /* Foco visible en todo control interactivo (WCAG 2.4.7). currentColor
+         para que funcione en ambos temas sin recalcular el token. */
+      a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline:2px solid currentColor; outline-offset:3px; border-radius:4px; }
+      .portada-h1 { font-size:52px; }
+      .portada-hero { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,0.85fr); gap:40px; align-items:start; }
+      .portada-grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+      .portada-grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:32px; }
+      .portada-grid-panorama { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:24px; align-items:start; }
+      .tarjeta-enlace { transition:transform 0.2s, border-color 0.2s; }
+      .tarjeta-enlace:hover { transform:translateY(-2px); }
+      @media (prefers-reduced-motion:reduce) {
+        *, .ticker-track, .fade-in, .live-dot, .skeleton-pulse, .tarjeta-enlace { animation:none !important; transition:none !important; }
+      }
+      @media (max-width:1024px) {
+        .portada-grid-panorama { grid-template-columns:1fr; }
+      }
+      @media (max-width:900px) {
+        .portada-hero { grid-template-columns:1fr; gap:28px; }
+        .portada-grid-3 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .portada-grid-2 { grid-template-columns:1fr; gap:24px; }
+      }
+      @media (max-width:640px) {
+        .portada-grid-3 { grid-template-columns:1fr; }
+        .portada-h1 { font-size:34px; }
+      }
       @media (max-width:900px) {
         .nav-principal { display:none !important; }
         .boton-menu { display:flex !important; }
@@ -520,7 +641,7 @@ function Layout() {
   const menuAbierto = menuEn === pathname;
   const seccionActiva = SECCIONES.find(sec => sec.rutas.includes(pathname));
 
-  const outletCtx = { stocks, C, dark, setDark, lastUpdate, realLoading, fetchRealPrices, noticias, noticiasLoading, fetchNoticias, noticiasRD, noticiasRDLoading, fetchNoticiasRD };
+  const outletCtx = { stocks, C, dark, setDark, lastUpdate, realLoading, realErr, fetchRealPrices, noticias, noticiasLoading, fetchNoticias, noticiasRD, noticiasRDLoading, fetchNoticiasRD };
 
   return (
     <div style={{ minHeight:"100dvh", background:C.bg, color:C.text, fontFamily:F.sans, display:"flex", flexDirection:"column" }}>
@@ -535,18 +656,24 @@ function Layout() {
             <Link key={i} to="/mercados" className="market-item"
               style={{ padding:"7px 12px", display:"flex", alignItems:"center", gap:8, textDecoration:"none", color:"inherit", whiteSpace:"nowrap" }}>
               <span style={{ fontSize:11, fontWeight:700, color:C.text }}>{st.s}</span>
-              <span style={{ fontSize:11, color:C.sub }}>
-                {st.p >= 1000 ? st.p.toLocaleString("en-US",{maximumFractionDigits:0}) : st.p.toFixed(2)}
-              </span>
-              {/* Signo y flecha ademas del color: el color no puede ser el unico
-                  portador de la informacion (WCAG 1.4.1). */}
-              <span style={{ fontSize:11, fontWeight:600, color:st.c>=0?C.green:C.red }}>
-                {st.c>=0?"▲":"▼"} {st.c>=0?"+":"−"}{Math.abs(st.c)}%
-              </span>
+              {/* Hasta que /api/precios responde no hay precio: se dice, en
+                  vez de pintar una cifra de ejemplo que luego cambia sola. */}
+              {st.p == null ? (
+                <span style={{ fontSize:11, color:C.muted }}>Sin dato</span>
+              ) : (
+                <>
+                  <span style={{ fontSize:11, color:C.sub }}>{fmtPrecio(st.p)}</span>
+                  {/* Signo y flecha ademas del color: el color no puede ser el
+                      unico portador de la informacion (WCAG 1.4.1). */}
+                  <span style={{ fontSize:11, fontWeight:600, color:st.c>=0?C.green:C.red }}>
+                    <span aria-hidden="true">{st.c>=0?"▲":"▼"} </span>{fmtVar(st.c)}
+                  </span>
+                </>
+              )}
             </Link>
           ))}
           <span style={{ fontSize:11, color:C.muted, marginLeft:"auto", paddingLeft:16, whiteSpace:"nowrap" }}>
-            {lastUpdate ? `Actualizado ${lastUpdate}` : "NYSE · NASDAQ"}
+            {lastUpdate ? `Consultado ${fmtHoraET(lastUpdate)} ET` : "NYSE · NASDAQ"}
           </span>
         </div>
       </div>
@@ -683,230 +810,506 @@ function Layout() {
   );
 }
 
-function BriefingTeaser() {
+// ===========================================================================
+// PORTADA
+// ===========================================================================
+
+// Estado del dato de mercado. Distingue la hora de consulta de la hora de
+// cotizacion: /api/precios devuelve precio y variacion, pero no la marca de
+// tiempo del quote ni el estado de sesion, asi que aqui solo se puede afirmar
+// cuando lo consultamos nosotros — nunca "en tiempo real".
+// DEPENDENCIA PENDIENTE (fase Mercados): ampliar /api/precios con el campo `t`
+// de Finnhub y el estado de sesion (preapertura / regular / fuera de horario /
+// cierre) para poder etiquetar cada instrumento con su propia actualidad.
+function EstadoDato() {
+  const { C, stocks, lastUpdate, realLoading, realErr, fetchRealPrices } = useOutletContext();
+  const hayDato = stocks.some((st) => st.p != null);
+
+  if (!hayDato) {
+    return (
+      <div role="status" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", fontSize: 13, color: C.sub }}>
+        <span>{realLoading ? "Consultando cotizaciones…" : "No hay cotizaciones disponibles ahora mismo."}</span>
+        {!realLoading && (
+          <button type="button" onClick={fetchRealPrices} style={{ minHeight: 44, padding: "0 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontFamily: F.sans, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Reintentar</button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    // C.sub y no C.muted: este texto tambien se pinta sobre surfaceAlt, donde
+    // muted se queda en 4.16:1 y no llega al 4.5:1 exigido para texto normal.
+    <p role="status" style={{ fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
+      Datos de Finnhub{lastUpdate ? `, consultados a las ${fmtHoraET(lastUpdate)} (hora de Nueva York)` : ""}.
+      {realLoading ? " Actualizando…" : ""}
+      {realErr ? " La última actualización falló: se muestra el último dato válido." : ""}
+    </p>
+  );
+}
+
+// Ficha compacta de instrumento para el panel del encabezado.
+function FilaInstrumento({ st, borde }) {
   const { C } = useOutletContext();
-  const [status, setStatus] = useState("loading");
-  const [teaser, setTeaser] = useState(null);
+  return (
+    <li style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, padding: "12px 0", borderTop: borde ? `1px solid ${C.border}` : "none" }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{st.s}</span>
+          <span style={{ fontSize: 12, color: C.muted }}>{st.tipoActivo}</span>
+        </div>
+        <div style={{ fontSize: 13, color: C.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st.corto}</div>
+      </div>
+      <div style={{ textAlign: "right" }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>
+          {st.p == null ? <span style={{ color: C.muted, fontWeight: 400 }}>—</span> : `${fmtPrecio(st.p)} ${st.moneda}`}
+        </div>
+        <Variacion c={st.c} size={13} />
+      </div>
+    </li>
+  );
+}
+
+// A. Presentacion. En escritorio, propuesta + panel de panorama; en movil el
+// panel cae debajo del mensaje y las acciones (orden natural del DOM).
+function PortadaHero() {
+  const { C, stocks } = useOutletContext();
+  return (
+    <section className="portada-hero" aria-labelledby="portada-titulo">
+      <div>
+        <p style={{ fontSize: 13, fontWeight: 600, letterSpacing: 1.6, textTransform: "uppercase", color: C.goldText, marginBottom: 16 }}>Wall Street en tu idioma</p>
+        <h1 id="portada-titulo" className="portada-h1" style={{ fontFamily: F.serif, fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -0.5 }}>
+          Entiende Wall Street.<br />Invierte con más criterio.
+        </h1>
+        <p style={{ fontSize: 18, lineHeight: 1.65, color: C.sub, margin: "20px 0 28px", maxWidth: "62ch" }}>
+          Guías en español, contexto del mercado y herramientas para latinos que quieren aprender a invertir.
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Boton to="/aprende">Aprender desde cero</Boton>
+          <Boton to="/mercados" variante="secundario">Ver el mercado</Boton>
+        </div>
+        <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 24, maxWidth: "62ch" }}>
+          Contenido educativo. FinanzaDR no es asesor de inversiones y no recomienda comprar ni vender ningún activo.
+        </p>
+      </div>
+
+      <aside aria-labelledby="panel-panorama" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 22px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+          <h2 id="panel-panorama" style={{ fontSize: 15, fontWeight: 700, color: C.text }}>El mercado hoy</h2>
+          <Link to="/mercados" style={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: 13, fontWeight: 600, color: C.goldText, textDecoration: "underline" }}>Ver todo</Link>
+        </div>
+        <ul role="list" style={{ listStyle: "none", margin: "4px 0 0" }}>
+          {stocks.slice(0, 4).map((st, i) => <FilaInstrumento key={st.s} st={st} borde={i > 0} />)}
+        </ul>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}><EstadoDato /></div>
+      </aside>
+    </section>
+  );
+}
+
+// B. Ruta para principiantes: tres pasos que enlazan a contenido que ya existe.
+const RUTA_PASOS = [
+  { to: "/aprende?articulo=3", titulo: "Entiende qué son las acciones y los ETFs", texto: "Qué compras exactamente cuando compras un ETF, y por qué es el punto de partida más común." },
+  { to: "/brokers", titulo: "Conoce los requisitos y compara brokers", texto: "Qué documentos piden, qué cobran y a qué perfil de inversor atiende cada uno." },
+  { to: "/calculadora", titulo: "Explora el interés compuesto", texto: "Simula cómo crece un aporte mensual sostenido en el tiempo, con tus propias cifras." },
+];
+
+function RutaPrincipiantes() {
+  const { C } = useOutletContext();
+  return (
+    <BloqueSeccion id="ruta-principiantes" titulo="Si empiezas desde cero, empieza aquí" descripcion="Tres pasos en orden. Cada uno lleva a una guía o a una herramienta que ya está publicada." enlace={["/aprende", "Ver todas las guías"]}>
+      <ol className="portada-grid-3" style={{ listStyle: "none" }}>
+        {RUTA_PASOS.map((paso, i) => (
+          <li key={paso.to} style={{ display: "flex" }}>
+            <Link to={paso.to} className="tarjeta-enlace" style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
+              <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", background: C.goldBg, color: C.goldText, fontSize: 14, fontWeight: 700 }}>{i + 1}</span>
+              <h3 style={{ fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.35 }}><span className="sr-only">{`Paso ${i + 1}: `}</span>{paso.titulo}</h3>
+              <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{paso.texto}</p>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </BloqueSeccion>
+  );
+}
+
+// C. Actualidad destacada. Toma la ultima edicion disponible de Apertura o de
+// Cierre y deja claro a que sesion corresponde: si la mas reciente no es de
+// hoy, se dice, en vez de presentarla como la del dia.
+const EDICIONES = [
+  { url: "/api/briefing?soloCache=true", to: "/briefing", etiqueta: "Cierre de mercado" },
+  { url: "/api/apertura?soloCache=true", to: "/apertura", etiqueta: "Apertura de mercado" },
+];
+
+// Primera frase de un parrafo, para las tres claves de lectura rapida.
+const primeraFrase = (texto) => {
+  const limpio = (texto || "").trim();
+  const corte = limpio.search(/[.:;]\s/);
+  return corte > 40 ? limpio.slice(0, corte + 1) : limpio;
+};
+
+function ActualidadDestacada() {
+  const { C } = useOutletContext();
+  const [estado, setEstado] = useState("loading");
+  const [edicion, setEdicion] = useState(null);
 
   useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    let cancelado = false;
+    const controlador = new AbortController();
+    const temporizador = setTimeout(() => controlador.abort(), 8000);
 
-    const cargar = async (url) => {
+    const cargar = async (fuente) => {
       try {
-        const res = await fetch(url, { signal: controller.signal });
+        const res = await fetch(fuente.url, { signal: controlador.signal });
         const body = await res.json();
         if (!res.ok || body.disponible === false || !body.resumen) return null;
-        return body;
+        return { ...fuente, data: body };
       } catch {
         return null;
       }
     };
 
-    Promise.all([
-      cargar("/api/briefing?soloCache=true").then(data => data && { data, to:"/briefing", label:"🤖 Cierre de Hoy" }),
-      cargar("/api/apertura?soloCache=true").then(data => data && { data, to:"/apertura", label:"🌅 Resumen de Apertura" }),
-    ]).then((candidatos) => {
-      if (cancelled) return;
-      const disponibles = candidatos.filter(Boolean).sort((a, b) => new Date(b.data.generadoEn) - new Date(a.data.generadoEn));
-      if (disponibles.length === 0) { setStatus("empty"); return; }
-      const elegido = disponibles[0];
-      const parrafos = (elegido.data.resumen || "").split(/\n+/).map(p => p.trim()).filter(Boolean);
-      const [titulo, ...cuerpo] = parrafos;
-      setTeaser({ titulo, preview: cuerpo[0] || "", generadoEn: elegido.data.generadoEn, to: elegido.to, label: elegido.label });
-      setStatus("ready");
-    }).catch(() => { if (!cancelled) setStatus("empty"); })
-      .finally(() => clearTimeout(timeoutId));
+    Promise.all(EDICIONES.map(cargar))
+      .then((candidatos) => {
+        if (cancelado) return;
+        const disponibles = candidatos.filter(Boolean).sort((a, b) => new Date(b.data.generadoEn) - new Date(a.data.generadoEn));
+        if (disponibles.length === 0) { setEstado("vacio"); return; }
+        const elegida = disponibles[0];
+        const parrafos = (elegida.data.resumen || "").split(/\n+/).map((p) => p.trim()).filter(Boolean);
+        const [titulo, ...cuerpo] = parrafos;
+        setEdicion({
+          etiqueta: elegida.etiqueta,
+          to: elegida.to,
+          titulo,
+          claves: cuerpo.slice(0, 3).map(primeraFrase),
+          generadoEn: elegida.data.generadoEn,
+          deHoy: claveDiaMercado(elegida.data.generadoEn) === claveDiaMercado(Date.now()),
+        });
+        setEstado("listo");
+      })
+      .catch(() => { if (!cancelado) setEstado("vacio"); })
+      .finally(() => clearTimeout(temporizador));
 
-    return () => { cancelled = true; clearTimeout(timeoutId); controller.abort(); };
+    return () => { cancelado = true; clearTimeout(temporizador); controlador.abort(); };
   }, []);
 
-  if (status === "empty") return null;
-
-  if (status === "loading") {
-    return <div className="skeleton-pulse" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"28px 32px", marginBottom:24, height:148 }} />;
-  }
+  const marco = { background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "24px 28px" };
 
   return (
-    <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"28px 32px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8, marginBottom:12 }}>
-        <Label style={{ margin:0 }}>── {teaser.label}</Label>
-        <span style={{ fontFamily:F.sans, fontSize:11, color:C.muted }}>Actualizado {formatTiempoRelativo(teaser.generadoEn)}</span>
-      </div>
-      {teaser.titulo && <h2 style={{ fontFamily:F.serif, fontSize:22, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(teaser.titulo)}</h2>}
-      {teaser.preview && <p style={{ fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:16, display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{renderTextoConNegritas(teaser.preview)}</p>}
-      <Link to={teaser.to} style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.gold, textDecoration:"none" }}>Leer el análisis completo →</Link>
-    </div>
+    <BloqueSeccion id="actualidad" titulo="La sesión, explicada" descripcion="Un resumen de apertura o de cierre por jornada, con la cadena de causas y lo que significa para quien está empezando." enlace={["/noticias", "Ver toda la actualidad"]}>
+      {estado === "loading" && <div className="skeleton-pulse" style={{ ...marco, height: 220 }} aria-hidden="true" />}
+
+      {estado === "vacio" && (
+        <div style={marco}>
+          <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65 }}>Todavía no hay una edición publicada. Los resúmenes de apertura y de cierre se publican en días de mercado.</p>
+          <div style={{ marginTop: 16 }}><Boton to="/noticias" variante="secundario">Ver las noticias del día</Boton></div>
+        </div>
+      )}
+
+      {estado === "listo" && (
+        <article style={marco}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+            <span style={{ background: C.goldBg, color: C.goldText, borderRadius: 999, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>{edicion.etiqueta}</span>
+            <span style={{ fontSize: 13, color: C.muted }}>Sesión del {fmtFechaSesion(edicion.generadoEn)} · publicado a las {fmtHoraET(edicion.generadoEn)} (hora de Nueva York)</span>
+          </div>
+
+          {!edicion.deHoy && (
+            <p role="status" style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px", fontSize: 14, color: C.sub, lineHeight: 1.55, marginBottom: 16 }}>
+              Es la última edición disponible y corresponde a otra jornada. La de hoy aún no se ha publicado.
+            </p>
+          )}
+
+          {edicion.titulo && <h3 style={{ fontFamily: F.serif, fontSize: 26, fontWeight: 700, color: C.text, lineHeight: 1.3, marginBottom: 16 }}>{renderTextoConNegritas(edicion.titulo)}</h3>}
+
+          {edicion.claves.length > 0 && (
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+              {edicion.claves.map((clave, i) => (
+                <li key={i} style={{ display: "flex", gap: 12, fontSize: 16, color: C.sub, lineHeight: 1.6 }}>
+                  <span aria-hidden="true" style={{ color: C.goldText, fontWeight: 700 }}>—</span>
+                  <span>{renderTextoConNegritas(clave)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+            <Boton to={edicion.to} variante="secundario">Leer el análisis completo</Boton>
+            <span style={{ fontSize: 13, color: C.muted, lineHeight: 1.55, maxWidth: "48ch" }}>Redactado por un modelo de lenguaje a partir de las cotizaciones y noticias del día, con publicación automática.</span>
+          </div>
+        </article>
+      )}
+    </BloqueSeccion>
   );
 }
 
-function NoticiasTeaser() {
+// Indicador distinto del balance de activos, y de otro mercado: mide el animo
+// del mercado cripto, no el de Wall Street. Se explica antes de mostrarse y no
+// se traduce a una señal de compra o de venta.
+const CLASIFICACION_FNG = { "Extreme Fear": "Miedo extremo", "Fear": "Miedo", "Neutral": "Neutral", "Greed": "Codicia", "Extreme Greed": "Codicia extrema" };
+
+function MiedoCodiciaCripto() {
   const { C } = useOutletContext();
-  const [status, setStatus] = useState("loading");
-  const [items, setItems] = useState([]);
+  const [estado, setEstado] = useState("loading");
+  const [dato, setDato] = useState(null);
 
   useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-    fetch("/api/noticias-es", { signal: controller.signal })
-      .then(async (res) => {
-        const body = await res.json();
-        if (!res.ok || body.disponible === false || !Array.isArray(body.items) || body.items.length === 0) return null;
-        return body.items;
+    let cancelado = false;
+    const controlador = new AbortController();
+    fetch("https://api.alternative.me/fng/?limit=1", { signal: controlador.signal })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelado) return;
+        const item = d && d.data && d.data[0];
+        if (!item) { setEstado("error"); return; }
+        setDato({ valor: Number(item.value), clasificacion: CLASIFICACION_FNG[item.value_classification] || item.value_classification, fecha: Number(item.timestamp) * 1000 });
+        setEstado("listo");
       })
-      .then((data) => {
-        if (cancelled) return;
-        if (!data) { setStatus("empty"); return; }
-        setItems(data);
-        setStatus("ready");
-      })
-      .catch(() => { if (!cancelled) setStatus("empty"); })
-      .finally(() => clearTimeout(timeoutId));
-
-    return () => { cancelled = true; clearTimeout(timeoutId); controller.abort(); };
+      .catch(() => { if (!cancelado) setEstado("error"); });
+    return () => { cancelado = true; controlador.abort(); };
   }, []);
 
-  if (status === "empty") return null;
-
-  if (status === "loading") {
-    return <div className="skeleton-pulse" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px", height:180 }} />;
-  }
-
   return (
-    <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px" }}>
-      <Label style={{ margin:"0 0 12px 0" }}>── NOTICIAS DEL DÍA</Label>
-      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        {items.map((n, i) => (
-          <div key={i} onClick={() => n.url && window.open(n.url, "_blank", "noopener,noreferrer")}
-            style={{ cursor:n.url?"pointer":"default", paddingBottom:i===items.length-1?0:12, borderBottom:i===items.length-1?"none":`1px solid ${C.border}` }}>
-            <div style={{ fontSize:10, fontFamily:F.sans, color:C.muted, marginBottom:3 }}>{n.fuente} · {formatTiempoRelativo(n.datetime * 1000)} · 🔗 en inglés</div>
-            <div style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:3, lineHeight:1.4 }}>{n.titulo}</div>
-            <p style={{ fontSize:12, color:C.sub, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{n.resumen}</p>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px 20px" }}>
+      <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 10 }}>Miedo y codicia cripto</h3>
+      {estado === "loading" && <p style={{ fontSize: 14, color: C.sub }}>Consultando el indicador…</p>}
+      {estado === "error" && <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.55 }}>No se pudo consultar el indicador de Alternative.me.</p>}
+      {estado === "listo" && (
+        <>
+          <p style={{ fontSize: 20, fontWeight: 700, color: C.text }}>{dato.valor} <span style={{ fontSize: 15, fontWeight: 600, color: C.sub }}>· {dato.clasificacion}</span></p>
+          <div aria-hidden="true" style={{ background: C.surfaceAlt, borderRadius: 999, height: 6, marginTop: 10 }}>
+            <div style={{ background: C.goldText, borderRadius: 999, height: 6, width: `${Math.min(100, Math.max(0, dato.valor))}%` }} />
           </div>
-        ))}
-      </div>
+          <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.55, marginTop: 10 }}>
+            Escala de 0 a 100 que publica Alternative.me con datos del mercado de criptomonedas, no de la bolsa estadounidense. Dato del {fmtFechaSesion(dato.fecha)}. No es una señal de compra ni de venta.
+          </p>
+          <Link to="/sentimiento" style={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontSize: 14, fontWeight: 600, color: C.goldText, textDecoration: "underline" }}>Cómo se lee este indicador</Link>
+        </>
+      )}
     </div>
   );
 }
 
-const HOME_GUIAS_INDICES = [0, 3, 7];
-const ICONOS_TIPO = { pasos:"📝", stats:"📊", tabla:"📋", herramientas:"🛠️", simulador:"🧮", errores:"⚠️" };
+// D. Panorama del mercado. Tabla con simbolo, tipo, moneda y variacion, mas
+// tres fichas de contexto que no se estiran a la altura de la tabla.
+function PanoramaMercado() {
+  const { C, stocks } = useOutletContext();
+  const conDato = stocks.filter((st) => st.c != null);
+  const destacado = conDato.length ? [...conDato].sort((a, b) => Math.abs(b.c) - Math.abs(a.c))[0] : null;
+  const enVerde = conDato.filter((st) => st.c > 0).length;
 
-function UltimasGuias() {
+  const celda = { padding: "12px 16px", borderTop: `1px solid ${C.border}` };
+  const celdaNum = { ...celda, textAlign: "right", whiteSpace: "nowrap" };
+  const cabecera = { padding: "10px 16px", fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "left" };
+  const ficha = { background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px 20px" };
+
+  return (
+    <BloqueSeccion id="panorama" titulo="Panorama del mercado" descripcion="Los ocho instrumentos que seguimos a diario. El detalle, los gráficos y el mapa de calor están en Mercados." enlace={["/mercados", "Ver todas las cotizaciones"]}>
+      <div className="portada-grid-panorama">
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <caption className="sr-only">Instrumentos que sigue FinanzaDR, con su precio y su variación en la sesión</caption>
+              <thead>
+                <tr>
+                  <th scope="col" style={cabecera}>Instrumento</th>
+                  <th scope="col" style={{ ...cabecera, textAlign: "right" }}>Precio</th>
+                  <th scope="col" style={{ ...cabecera, textAlign: "right" }}>Variación</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stocks.slice(0, 6).map((st) => (
+                  <tr key={st.s}>
+                    <th scope="row" style={{ ...celda, textAlign: "left", fontWeight: 400 }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{st.s}</span>
+                      <span style={{ marginLeft: 8, fontSize: 12, color: C.muted }}>{st.tipoActivo}</span>
+                      <span style={{ display: "block", fontSize: 14, color: C.sub, lineHeight: 1.45 }}>{st.corto}</span>
+                    </th>
+                    <td style={celdaNum}>
+                      {st.p == null
+                        ? <span style={{ color: C.muted }}>—</span>
+                        : <><span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{fmtPrecio(st.p)}</span> <span style={{ fontSize: 13, color: C.muted }}>{st.moneda}</span></>}
+                    </td>
+                    <td style={celdaNum}><Variacion c={st.c} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}`, background: C.surfaceAlt }}><EstadoDato /></div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, alignSelf: "start" }}>
+          <div style={ficha}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 10 }}>Mayor variación de la sesión</h3>
+            {destacado ? (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: C.text }}>{destacado.s}</span>
+                  <Variacion c={destacado.c} size={17} />
+                </div>
+                <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.55, marginTop: 6 }}>{destacado.n} · {destacado.tipoActivo}</p>
+                <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.55, marginTop: 8 }}>{destacado.referencia}.</p>
+              </>
+            ) : <p style={{ fontSize: 14, color: C.sub }}>Sin datos suficientes ahora mismo.</p>}
+          </div>
+
+          <div style={ficha}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 10 }}>Balance de activos seguidos</h3>
+            {conDato.length ? (
+              <>
+                <p style={{ fontSize: 20, fontWeight: 700, color: C.text }}>{enVerde} de {conDato.length} en positivo</p>
+                <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.55, marginTop: 8 }}>
+                  Cuenta cuántos de los instrumentos de esta lista suben en la sesión en curso. Es una foto de estos {conDato.length} activos, no del mercado completo ni del ánimo de los inversores.
+                </p>
+              </>
+            ) : <p style={{ fontSize: 14, color: C.sub }}>Sin datos suficientes ahora mismo.</p>}
+          </div>
+
+          <MiedoCodiciaCripto />
+        </div>
+      </div>
+    </BloqueSeccion>
+  );
+}
+
+// E. Guias destacadas. Nivel y tema salen del propio articulo; el tiempo de
+// lectura se calcula sobre su texto. Los titulos no se recortan.
+const HOME_GUIAS_INDICES = [0, 3, 7];
+
+function GuiasDestacadas() {
   const { C } = useOutletContext();
   return (
-    <div style={{ marginBottom:24 }}>
-      <Label>── ÚLTIMAS GUÍAS</Label>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:16 }}>
+    <BloqueSeccion id="guias" titulo="Guías para empezar" descripcion="Explicaciones en español, sin jerga, sobre lo que conviene entender antes de invertir." enlace={["/aprende", "Ver la biblioteca"]}>
+      <ul role="list" className="portada-grid-3" style={{ listStyle: "none" }}>
         {HOME_GUIAS_INDICES.map((idx) => {
           const post = ARTICULOS[idx];
+          if (!post) return null;
           return (
-            <Link key={idx} to={`/aprende?articulo=${idx}`} className="card-hover"
-              style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"18px 20px", textDecoration:"none", display:"block" }}>
-              <div style={{ fontSize:20, marginBottom:8 }}>{ICONOS_TIPO[post.tipo] || "📚"}</div>
-              <h3 style={{ fontFamily:F.serif, fontSize:15, fontWeight:800, color:C.text, marginBottom:6, lineHeight:1.35 }}>{post.titulo}</h3>
-              <p style={{ fontSize:12, color:C.sub, lineHeight:1.6, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{post.extracto}</p>
-            </Link>
+            <li key={idx} style={{ display: "flex" }}>
+              <Link to={`/aprende?articulo=${idx}`} className="tarjeta-enlace" style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, color: C.muted }}>
+                  <span style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: "3px 10px", fontWeight: 600, color: C.sub }}>{post.nivel}</span>
+                  <span>{post.tema}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{tiempoLectura(post)} min de lectura</span>
+                </div>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: C.text, lineHeight: 1.35 }}>{post.titulo}</h3>
+                <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{post.extracto}</p>
+                <span style={{ fontSize: 14, fontWeight: 600, color: C.goldText, marginTop: "auto", paddingTop: 6 }}>Leer la guía →</span>
+              </Link>
+            </li>
           );
         })}
+      </ul>
+    </BloqueSeccion>
+  );
+}
+
+// F. Herramientas, presentadas por lo que resuelven.
+const HERRAMIENTAS_PORTADA = [
+  { to: "/calculadora", icono: "herramientas", titulo: "Calculadora de interés compuesto", texto: "Pon tu aporte mensual, el plazo y la tasa que asumes, y mira cuánto del resultado viene de lo aportado y cuánto del rendimiento." },
+  { to: "/brokers", icono: "documento", titulo: "Brokers y remesas", texto: "Compara requisitos, comisiones y perfil de uso antes de abrir una cuenta, con la fecha en que revisamos cada ficha." },
+  { to: "/heatmap", icono: "mercados", titulo: "Mapa de calor del mercado", texto: "Ve en una sola pantalla qué sectores empujan al mercado y cuáles lo frenan en la sesión." },
+];
+
+function HerramientasPortada() {
+  const { C } = useOutletContext();
+  return (
+    <BloqueSeccion id="herramientas" titulo="Herramientas" descripcion="Gratuitas y sin registro. Cada una resuelve una pregunta concreta.">
+      <ul role="list" className="portada-grid-3" style={{ listStyle: "none" }}>
+        {HERRAMIENTAS_PORTADA.map((h) => (
+          <li key={h.to} style={{ display: "flex" }}>
+            <Link to={h.to} className="tarjeta-enlace" style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
+              <span style={{ color: C.goldText }}><Icon name={h.icono} size={24} /></span>
+              <h3 style={{ fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.35 }}>{h.titulo}</h3>
+              <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6 }}>{h.texto}</p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </BloqueSeccion>
+  );
+}
+
+// G. Autor y metodo. Sin fotografia: en el repositorio no hay ninguna imagen
+// de la que conste autorizacion, asi que la marca personal es tipografica.
+// Las fuentes que se listan son exactamente las que consume el sitio.
+const FUENTES_METODO = [
+  "Las cotizaciones vienen de Finnhub y se consultan desde el servidor de FinanzaDR, nunca desde tu navegador.",
+  "Los gráficos y el mapa de calor son widgets de TradingView, con su propia atribución y sus limitaciones.",
+  "El índice de miedo y codicia cripto lo publica Alternative.me y mide el mercado de criptomonedas.",
+  "Los resúmenes de apertura y de cierre los redacta un modelo de lenguaje a partir de esos datos y se publican de forma automática, identificados como tales.",
+  "Las guías son editoriales, llevan fecha y se corrigen cuando cambia la información en la que se apoyan.",
+];
+
+function AutorYMetodo() {
+  const { C } = useOutletContext();
+  return (
+    <BloqueSeccion id="autor" titulo="Quién está detrás y cómo se hace">
+      <div className="portada-grid-2" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "28px 32px" }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+            <span aria-hidden="true" style={{ width: 56, height: 56, borderRadius: "50%", background: C.goldBg, border: `1px solid ${C.gold}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F.serif, fontSize: 24, fontWeight: 700, color: C.goldText, flexShrink: 0 }}>J</span>
+            <div>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: C.text }}>Julio</h3>
+              <p style={{ fontSize: 14, color: C.sub }}>Dominicano residente en Massachusetts</p>
+            </div>
+          </div>
+          <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, maxWidth: "62ch" }}>
+            Cuando empecé a invertir en Wall Street, nadie me explicaba nada en español: todo estaba en inglés y lleno de jerga, y me tomó años entender lo básico a punta de prueba y error. Escribo FinanzaDR para que otro latino no tenga que repetir ese camino.
+          </p>
+          <a href="mailto:finanzasDR.oficial@gmail.com" style={{ display: "inline-flex", alignItems: "center", minHeight: 44, marginTop: 12, fontSize: 15, color: C.goldText, textDecoration: "underline", wordBreak: "break-word" }}>finanzasDR.oficial@gmail.com</a>
+        </div>
+        <div>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 12 }}>De dónde salen los datos</h3>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+            {FUENTES_METODO.map((linea, i) => (
+              <li key={i} style={{ display: "flex", gap: 10, fontSize: 15, color: C.sub, lineHeight: 1.6 }}>
+                <span aria-hidden="true" style={{ color: C.goldText }}>—</span><span>{linea}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-    </div>
+    </BloqueSeccion>
+  );
+}
+
+// H. Newsletter. Promesa concreta, baja explicita y enlace a privacidad; sin
+// numero de suscriptores ni testimonios, que no constan en ninguna parte.
+function NewsletterPortada() {
+  const { C } = useOutletContext();
+  return (
+    <BloqueSeccion id="newsletter" titulo="Recibe el resumen semanal">
+      <div className="portada-grid-2" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "28px 32px", alignItems: "start" }}>
+        <div>
+          <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.65, maxWidth: "62ch" }}>
+            Un correo por semana con lo que movió al mercado, la guía nueva si la hay y el contexto para entenderla. En español y sin jerga.
+          </p>
+          <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>
+            Puedes darte de baja desde cualquier envío. Tu correo se gestiona con MailerLite y solo se usa para este boletín; los detalles están en la <Link to="/privacidad" style={{ color: C.goldText, textDecoration: "underline" }}>política de privacidad</Link>.
+          </p>
+        </div>
+        <div><NewsletterForm /></div>
+      </div>
+    </BloqueSeccion>
   );
 }
 
 function InicioPage() {
-  useDocumentMeta("FinanzaDR — Wall Street en tu idioma", "Educación financiera en español para latinos en EE.UU.: precios en tiempo real, análisis con IA y guías claras para aprender a invertir.");
-  const { stocks, C, dark } = useOutletContext();
+  useDocumentMeta(
+    "FinanzaDR — Entiende Wall Street, invierte con más criterio",
+    "Guías en español, contexto del mercado y herramientas para latinos que quieren aprender a invertir."
+  );
   return (
     <div className="fade-in">
-      <div style={{ background:dark?"linear-gradient(135deg,#07080f 0%,#0d0f1e 40%,#0f1228 100%)":"linear-gradient(135deg,#eef0f8 0%,#e8eaf5 100%)", border:`1px solid ${C.gold}25`, borderRadius:20, padding:"48px 40px 40px", marginBottom:24, borderTop:`3px solid ${C.gold}` }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:32 }} className="hero-grid">
-          <div style={{ maxWidth:540 }} className="hero-text">
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
-              <span className="live-dot" style={{ width:8, height:8, borderRadius:"50%", background:"#00d68f", display:"inline-block" }} />
-              <span style={{ fontFamily:F.sans, fontSize:10, color:"#00d68f", letterSpacing:3, fontWeight:700 }}>FINANZADR</span>
-            </div>
-            <h1 style={{ fontFamily:F.serif, fontSize:44, fontWeight:800, color:C.text, marginBottom:8, lineHeight:1.15 }}>
-              Wall Street.<br/><span style={{ color:C.gold }}>En tu idioma.</span>
-            </h1>
-            <p style={{ fontSize:15, color:C.sub, lineHeight:1.8, marginBottom:28, maxWidth:460 }}>Precios en tiempo real, charts profesionales y educación financiera para latinos que quieren invertir en Wall Street.</p>
-            <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-              <Link to="/mercados" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>📊 Explorar Mercados</Link>
-              <Link to="/mercados?view=charts" style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:700, textDecoration:"none", display:"inline-block" }}>📈 Charts en Vivo</Link>
-            </div>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, minWidth:280 }} className="hero-stocks">
-            {stocks.slice(0,4).map(st => (
-              <Link key={st.s} to="/mercados" className="market-item"
-                style={{ background:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)", borderRadius:10, padding:"14px 16px", border:`1px solid ${st.c>=0?"#00d68f22":"#ff446622"}`, cursor:"pointer", borderLeft:`3px solid ${st.c>=0?"#00d68f":"#ff4466"}`, textDecoration:"none", color:"inherit", display:"block" }}>
-                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                  <span style={{ fontFamily:F.sans, fontSize:11, fontWeight:800, color:C.gold }}>{st.s}</span>
-                  <span style={{ fontFamily:F.sans, fontSize:10, color:st.c>=0?"#00d68f":"#ff4466", fontWeight:700 }}>{st.c>=0?"▲":"▼"}{Math.abs(st.c)}%</span>
-                </div>
-                <div style={{ fontFamily:F.sans, fontSize:10, color:C.muted, marginBottom:6 }}>{st.n}</div>
-                <div style={{ fontFamily:F.sans, fontSize:18, fontWeight:800, color:C.text }}>{st.p>=1000?st.p.toLocaleString("en-US",{maximumFractionDigits:0}):st.p.toFixed(2)}</div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <BriefingTeaser />
-
-      {/* SUMMARY CARDS */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:16, marginBottom:28 }} className="summary-grid">
-        <Link to="/sentimiento" className="market-item" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px", cursor:"pointer", textDecoration:"none", color:"inherit", display:"block" }}>
-          <Label style={{ margin:"0 0 12px 0" }}>── SENTIMIENTO HOY</Label>
-          {(() => {
-            const gainers = stocks.filter(s=>s.c>0).length;
-            const pct = Math.round(gainers/stocks.length*100);
-            const sentiment = pct>=70?"Alcista 🟢":pct>=40?"Neutral ⚪":"Bajista 🔴";
-            const color = pct>=70?C.green:pct>=40?C.gold:C.red;
-            return (<div>
-              <div style={{ fontFamily:F.serif, fontSize:28, fontWeight:800, color, marginBottom:8 }}>{sentiment}</div>
-              <div style={{ background:C.border, borderRadius:99, height:6, marginBottom:8 }}>
-                <div style={{ background:color, borderRadius:99, height:6, width:`${pct}%`, transition:"width 0.5s" }} />
-              </div>
-              <p style={{ fontSize:12, color:C.sub }}>{gainers} de {stocks.length} activos en verde — {pct}% positivo</p>
-            </div>);
-          })()}
-        </Link>
-        <Link to="/mercados" className="market-item" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"20px 22px", cursor:"pointer", textDecoration:"none", color:"inherit", display:"block" }}>
-          <Label style={{ margin:"0 0 12px 0" }}>── TOP MOVER</Label>
-          {(() => {
-            const top = [...stocks].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0];
-            return (<div>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-                <span style={{ fontFamily:F.sans, fontSize:22, fontWeight:800, color:C.gold }}>{top.s}</span>
-                <span style={{ fontFamily:F.sans, fontSize:20, fontWeight:700, color:clr(top.c) }}>{arr(top.c)}{Math.abs(top.c)}%</span>
-              </div>
-              <div style={{ fontSize:13, color:C.sub, marginBottom:6 }}>{top.n}</div>
-              <div style={{ fontFamily:F.sans, fontSize:16, color:C.text, fontWeight:700 }}>{fmt(top.p)}</div>
-            </div>);
-          })()}
-        </Link>
-        <NoticiasTeaser />
-      </div>
-
-      <UltimasGuias />
-
-      {/* QUIÉN SOY */}
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"32px 36px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
-        <Label style={{ marginBottom:16 }}>── QUIÉN SOY</Label>
-        <div style={{ display:"flex", gap:28, flexWrap:"wrap", alignItems:"flex-start" }}>
-          <div style={{ width:72, height:72, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:F.serif, fontSize:30, fontWeight:800, color:C.gold }}>J</div>
-          <div style={{ flex:1, minWidth:260 }}>
-            <h2 style={{ fontFamily:F.serif, fontSize:24, fontWeight:800, color:C.text, marginBottom:4 }}>Julio</h2>
-            <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, letterSpacing:1, marginBottom:14 }}>DOMINICANO · VIVIENDO EN MASSACHUSETTS</div>
-            <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, maxWidth:640 }}>
-              Soy dominicano y vivo en Massachusetts. Cuando empecé a invertir en Wall Street, nadie me explicaba nada en español — todo estaba en inglés, lleno de jerga, y me tomó años entender lo básico a punta de prueba y error. Construí FinanzaDR para que ningún latino tenga que pasar por lo mismo: precios reales, herramientas claras y educación financiera, todo en nuestro idioma.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PortadaHero />
+      <RutaPrincipiantes />
+      <ActualidadDestacada />
+      <PanoramaMercado />
+      <GuiasDestacadas />
+      <HerramientasPortada />
+      <AutorYMetodo />
+      <NewsletterPortada />
     </div>
   );
 }
@@ -934,7 +1337,7 @@ function MercadosPage() {
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8, flexWrap:"wrap", gap:12 }}>
             <Label style={{ margin:0 }}>── Precios en tiempo real · Powered by Finnhub</Label>
             <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-              {lastUpdate && <span style={{ fontFamily:F.sans, fontSize:11, color:C.green }}>✓ {lastUpdate}</span>}
+              {lastUpdate && <span style={{ fontFamily:F.sans, fontSize:11, color:C.green }}>✓ Consultado {fmtHoraET(lastUpdate)} ET</span>}
               <button onClick={fetchRealPrices} disabled={realLoading} style={{ background:realLoading?C.border:C.gold, color:realLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:realLoading?"not-allowed":"pointer", fontFamily:F.sans, fontSize:11, fontWeight:700 }}>
                 {realLoading?"⏳ Cargando...":"🔴 Actualizar Precios"}
               </button>
@@ -1987,8 +2390,8 @@ function CompartirPage() {
       .then((body) => {
         if (cancelled) return;
         const indices = (body.precios || [])
-          .filter((p) => p.tipo === "Índices" && p.precio != null && p.cambioPct != null)
-          .map((p) => ({ s: p.simbolo, n: p.nombre, p: p.precio, c: p.cambioPct }));
+          .filter((p) => p.tipo === "ETFs de índice" && p.precio != null && p.cambioPct != null)
+          .map((p) => ({ s: p.simbolo, n: p.nombre, corto: p.corto || p.nombre, tipoActivo: p.tipoActivo || "ETF", moneda: "USD", p: p.precio, c: p.cambioPct }));
         if (indices.length === 0) throw new Error("No hay datos de índices disponibles en el cierre guardado.");
         setCierreStocks(indices);
         setCierreFecha(new Date(body.generadoEn));
@@ -2245,15 +2648,17 @@ function Label({ children, style: s }) {
 
 function StockCard({ st }) {
   const { C } = useOutletContext();
-  const pos = st.c >= 0;
+  const hayDato = st.p != null && st.c != null;
   return (
-    <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${pos?C.green:C.red}` }}>
-      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-        <span style={{ fontFamily:F.sans, fontSize:12, fontWeight:600, color:C.gold }}>{st.s}</span>
-        <span style={{ fontFamily:F.sans, fontSize:11, color:clr(st.c) }}>{arr(st.c)} {Math.abs(st.c)}%</span>
+    <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${hayDato ? (st.c >= 0 ? C.green : C.red) : C.border}` }}>
+      <div style={{ display:"flex", justifyContent:"space-between", gap:8, marginBottom:3 }}>
+        <span style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.text }}>{st.s}</span>
+        <Variacion c={st.c} size={12} />
       </div>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{st.n}</div>
-      <div style={{ fontFamily:F.sans, fontSize:20, fontWeight:600, color:C.text }}>{fmt(st.p)}</div>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{st.corto || st.n} · {st.tipoActivo}</div>
+      <div style={{ fontFamily:F.sans, fontSize:20, fontWeight:600, color:hayDato ? C.text : C.muted }}>
+        {hayDato ? `${fmtPrecio(st.p)} ${st.moneda || ""}`.trim() : "—"}
+      </div>
     </div>
   );
 }
@@ -2703,21 +3108,24 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
   const canvasRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [cardTheme, setCardTheme] = useState("dark");
-  const gainers = stocks.filter(s=>s.c>0).length;
-  const pct = Math.round(gainers/stocks.length*100);
+  // Solo entran instrumentos con precio y variacion reales: una imagen que se
+  // comparte no puede llevar cifras semilla.
+  const conDato = stocks.filter(s => s.p != null && s.c != null);
+  const gainers = conDato.filter(s=>s.c>0).length;
+  const pct = conDato.length ? Math.round(gainers/conDato.length*100) : 0;
   const sentiment = pct>=70?"ALCISTA 🟢":pct>=40?"NEUTRAL ⚪":"BAJISTA 🔴";
-  const topMover = [...stocks].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0];
+  const topMover = conDato.length ? [...conDato].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0] : null;
   const date = (fecha || new Date()).toLocaleDateString("es-DO",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
   const etiqueta = modo==="cierre" ? `CIERRE DEL ${date.toUpperCase()}` : "MARKET SNAPSHOT · "+date.toUpperCase();
   const generateCanvas = () => {
-    const canvas=canvasRef.current; if(!canvas) return;
+    const canvas=canvasRef.current; if(!canvas || !conDato.length) return;
     const ctx=canvas.getContext("2d");
     // El alto del canvas se calcula a partir de cuántas filas de activos hay
     // (cols fijo en 4) — así una tarjeta con menos activos (ej. los 4 índices
     // del Cierre, 1 fila) no deja un hueco vacío abajo como pasaría con un
     // alto fijo pensado para 8 activos (2 filas).
     const W=1080,cols=4,cellW=(W-120)/cols,startY=350;
-    const rows=Math.ceil(stocks.length/cols);
+    const rows=Math.ceil(conDato.length/cols);
     const tmY=startY+rows*160+20;
     const H=tmY+390;
     canvas.width=W; canvas.height=H;
@@ -2729,15 +3137,15 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
     ctx.fillStyle=subCol; ctx.font="28px 'Courier New',monospace"; ctx.fillText(etiqueta,60,145);
     ctx.fillStyle=border; ctx.fillRect(60,165,W-120,2);
     ctx.fillStyle=pct>=70?green:pct>=40?gold:red; ctx.font="bold 52px Georgia,serif"; ctx.fillText(sentiment,60,250);
-    ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText(`${gainers} de ${stocks.length} activos en verde — ${pct}% positivo`,60,295);
+    ctx.fillStyle=subCol; ctx.font="26px 'Courier New',monospace"; ctx.fillText(`${gainers} de ${conDato.length} activos seguidos en verde — ${pct}% positivo`,60,295);
     ctx.fillStyle=border; ctx.fillRect(60,320,W-120,2);
-    stocks.forEach((st,i)=>{
+    conDato.forEach((st,i)=>{
       const col=i%cols,row=Math.floor(i/cols),x=60+col*cellW,y=startY+row*160;
       ctx.fillStyle=card;
       ctx.beginPath();ctx.moveTo(x+8+12,y);ctx.lineTo(x+cellW-8-12,y);ctx.quadraticCurveTo(x+cellW-8,y,x+cellW-8,y+12);ctx.lineTo(x+cellW-8,y+140-12);ctx.quadraticCurveTo(x+cellW-8,y+140,x+cellW-8-12,y+140);ctx.lineTo(x+8+12,y+140);ctx.quadraticCurveTo(x+8,y+140,x+8,y+140-12);ctx.lineTo(x+8,y+12);ctx.quadraticCurveTo(x+8,y,x+8+12,y);ctx.closePath();ctx.fill();
       ctx.fillStyle=st.c>=0?green:red; ctx.fillRect(x+8,y,4,140);
       ctx.fillStyle=gold; ctx.font="bold 28px 'Courier New',monospace"; ctx.fillText(st.s,x+22,y+38);
-      ctx.fillStyle=subCol; ctx.font="18px 'Courier New',monospace"; ctx.fillText(st.n.length>12?st.n.slice(0,12)+"...":st.n,x+22,y+65);
+      ctx.fillStyle=subCol; ctx.font="18px 'Courier New',monospace"; const etiquetaCorta=(st.corto||st.n); ctx.fillText(etiquetaCorta.length>16?etiquetaCorta.slice(0,16)+"…":etiquetaCorta,x+22,y+65);
       ctx.fillStyle=textCol; ctx.font="bold 30px 'Courier New',monospace"; ctx.fillText(st.p>=1000?Math.round(st.p).toLocaleString():st.p.toFixed(2),x+22,y+105);
       ctx.fillStyle=st.c>=0?green:red; ctx.font="bold 22px 'Courier New',monospace"; ctx.fillText(`${st.c>=0?"▲":"▼"} ${Math.abs(st.c)}%`,x+22,y+132);
     });
@@ -2802,7 +3210,9 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
         {["dark","light"].map(s=>(<button key={s} onClick={()=>setCardTheme(s)} style={{padding:"9px 20px",borderRadius:8,border:`1px solid ${cardTheme===s?C.gold:C.border}`,background:cardTheme===s?C.goldBg:"none",color:cardTheme===s?C.gold:C.muted,fontFamily:F.sans,fontSize:12,fontWeight:600,cursor:"pointer"}}>{s==="dark"?"🌙 Oscuro":"☀️ Claro"}</button>))}
       </div>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:20,overflow:"hidden"}}>
-        <canvas ref={canvasRef} style={{width:"100%",height:"auto",borderRadius:8,display:"block"}}/>
+        {conDato.length
+          ? <canvas ref={canvasRef} style={{width:"100%",height:"auto",borderRadius:8,display:"block"}}/>
+          : <p style={{fontSize:14,color:C.sub,lineHeight:1.6}}>Todavía no hay cotizaciones con las que generar la imagen. Vuelve a intentarlo cuando carguen los precios.</p>}
       </div>
       <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
         <button onClick={downloadImage} style={{background:C.gold,color:"#000",border:"none",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>⬇️ Guardar Imagen</button>

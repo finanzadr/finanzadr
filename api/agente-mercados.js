@@ -14,15 +14,21 @@ const FINNHUB_KEY = process.env.FINNHUB_KEY;
 // cada lectura desde /api/briefing sin tener que guardar la URL en otro lado.
 export const BLOB_PATHNAME = "briefing/latest.json";
 
+// Mismo modelo de instrumento que usa el frontend (INSTRUMENTOS en
+// src/App.jsx). `n` es el nombre del producto que realmente cotiza y `corto`
+// la referencia en lenguaje llano. La distinción importa aquí porque este
+// objeto alimenta el prompt del agente: mientras SPY se llamó "S&P 500" y DIA
+// "Dow Jones", el resumen publicaba el precio del ETF como si fuera el nivel
+// del índice.
 const WS_STOCKS = [
-  { s: "SPY", n: "S&P 500", tipo: "Índices" },
-  { s: "QQQ", n: "NASDAQ", tipo: "Índices" },
-  { s: "DIA", n: "Dow Jones", tipo: "Índices" },
-  { s: "IWM", n: "Russell 2000", tipo: "Índices" },
-  { s: "GLD", n: "Oro", tipo: "Materias Primas" },
-  { s: "TLT", n: "Bonos T. 20Y", tipo: "Bonos" },
-  { s: "XLU", n: "Utilities", tipo: "Sectores" },
-  { s: "BTC-USD", n: "Bitcoin", tipo: "Cripto" },
+  { s: "SPY", n: "SPDR S&P 500 ETF Trust", corto: "S&P 500", tipo: "ETFs de índice", tipoActivo: "ETF", referencia: "sigue el índice S&P 500" },
+  { s: "QQQ", n: "Invesco QQQ Trust", corto: "NASDAQ 100", tipo: "ETFs de índice", tipoActivo: "ETF", referencia: "sigue el índice NASDAQ 100" },
+  { s: "DIA", n: "SPDR Dow Jones Industrial Average ETF", corto: "Dow Jones", tipo: "ETFs de índice", tipoActivo: "ETF", referencia: "sigue el índice Dow Jones Industrial Average" },
+  { s: "IWM", n: "iShares Russell 2000 ETF", corto: "Russell 2000", tipo: "ETFs de índice", tipoActivo: "ETF", referencia: "sigue el índice Russell 2000" },
+  { s: "GLD", n: "SPDR Gold Shares", corto: "Oro", tipo: "ETFs de materias primas", tipoActivo: "ETF", referencia: "respaldado por oro físico; su precio no es la onza de oro" },
+  { s: "TLT", n: "iShares 20+ Year Treasury Bond ETF", corto: "Bonos del Tesoro a 20+ años", tipo: "ETFs de bonos", tipoActivo: "ETF", referencia: "cesta de bonos del Tesoro de EE.UU. a más de 20 años" },
+  { s: "XLU", n: "Utilities Select Sector SPDR Fund", corto: "Sector Utilities", tipo: "ETFs sectoriales", tipoActivo: "ETF", referencia: "empresas de servicios públicos del S&P 500" },
+  { s: "BTC-USD", n: "Bitcoin", corto: "Bitcoin", tipo: "Criptomonedas", tipoActivo: "Criptomoneda", referencia: "cotización BTC/USDT en Binance, sin horario de cierre" },
 ];
 
 // Lista fija de empresas grandes/reconocibles para un lector principiante.
@@ -62,11 +68,11 @@ export async function fetchPrecios() {
         const data = await res.json();
         if (data.c && data.c > 0) {
           const cambioPct = data.dp ?? ((data.c - data.pc) / data.pc) * 100;
-          return { simbolo: st.s, nombre: st.n, tipo: st.tipo, precio: data.c, cambioPct: +cambioPct.toFixed(2) };
+          return { simbolo: st.s, nombre: st.n, corto: st.corto, tipo: st.tipo, tipoActivo: st.tipoActivo, referencia: st.referencia, moneda: "USD", precio: data.c, cambioPct: +cambioPct.toFixed(2) };
         }
-        return { simbolo: st.s, nombre: st.n, tipo: st.tipo, precio: null, cambioPct: null };
+        return { simbolo: st.s, nombre: st.n, corto: st.corto, tipo: st.tipo, tipoActivo: st.tipoActivo, referencia: st.referencia, moneda: "USD", precio: null, cambioPct: null };
       } catch {
-        return { simbolo: st.s, nombre: st.n, tipo: st.tipo, precio: null, cambioPct: null };
+        return { simbolo: st.s, nombre: st.n, corto: st.corto, tipo: st.tipo, tipoActivo: st.tipoActivo, referencia: st.referencia, moneda: "USD", precio: null, cambioPct: null };
       }
     })
   );
@@ -169,7 +175,9 @@ async function fetchEarningsRelevantes(fechaISO) {
 }
 
 function calcularVolatilidad(precios) {
-  const indices = precios.filter((p) => p.tipo === "Índices" && p.cambioPct != null);
+  // Los cuatro ETFs de índice (SPY/QQQ/DIA/IWM) siguen sirviendo de proxy de
+  // la volatilidad general, pero se nombran por lo que son.
+  const indices = precios.filter((p) => p.tipo === "ETFs de índice" && p.cambioPct != null);
   if (!indices.length) return { nivel: "Medio", promedioAbs: null };
   const promedioAbs = indices.reduce((sum, p) => sum + Math.abs(p.cambioPct), 0) / indices.length;
   let nivel;
@@ -190,8 +198,8 @@ function agruparPreciosPorTipo(precios) {
       const lineas = items
         .map((p) =>
           p.precio != null
-            ? `  - ${p.nombre} (${p.simbolo}): $${p.precio.toFixed(2)} (${p.cambioPct >= 0 ? "+" : ""}${p.cambioPct}%)`
-            : `  - ${p.nombre} (${p.simbolo}): dato no disponible`
+            ? `  - ${p.nombre} (${p.simbolo}, ${p.tipoActivo} que ${p.referencia}): $${p.precio.toFixed(2)} (${p.cambioPct >= 0 ? "+" : ""}${p.cambioPct}%)`
+            : `  - ${p.nombre} (${p.simbolo}, ${p.tipoActivo} que ${p.referencia}): dato no disponible`
         )
         .join("\n");
       return `${tipo}:\n${lineas}`;
@@ -264,6 +272,13 @@ ${contextoTiempoTexto}
 ${etiquetaPrecios} (agrupados por tipo de activo):
 ${preciosTexto}
 
+REGLA SOBRE ESTOS PRECIOS: cada cifra de arriba es el precio de un ETF, no el
+nivel del índice al que sigue. No escribas "el Dow Jones cerró en 391" ni "el
+S&P 500 está en 528": esos son los precios de DIA y de SPY. Habla del ETF por
+su símbolo, o del índice solo en términos de su variación porcentual, que sí
+es comparable. Lo mismo con GLD: es un ETF respaldado por oro, no el precio de
+la onza.
+
 NOTICIAS RECIENTES:
 ${noticiasTexto}
 
@@ -272,7 +287,7 @@ ${earningsTexto}
 
 SENTIMIENTO CRIPTO (Fear & Greed Index de Alternative.me): ${fearGreedTexto}
 
-NIVEL DE VOLATILIDAD YA CALCULADO (basado en el cambio promedio de los índices SPY/QQQ/DIA/IWM): ${nivelVolatilidad}${
+NIVEL DE VOLATILIDAD YA CALCULADO (basado en el cambio promedio de los ETFs de índice SPY/QQQ/DIA/IWM): ${nivelVolatilidad}${
     volatilidadPromedio != null ? ` (variación promedio de ${volatilidadPromedio}%)` : ""
   }. Usa este nivel tal cual, no lo recalcules ni lo contradigas.
 
