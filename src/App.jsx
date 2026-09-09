@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route, Link, NavLink, Outlet, useOutletContext, useSearchParams, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Outlet, useOutletContext, useSearchParams, useLocation } from "react-router-dom";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from "recharts";
 
 const WS_STOCKS = [
@@ -300,9 +300,20 @@ function temaInicial() {
   return false;
 }
 
-const NAV_ITEMS = [
-  ["/", "🚀 Empieza Aquí"], ["/apertura", "🌅 Apertura"], ["/briefing", "🤖 Cierre"], ["/mercados", "📊 Mercados"], ["/heatmap", "🔲 Heat Map"], ["/sentimiento", "🪙 Sentimiento Cripto"],
-  ["/noticias", "📰 Noticias"], ["/aprende", "📚 Aprende"], ["/brokers", "💳 Brokers"], ["/calculadora", "🧮 Calculadora"],
+// Cinco secciones de primer nivel. `rutas` lista todas las rutas que pertenecen
+// a la seccion, para resaltarla aunque el usuario este en una pagina hija.
+// Ninguna ruta desaparece: las que salen del nav viven en la subnavegacion o
+// en el pie, y todas conservan su URL original.
+const SECCIONES = [
+  { to: "/", icon: "inicio", label: "Inicio", rutas: ["/"], hijos: [] },
+  { to: "/aprende", icon: "aprende", label: "Aprende", rutas: ["/aprende", "/opciones"],
+    hijos: [["/aprende", "Guías"], ["/opciones", "Opcionario"]] },
+  { to: "/noticias", icon: "actualidad", label: "Actualidad", rutas: ["/noticias", "/apertura", "/briefing", "/contenido-diario"],
+    hijos: [["/noticias", "Noticias"], ["/apertura", "Apertura"], ["/briefing", "Cierre"], ["/contenido-diario", "Contenido diario"]] },
+  { to: "/mercados", icon: "mercados", label: "Mercados", rutas: ["/mercados", "/heatmap", "/sentimiento"],
+    hijos: [["/mercados", "Cotizaciones"], ["/mercados?view=charts", "Gráficos"], ["/heatmap", "Mapa de calor"], ["/sentimiento", "Sentimiento cripto"]] },
+  { to: "/calculadora", icon: "herramientas", label: "Herramientas", rutas: ["/calculadora", "/brokers", "/compartir"],
+    hijos: [["/calculadora", "Calculadora"], ["/brokers", "Brokers y remesas"], ["/compartir", "Resumen para compartir"]] },
 ];
 
 
@@ -465,13 +476,27 @@ function Layout() {
       .live-dot { animation:pulse-dot 1.5s ease-in-out infinite; display:inline-block; }
       .skeleton-pulse { animation:skeleton-pulse 1.4s ease-in-out infinite; }
       * { box-sizing:border-box; margin:0; padding:0; transition:background 0.3s,color 0.2s,border-color 0.2s; }
-      .nav-btn:hover { color:#c8a84b !important; }
+      
       .card-hover { transition:all 0.2s; }
-      .card-hover:hover { border-color:#c8a84b44 !important; transform:translateY(-2px); }
+      .card-hover:hover { transform:translateY(-2px); }
       .market-item { transition:all 0.15s; border-radius:6px; }
-      .market-item:hover { background:rgba(200,168,75,0.08) !important; transform:translateY(-1px); }
+      .market-item:hover { text-decoration:underline; }
+      .saltar-contenido:focus { left:16px !important; }
+      @media (max-width:900px) {
+        .nav-principal { display:none !important; }
+        .boton-menu { display:flex !important; }
+
+        .pie-grid { grid-template-columns:1fr 1fr !important; }
+      }
+      /* Por debajo de 560px la marca y el CTA no caben juntos: el boton se
+         queda solo con el icono, que conserva su nombre accesible. */
+      @media (max-width:560px) {
+        .cta-texto { display:none; }
+        .cta-resumen { padding:0 !important; width:44px; justify-content:center; }
+      }
       @media (max-width:768px) {
-        .main-padding { padding:16px !important; }
+        .main-padding { padding:20px 16px !important; }
+        .pie-grid { grid-template-columns:1fr !important; gap:24px !important; }
         .hero-grid { flex-direction:column !important; }
         .hero-stocks { display:grid !important; grid-template-columns:1fr 1fr !important; width:100% !important; }
         .toggle-text { display:none !important; }
@@ -487,99 +512,172 @@ function Layout() {
     return () => { document.head.removeChild(link); document.head.removeChild(style); };
   }, []);
 
+  const { pathname, search } = useLocation();
+  // El menu guarda la ruta en la que se abrio, no un booleano: al navegar, la
+  // ruta cambia y el menu queda cerrado por derivacion. Evita sincronizar
+  // estado dentro de un efecto.
+  const [menuEn, setMenuEn] = useState(null);
+  const menuAbierto = menuEn === pathname;
+  const seccionActiva = SECCIONES.find(sec => sec.rutas.includes(pathname));
+
   const outletCtx = { stocks, C, dark, setDark, lastUpdate, realLoading, fetchRealPrices, noticias, noticiasLoading, fetchNoticias, noticiasRD, noticiasRDLoading, fetchNoticiasRD };
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", maxWidth:"100%", background:C.bg, color:C.text, fontFamily:F.sans, overflowX:"hidden" }}>
+    <div style={{ minHeight:"100dvh", background:C.bg, color:C.text, fontFamily:F.sans, display:"flex", flexDirection:"column" }}>
 
-      {/* MARKET BAR */}
-      <div style={{ background:"#050609", borderBottom:"1px solid #1a1e35", overflowX:"auto" }} className="nav-scroll">
-        <div style={{ display:"flex", alignItems:"stretch", minWidth:"max-content" }}>
-          <div style={{ background:C.gold, color:"#000", fontFamily:F.sans, fontSize:10, fontWeight:800, padding:"0 16px", display:"flex", alignItems:"center", gap:6, flexShrink:0, letterSpacing:1 }}>
-            LIVE
-          </div>
+      {/* Primer elemento focalizable: permite saltar la navegacion (WCAG 2.4.1). */}
+      <a href="#contenido" className="saltar-contenido" style={{ position:"absolute", left:-9999, top:8, zIndex:200, background:C.card, color:C.text, border:`1px solid ${C.border}`, borderRadius:8, padding:"10px 16px", fontSize:14, fontWeight:600, textDecoration:"none" }}>Saltar al contenido</a>
+
+      {/* FRANJA DE COTIZACIONES — secundaria, con desplazamiento manual en movil */}
+      <div className="franja-ticker nav-scroll" style={{ background:C.tickerBg, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
+        <div style={{ display:"flex", alignItems:"center", minWidth:"max-content", gap:2, maxWidth:1240, margin:"0 auto", padding:"0 24px", width:"100%" }}>
           {stocks.map((st,i) => (
             <Link key={i} to="/mercados" className="market-item"
-              style={{ padding:"8px 18px", display:"flex", alignItems:"center", cursor:"pointer", borderRight:"1px solid #1a1e3530", textDecoration:"none", color:"inherit" }}>
-              <div>
-                <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                  <span style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.gold }}>{st.s}</span>
-                  <span style={{ fontFamily:F.sans, fontSize:10, color:"#8890b5" }}>{st.n}</span>
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:2 }}>
-                  <span style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:"#fff" }}>
-                    {st.p >= 1000 ? st.p.toLocaleString("en-US",{maximumFractionDigits:0}) : st.p.toFixed(2)}
-                  </span>
-                  <span style={{ fontFamily:F.sans, fontSize:11, fontWeight:600, color:st.c>=0?"#00d68f":"#ff4466" }}>
-                    {st.c>=0?"▲":"▼"} {Math.abs(st.c)}%
-                  </span>
-                </div>
-              </div>
+              style={{ padding:"7px 12px", display:"flex", alignItems:"center", gap:8, textDecoration:"none", color:"inherit", whiteSpace:"nowrap" }}>
+              <span style={{ fontSize:11, fontWeight:700, color:C.text }}>{st.s}</span>
+              <span style={{ fontSize:11, color:C.sub }}>
+                {st.p >= 1000 ? st.p.toLocaleString("en-US",{maximumFractionDigits:0}) : st.p.toFixed(2)}
+              </span>
+              {/* Signo y flecha ademas del color: el color no puede ser el unico
+                  portador de la informacion (WCAG 1.4.1). */}
+              <span style={{ fontSize:11, fontWeight:600, color:st.c>=0?C.green:C.red }}>
+                {st.c>=0?"▲":"▼"} {st.c>=0?"+":"−"}{Math.abs(st.c)}%
+              </span>
             </Link>
           ))}
-          <div style={{ padding:"0 16px", display:"flex", alignItems:"center", marginLeft:"auto", flexShrink:0 }}>
-            <span style={{ fontFamily:F.sans, fontSize:10, color:"#484e72" }}>{lastUpdate ? `✓ ${lastUpdate}` : "NYSE · NASDAQ"}</span>
-          </div>
+          <span style={{ fontSize:11, color:C.muted, marginLeft:"auto", paddingLeft:16, whiteSpace:"nowrap" }}>
+            {lastUpdate ? `Actualizado ${lastUpdate}` : "NYSE · NASDAQ"}
+          </span>
         </div>
       </div>
 
-      {/* HEADER */}
-      <header style={{ borderBottom:`1px solid ${C.border}`, padding:"20px 32px", background:C.bg, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
-        <div>
-          <div style={{ fontFamily:F.serif, fontSize:30, fontWeight:800, color:C.gold }}>FinanzaDR</div>
-          <div style={{ fontFamily:F.sans, fontSize:10, color:C.muted, marginTop:4, letterSpacing:2 }}>APRENDE A INVERTIR EN WALL STREET · PARA LATINOS</div>
-          <div style={{ fontFamily:F.serif, fontSize:13, color:C.gold, marginTop:6, fontStyle:"italic" }}>"Wall Street en tu idioma"</div>
-        </div>
-        <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-          <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted }}>{new Date().toLocaleDateString("es-DO",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
-          <button onClick={() => setDark(d=>!d)} style={{ background:dark?"#1a1e35":"#f0f2f8", border:`1px solid ${C.border}`, borderRadius:50, padding:"8px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:8 }}>
-            <Icon name={dark?"sol":"luna"} size={18} />
-            <span className="toggle-text" style={{ fontFamily:F.sans, fontSize:11, fontWeight:600, color:C.text }}>{dark?"Modo Claro":"Modo Oscuro"}</span>
-          </button>
+      {/* CABECERA COMPACTA — 72px */}
+      <header style={{ borderBottom:`1px solid ${C.border}`, background:C.navBg, position:"sticky", top:0, zIndex:50 }}>
+        <div style={{ height:72, maxWidth:1240, margin:"0 auto", padding:"0 24px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:16 }}>
+          <Link to="/" style={{ textDecoration:"none", display:"flex", flexDirection:"column", gap:1, minWidth:0 }}>
+            <span style={{ fontFamily:F.serif, fontSize:24, fontWeight:700, color:C.text, lineHeight:1.1 }}>FinanzaDR</span>
+            <span style={{ fontSize:12, color:C.sub, whiteSpace:"nowrap" }}>Wall Street en tu idioma</span>
+          </Link>
+
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <Link to="/newsletter" className="cta-resumen"
+              style={{ display:"flex", alignItems:"center", gap:8, minHeight:44, padding:"0 18px", borderRadius:10, background:C.text, color:C.bg, fontSize:14, fontWeight:600, textDecoration:"none", whiteSpace:"nowrap" }}>
+              <Icon name="resumen" size={18} titulo="Recibir resumen" /><span className="cta-texto">Recibir resumen</span>
+            </Link>
+            <button onClick={() => setDark(d=>!d)} aria-pressed={dark}
+              style={{ width:44, height:44, display:"flex", alignItems:"center", justifyContent:"center", borderRadius:10, border:`1px solid ${C.border}`, background:C.card, color:C.text, cursor:"pointer" }}>
+              <Icon name={dark?"sol":"luna"} size={20} titulo={dark?"Cambiar a tema claro":"Cambiar a tema oscuro"} />
+            </button>
+            <button className="boton-menu" onClick={() => setMenuEn(menuAbierto ? null : pathname)} aria-expanded={menuAbierto} aria-controls="menu-movil"
+              style={{ display:"none", width:44, height:44, alignItems:"center", justifyContent:"center", borderRadius:10, border:`1px solid ${C.border}`, background:C.card, color:C.text, cursor:"pointer" }}>
+              <Icon name={menuAbierto?"cerrar":"menu"} size={20} titulo={menuAbierto?"Cerrar menú":"Abrir menú"} />
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* NAV */}
-      <nav className="nav-scroll" style={{ borderBottom:`1px solid ${C.border}`, display:"flex", padding:"0 32px", background:C.navBg, overflowX:"auto" }}>
-        {NAV_ITEMS.map(([path,label]) => (
-          <NavLink key={path} to={path} end={path==="/"} className="nav-btn"
-            style={({isActive}) => ({ padding:"14px 18px", border:"none", background:"none", cursor:"pointer", fontFamily:F.sans, fontSize:13, fontWeight:500, whiteSpace:"nowrap", color:isActive?C.gold:C.muted, borderBottom:isActive?`2px solid ${C.gold}`:"2px solid transparent", textDecoration:"none", display:"inline-block" })}>
-            {label}
-          </NavLink>
-        ))}
+      {/* NAVEGACION PRINCIPAL — cinco secciones */}
+      <nav aria-label="Navegación principal" className="nav-principal" style={{ borderBottom:`1px solid ${C.border}`, background:C.navBg }}>
+        <div className="nav-scroll" style={{ maxWidth:1240, margin:"0 auto", padding:"0 24px", display:"flex", gap:4, overflowX:"auto" }}>
+          {SECCIONES.map((sec) => {
+            const activa = sec.rutas.includes(pathname);
+            return (
+              <Link key={sec.to} to={sec.to} aria-current={activa ? "page" : undefined}
+                style={{ display:"flex", alignItems:"center", gap:8, minHeight:44, padding:"0 14px", fontSize:14, fontWeight:activa?600:500, whiteSpace:"nowrap", textDecoration:"none", color:activa?C.text:C.sub, borderBottom:activa?`2px solid ${C.gold}`:"2px solid transparent" }}>
+                <Icon name={sec.icon} size={18} />{sec.label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
-      <main style={{ padding:"32px", maxWidth:"100%", margin:"0 auto" }} className="main-padding">
+      {/* SUBNAVEGACION DE SECCION — solo cuando la seccion activa tiene hijos */}
+      {seccionActiva && seccionActiva.hijos.length > 0 && (
+        <nav aria-label={`Secciones de ${seccionActiva.label}`} style={{ borderBottom:`1px solid ${C.border}`, background:C.surfaceAlt }}>
+          <div className="nav-scroll" style={{ maxWidth:1240, margin:"0 auto", padding:"0 24px", display:"flex", gap:4, overflowX:"auto" }}>
+            {seccionActiva.hijos.map(([to,label]) => {
+              const activa = to === pathname + (search || "") || (to === pathname && !search);
+              return (
+                <Link key={to} to={to} aria-current={activa ? "page" : undefined}
+                  style={{ display:"flex", alignItems:"center", minHeight:44, padding:"0 12px", fontSize:13, fontWeight:activa?600:400, whiteSpace:"nowrap", textDecoration:"none", color:activa?C.goldText:C.sub, borderBottom:activa?`2px solid ${C.gold}`:"2px solid transparent" }}>
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
+
+      {/* MENU MOVIL */}
+      {menuAbierto && (
+        <div id="menu-movil" style={{ borderBottom:`1px solid ${C.border}`, background:C.card, padding:"8px 16px 16px" }}>
+          {SECCIONES.map((sec) => (
+            <div key={sec.to} style={{ padding:"4px 0" }}>
+              <Link to={sec.to} onClick={() => setMenuEn(null)}
+                style={{ display:"flex", alignItems:"center", gap:10, minHeight:44, fontSize:15, fontWeight:600, color:C.text, textDecoration:"none" }}>
+                <Icon name={sec.icon} size={18} />{sec.label}
+              </Link>
+              {sec.hijos.length > 0 && (
+                <div style={{ display:"flex", flexDirection:"column", paddingLeft:28 }}>
+                  {sec.hijos.map(([to,label]) => (
+                    <Link key={to} to={to} onClick={() => setMenuEn(null)}
+                      style={{ display:"flex", alignItems:"center", minHeight:44, fontSize:14, color:C.sub, textDecoration:"none" }}>{label}</Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <main id="contenido" style={{ flex:1, width:"100%", maxWidth:1240, margin:"0 auto", padding:"32px 24px" }} className="main-padding">
         <Outlet context={outletCtx} />
       </main>
 
-      <footer style={{ borderTop:`1px solid ${C.border}`, padding:"32px", textAlign:"center", marginTop:40 }}>
-        <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
-          {[["🌅","Apertura","/apertura"],["🤖","Briefing IA","/briefing"],["📱","Contenido Diario","/contenido-diario"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
-            <Link key={i} to={to}
-              style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
-              <span>{icon}</span>{label}
-            </Link>
-          ))}
-        </div>
-        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", marginBottom:20, paddingTop:20, borderTop:`1px dashed ${C.border}` }}>
-          <p style={{ fontSize:11, color:C.muted, fontFamily:F.sans, maxWidth:380, lineHeight:1.6, margin:"0 0 12px" }}>Contenido avanzado de trading — si ya sabes qué es una acción y un ETF</p>
-          <span style={{ display:"inline-block", background:`${C.red}25`, border:`1px solid ${C.red}`, color:C.red, padding:"2px 8px", borderRadius:20, fontSize:8.5, fontFamily:F.sans, fontWeight:800, letterSpacing:0.5, whiteSpace:"nowrap", textTransform:"uppercase", marginBottom:8 }}>Nivel Avanzado</span>
-          <Link to="/opciones"
-            style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
-            <span>🎯</span>Opcionario
-          </Link>
-        </div>
-        <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted }}>
-          FinanzaDR &copy; 2026 &middot; Todos los derechos reservados &middot; No constituye asesoria de inversion
+      {/* PIE UNICO — sustituye al footer + barra fija superpuesta */}
+      <footer style={{ borderTop:`1px solid ${C.border}`, background:C.surfaceAlt, marginTop:64 }}>
+        <div style={{ maxWidth:1240, margin:"0 auto", padding:"48px 24px 32px" }}>
+          <div className="pie-grid" style={{ display:"grid", gridTemplateColumns:"1.4fr repeat(3, 1fr)", gap:32, alignItems:"start" }}>
+
+            <div>
+              <div style={{ fontFamily:F.serif, fontSize:20, fontWeight:700, color:C.text }}>FinanzaDR</div>
+              <p style={{ fontSize:14, color:C.sub, lineHeight:1.6, margin:"8px 0 0", maxWidth:320 }}>
+                Educación financiera y contexto de mercado en español, para latinos que quieren aprender a invertir.
+              </p>
+              <p style={{ fontSize:13, color:C.muted, margin:"16px 0 0" }}>
+                Editado por Julio, dominicano residente en Massachusetts.
+              </p>
+              <a href="mailto:finanzasDR.oficial@gmail.com" style={{ display:"inline-flex", alignItems:"center", minHeight:44, marginTop:4, fontSize:14, color:C.goldText, textDecoration:"underline", wordBreak:"break-word" }}>finanzasDR.oficial@gmail.com</a>
+            </div>
+
+            {[
+              ["Aprende", [["/aprende","Guías"],["/opciones","Opcionario"]]],
+              ["Actualidad", [["/noticias","Noticias"],["/apertura","Apertura"],["/briefing","Cierre"],["/contenido-diario","Contenido diario"]]],
+              ["Mercados y herramientas", [["/mercados","Cotizaciones"],["/heatmap","Mapa de calor"],["/sentimiento","Sentimiento cripto"],["/calculadora","Calculadora"],["/brokers","Brokers y remesas"],["/compartir","Resumen para compartir"]]],
+            ].map(([titulo,enlaces]) => (
+              <div key={titulo}>
+                <h2 style={{ fontSize:13, fontWeight:700, color:C.text, letterSpacing:0.4, textTransform:"uppercase", marginBottom:12 }}>{titulo}</h2>
+                <ul role="list" style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                  {enlaces.map(([to,label]) => (
+                    <li key={to}><Link to={to} style={{ display:"inline-flex", alignItems:"center", minHeight:44, fontSize:14, color:C.sub, textDecoration:"none" }}>{label}</Link></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop:40, paddingTop:24, borderTop:`1px solid ${C.border}`, display:"flex", flexWrap:"wrap", gap:16, justifyContent:"space-between", alignItems:"center" }}>
+            <p style={{ fontSize:13, color:C.muted }}>
+              FinanzaDR © 2026 · Contenido educativo, no constituye asesoría de inversión.
+            </p>
+            <ul role="list" style={{ display:"flex", flexWrap:"wrap", gap:20 }}>
+              {[["/privacidad","Privacidad"],["/terminos","Términos"],["/aviso","Aviso legal"]].map(([to,label]) => (
+                <li key={to}><Link to={to} style={{ display:"inline-flex", alignItems:"center", minHeight:44, fontSize:13, color:C.sub, textDecoration:"none" }}>{label}</Link></li>
+              ))}
+            </ul>
+          </div>
         </div>
       </footer>
-      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#050609",borderTop:"1px solid #1a1e35",padding:"12px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,zIndex:99}}>
-        <div style={{fontFamily:F.sans,fontSize:10,color:"#484e72"}}>FinanzaDR © 2026 · Wall Street en tu idioma · RD</div>
-        <div style={{display:"flex",gap:16}}>
-          {[["🔒 Privacidad","/privacidad"],["📋 Términos","/terminos"],["⚠️ Aviso","/aviso"]].map(([l,to],i)=>(<Link key={i} to={to} style={{fontFamily:F.sans,fontSize:10,color:"#c8a84b",cursor:"pointer",textDecoration:"none"}}>{l}</Link>))}
-        </div>
-      </div>
 
     </div>
   );
@@ -928,7 +1026,7 @@ function NoticiasPage() {
       {/* ── NOTICIAS WALL STREET ── */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
         <div>
-          <SectionTitle>📈 Noticias Wall Street</SectionTitle>
+          <SectionTitle nivel={2}>📈 Noticias Wall Street</SectionTitle>
           <p style={{ fontSize:13, color:C.sub, marginTop:4 }}>{noticiasLoading ? "Cargando noticias..." : "Noticias reales de hoy · Powered by Finnhub"}</p>
         </div>
         <button onClick={fetchNoticias} disabled={noticiasLoading}
@@ -2132,9 +2230,12 @@ function NotFoundPage() {
   );
 }
 
-function SectionTitle({ children }) {
+// Titulo de pagina. Por defecto <h1>: cada ruta debe tener uno y solo uno
+// (WCAG 1.3.1 / 2.4.6). Con nivel={2} sirve para una seccion secundaria.
+function SectionTitle({ children, nivel = 1 }) {
   const { C } = useOutletContext();
-  return <h2 style={{ fontFamily:F.serif, fontSize:26, fontWeight:800, color:C.text, marginBottom:4 }}>{children}</h2>;
+  const H = nivel === 1 ? "h1" : "h2";
+  return <H style={{ fontFamily:F.serif, fontSize:nivel === 1 ? 32 : 24, fontWeight:700, color:C.text, marginBottom:4, lineHeight:1.2 }}>{children}</H>;
 }
 
 function Label({ children, style: s }) {
