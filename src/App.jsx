@@ -278,13 +278,69 @@ const renderTextoConNegritas = (texto) => {
   });
 };
 
-const DARK = { bg: "#07080f", card: "#0d0f1e", border: "#1a1e35", gold: "#c8a84b", goldBg: "#c8a84b18", green: "#00d68f", red: "#ff4466", text: "#dde1f5", muted: "#484e72", sub: "#8890b5", navBg: "#09091a", tickerBg: "#0a0b16" };
-const LIGHT = { bg: "#f4f5f8", card: "#ffffff", border: "#e0e4ef", gold: "#b8860b", goldBg: "#b8860b15", green: "#00875a", red: "#d93025", text: "#1a1d2e", muted: "#8891a8", sub: "#555e7a", navBg: "#ffffff", tickerBg: "#1a1d2e" };
+// Familias tipograficas. Dos, no mas: Inter para interfaz, lectura y cifras;
+// Source Serif 4 reservada a la marca y a titulares editoriales puntuales.
+// Las cifras tabulares se activan globalmente en index.css.
+const F = { sans: "'Inter',system-ui,-apple-system,'Segoe UI',sans-serif", serif: "'Source Serif 4',Georgia,serif" };
+
+// Tokens de color. Contraste verificado contra WCAG 2.2 AA sobre bg y card.
+// OJO: gold es decorativo y NO cumple para texto pequeno en tema claro
+// (2.46:1 sobre el fondo). Para texto dorado usar siempre goldText.
+const DARK = { bg: "#0B111A", card: "#101823", surfaceAlt: "#161F2C", border: "#253041", gold: "#D6B365", goldText: "#D6B365", goldBg: "#D6B36518", green: "#4ADE80", greenBg: "#4ADE8018", red: "#FB7185", redBg: "#FB718518", text: "#E8EDF5", muted: "#7E8B9D", sub: "#AAB6C6", navBg: "#101823", tickerBg: "#0B111A", hover: "#1B2534", focus: "#D6B365" };
+const LIGHT = { bg: "#F7F8FA", card: "#FFFFFF", surfaceAlt: "#EEF1F5", border: "#DCE1E8", gold: "#C49A3A", goldText: "#8A6A1F", goldBg: "#C49A3A1F", green: "#15803D", greenBg: "#15803D14", red: "#B91C1C", redBg: "#B91C1C14", text: "#14213D", muted: "#68717F", sub: "#526071", navBg: "#FFFFFF", tickerBg: "#FFFFFF", hover: "#EEF1F5", focus: "#14213D" };
+
+// Tema inicial: preferencia guardada > preferencia del sistema > claro.
+function temaInicial() {
+  try {
+    const guardado = localStorage.getItem("finanzadr-tema");
+    if (guardado === "dark") return true;
+    if (guardado === "light") return false;
+  } catch { /* localStorage bloqueado: modo privado o cookies desactivadas */ }
+  if (typeof window !== "undefined" && window.matchMedia) return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return false;
+}
 
 const NAV_ITEMS = [
   ["/", "🚀 Empieza Aquí"], ["/apertura", "🌅 Apertura"], ["/briefing", "🤖 Cierre"], ["/mercados", "📊 Mercados"], ["/heatmap", "🔲 Heat Map"], ["/sentimiento", "🪙 Sentimiento Cripto"],
   ["/noticias", "📰 Noticias"], ["/aprende", "📚 Aprende"], ["/brokers", "💳 Brokers"], ["/calculadora", "🧮 Calculadora"],
 ];
+
+
+// Sistema de iconos. Sustituye a los emojis usados como iconografia funcional:
+// un emoji se renderiza distinto en cada plataforma, no hereda currentColor y
+// los lectores de pantalla lo anuncian por su nombre Unicode.
+// Trazos de 24x24 sobre rejilla, stroke 1.75, sin relleno.
+const ICON_PATHS = {
+  inicio: "M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
+  aprende: "M4 5.5A1.5 1.5 0 0 1 5.5 4H19v13H5.5A1.5 1.5 0 0 0 4 18.5zM4 18.5A1.5 1.5 0 0 0 5.5 20H19v-3",
+  actualidad: "M4 5h11v14H5a1 1 0 0 1-1-1zM15 9h4a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-4M7 8h5M7 11h5M7 14h3",
+  mercados: "M4 20V10M9 20V4M14 20v-7M19 20V7",
+  herramientas: "M14.5 3.5a4.5 4.5 0 0 0 5.9 5.9L21 10l-9 9-3-3 9-9zM7.5 13.5 4 17a2.1 2.1 0 0 0 3 3l3.5-3.5",
+  resumen: "M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5zM3.5 6.8 12 13l8.5-6.2",
+  sol: "M12 4V2M12 22v-2M4 12H2M22 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z",
+  luna: "M20 14.2A8.2 8.2 0 0 1 9.8 4 8.2 8.2 0 1 0 20 14.2z",
+  candado: "M6 11h12v9H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11",
+  documento: "M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6",
+  aviso: "M12 3.5 22 20H2zM12 10v4M12 17.2v.1",
+  externo: "M14 4h6v6M20 4l-8.5 8.5M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5",
+  buscar: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16.2 16.2 21 21",
+  menu: "M4 7h16M4 12h16M4 17h16",
+  cerrar: "M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5",
+  chevron: "M9 5l7 7-7 7",
+};
+
+// `titulo` da nombre accesible al icono. Sin el, el SVG queda aria-hidden y se
+// asume que el texto adyacente ya describe el control (WAI-ARIA, imagen decorativa).
+function Icon({ name, size = 20, titulo, style }) {
+  const d = ICON_PATHS[name];
+  if (!d) return null;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden={titulo ? undefined : "true"} role={titulo ? "img" : undefined} focusable="false" style={{ flexShrink: 0, display: "block", ...style }}>
+      {titulo ? <title>{titulo}</title> : null}
+      <path d={d} />
+    </svg>
+  );
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -335,7 +391,7 @@ export default function FinanzasDR() {
 
 function Layout() {
   const [stocks, setStocks] = useState(WS_STOCKS);
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(temaInicial);
   const [realLoading, setRealLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [realErr, setRealErr] = useState(null);
@@ -343,6 +399,8 @@ function Layout() {
   const [noticiasLoading, setNoticiasLoading] = useState(false);
   const [noticiasRD, setNoticiasRD] = useState([]);
   const [noticiasRDLoading, setNoticiasRDLoading] = useState(false);
+
+  useEffect(() => { try { localStorage.setItem("finanzadr-tema", dark ? "dark" : "light"); } catch { /* almacenamiento no disponible */ } }, [dark]);
 
   const C = dark ? DARK : LIGHT;
 
@@ -392,7 +450,7 @@ function Layout() {
   useEffect(() => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600&display=swap";
     document.head.appendChild(link);
     const style = document.createElement("style");
     style.textContent = `
@@ -432,12 +490,12 @@ function Layout() {
   const outletCtx = { stocks, C, dark, setDark, lastUpdate, realLoading, fetchRealPrices, noticias, noticiasLoading, fetchNoticias, noticiasRD, noticiasRDLoading, fetchNoticiasRD };
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", maxWidth:"100%", background:C.bg, color:C.text, fontFamily:"'Inter',sans-serif", overflowX:"hidden" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", maxWidth:"100%", background:C.bg, color:C.text, fontFamily:F.sans, overflowX:"hidden" }}>
 
       {/* MARKET BAR */}
       <div style={{ background:"#050609", borderBottom:"1px solid #1a1e35", overflowX:"auto" }} className="nav-scroll">
         <div style={{ display:"flex", alignItems:"stretch", minWidth:"max-content" }}>
-          <div style={{ background:C.gold, color:"#000", fontFamily:"'IBM Plex Mono'", fontSize:10, fontWeight:800, padding:"0 16px", display:"flex", alignItems:"center", gap:6, flexShrink:0, letterSpacing:1 }}>
+          <div style={{ background:C.gold, color:"#000", fontFamily:F.sans, fontSize:10, fontWeight:800, padding:"0 16px", display:"flex", alignItems:"center", gap:6, flexShrink:0, letterSpacing:1 }}>
             LIVE
           </div>
           {stocks.map((st,i) => (
@@ -445,14 +503,14 @@ function Layout() {
               style={{ padding:"8px 18px", display:"flex", alignItems:"center", cursor:"pointer", borderRight:"1px solid #1a1e3530", textDecoration:"none", color:"inherit" }}>
               <div>
                 <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                  <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.gold }}>{st.s}</span>
-                  <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#8890b5" }}>{st.n}</span>
+                  <span style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.gold }}>{st.s}</span>
+                  <span style={{ fontFamily:F.sans, fontSize:10, color:"#8890b5" }}>{st.n}</span>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:2 }}>
-                  <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:"#fff" }}>
+                  <span style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:"#fff" }}>
                     {st.p >= 1000 ? st.p.toLocaleString("en-US",{maximumFractionDigits:0}) : st.p.toFixed(2)}
                   </span>
-                  <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:600, color:st.c>=0?"#00d68f":"#ff4466" }}>
+                  <span style={{ fontFamily:F.sans, fontSize:11, fontWeight:600, color:st.c>=0?"#00d68f":"#ff4466" }}>
                     {st.c>=0?"▲":"▼"} {Math.abs(st.c)}%
                   </span>
                 </div>
@@ -460,7 +518,7 @@ function Layout() {
             </Link>
           ))}
           <div style={{ padding:"0 16px", display:"flex", alignItems:"center", marginLeft:"auto", flexShrink:0 }}>
-            <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#484e72" }}>{lastUpdate ? `✓ ${lastUpdate}` : "NYSE · NASDAQ"}</span>
+            <span style={{ fontFamily:F.sans, fontSize:10, color:"#484e72" }}>{lastUpdate ? `✓ ${lastUpdate}` : "NYSE · NASDAQ"}</span>
           </div>
         </div>
       </div>
@@ -468,15 +526,15 @@ function Layout() {
       {/* HEADER */}
       <header style={{ borderBottom:`1px solid ${C.border}`, padding:"20px 32px", background:C.bg, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
         <div>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:30, fontWeight:800, color:C.gold }}>FinanzaDR</div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, marginTop:4, letterSpacing:2 }}>APRENDE A INVERTIR EN WALL STREET · PARA LATINOS</div>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:13, color:C.gold, marginTop:6, fontStyle:"italic" }}>"Wall Street en tu idioma"</div>
+          <div style={{ fontFamily:F.serif, fontSize:30, fontWeight:800, color:C.gold }}>FinanzaDR</div>
+          <div style={{ fontFamily:F.sans, fontSize:10, color:C.muted, marginTop:4, letterSpacing:2 }}>APRENDE A INVERTIR EN WALL STREET · PARA LATINOS</div>
+          <div style={{ fontFamily:F.serif, fontSize:13, color:C.gold, marginTop:6, fontStyle:"italic" }}>"Wall Street en tu idioma"</div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted }}>{new Date().toLocaleDateString("es-DO",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
+          <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted }}>{new Date().toLocaleDateString("es-DO",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
           <button onClick={() => setDark(d=>!d)} style={{ background:dark?"#1a1e35":"#f0f2f8", border:`1px solid ${C.border}`, borderRadius:50, padding:"8px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:18 }}>{dark?"☀️":"🌙"}</span>
-            <span className="toggle-text" style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:600, color:C.text }}>{dark?"Modo Claro":"Modo Oscuro"}</span>
+            <Icon name={dark?"sol":"luna"} size={18} />
+            <span className="toggle-text" style={{ fontFamily:F.sans, fontSize:11, fontWeight:600, color:C.text }}>{dark?"Modo Claro":"Modo Oscuro"}</span>
           </button>
         </div>
       </header>
@@ -485,7 +543,7 @@ function Layout() {
       <nav className="nav-scroll" style={{ borderBottom:`1px solid ${C.border}`, display:"flex", padding:"0 32px", background:C.navBg, overflowX:"auto" }}>
         {NAV_ITEMS.map(([path,label]) => (
           <NavLink key={path} to={path} end={path==="/"} className="nav-btn"
-            style={({isActive}) => ({ padding:"14px 18px", border:"none", background:"none", cursor:"pointer", fontFamily:"'Inter',sans-serif", fontSize:13, fontWeight:500, whiteSpace:"nowrap", color:isActive?C.gold:C.muted, borderBottom:isActive?`2px solid ${C.gold}`:"2px solid transparent", textDecoration:"none", display:"inline-block" })}>
+            style={({isActive}) => ({ padding:"14px 18px", border:"none", background:"none", cursor:"pointer", fontFamily:F.sans, fontSize:13, fontWeight:500, whiteSpace:"nowrap", color:isActive?C.gold:C.muted, borderBottom:isActive?`2px solid ${C.gold}`:"2px solid transparent", textDecoration:"none", display:"inline-block" })}>
             {label}
           </NavLink>
         ))}
@@ -499,27 +557,27 @@ function Layout() {
         <div style={{ display:"flex", justifyContent:"center", gap:12, flexWrap:"wrap", marginBottom:20 }}>
           {[["🌅","Apertura","/apertura"],["🤖","Briefing IA","/briefing"],["📱","Contenido Diario","/contenido-diario"],["📸","Compartir Snapshot","/compartir"],["📧","Newsletter Gratis","/newsletter"]].map(([icon,label,to],i) => (
             <Link key={i} to={to}
-              style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
+              style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
               <span>{icon}</span>{label}
             </Link>
           ))}
         </div>
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", marginBottom:20, paddingTop:20, borderTop:`1px dashed ${C.border}` }}>
-          <p style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'", maxWidth:380, lineHeight:1.6, margin:"0 0 12px" }}>Contenido avanzado de trading — si ya sabes qué es una acción y un ETF</p>
-          <span style={{ display:"inline-block", background:`${C.red}25`, border:`1px solid ${C.red}`, color:C.red, padding:"2px 8px", borderRadius:20, fontSize:8.5, fontFamily:"'IBM Plex Mono'", fontWeight:800, letterSpacing:0.5, whiteSpace:"nowrap", textTransform:"uppercase", marginBottom:8 }}>Nivel Avanzado</span>
+          <p style={{ fontSize:11, color:C.muted, fontFamily:F.sans, maxWidth:380, lineHeight:1.6, margin:"0 0 12px" }}>Contenido avanzado de trading — si ya sabes qué es una acción y un ETF</p>
+          <span style={{ display:"inline-block", background:`${C.red}25`, border:`1px solid ${C.red}`, color:C.red, padding:"2px 8px", borderRadius:20, fontSize:8.5, fontFamily:F.sans, fontWeight:800, letterSpacing:0.5, whiteSpace:"nowrap", textTransform:"uppercase", marginBottom:8 }}>Nivel Avanzado</span>
           <Link to="/opciones"
-            style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
+            style={{ background:C.goldBg, border:`1px solid ${C.gold}40`, color:C.gold, padding:"11px 22px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
             <span>🎯</span>Opcionario
           </Link>
         </div>
-        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted }}>
+        <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted }}>
           FinanzaDR &copy; 2026 &middot; Todos los derechos reservados &middot; No constituye asesoria de inversion
         </div>
       </footer>
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#050609",borderTop:"1px solid #1a1e35",padding:"12px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,zIndex:99}}>
-        <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:"#484e72"}}>FinanzaDR © 2026 · Wall Street en tu idioma · RD</div>
+        <div style={{fontFamily:F.sans,fontSize:10,color:"#484e72"}}>FinanzaDR © 2026 · Wall Street en tu idioma · RD</div>
         <div style={{display:"flex",gap:16}}>
-          {[["🔒 Privacidad","/privacidad"],["📋 Términos","/terminos"],["⚠️ Aviso","/aviso"]].map(([l,to],i)=>(<Link key={i} to={to} style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:"#c8a84b",cursor:"pointer",textDecoration:"none"}}>{l}</Link>))}
+          {[["🔒 Privacidad","/privacidad"],["📋 Términos","/terminos"],["⚠️ Aviso","/aviso"]].map(([l,to],i)=>(<Link key={i} to={to} style={{fontFamily:F.sans,fontSize:10,color:"#c8a84b",cursor:"pointer",textDecoration:"none"}}>{l}</Link>))}
         </div>
       </div>
 
@@ -576,11 +634,11 @@ function BriefingTeaser() {
     <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"28px 32px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8, marginBottom:12 }}>
         <Label style={{ margin:0 }}>── {teaser.label}</Label>
-        <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted }}>Actualizado {formatTiempoRelativo(teaser.generadoEn)}</span>
+        <span style={{ fontFamily:F.sans, fontSize:11, color:C.muted }}>Actualizado {formatTiempoRelativo(teaser.generadoEn)}</span>
       </div>
-      {teaser.titulo && <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(teaser.titulo)}</h2>}
+      {teaser.titulo && <h2 style={{ fontFamily:F.serif, fontSize:22, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(teaser.titulo)}</h2>}
       {teaser.preview && <p style={{ fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:16, display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{renderTextoConNegritas(teaser.preview)}</p>}
-      <Link to={teaser.to} style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.gold, textDecoration:"none" }}>Leer el análisis completo →</Link>
+      <Link to={teaser.to} style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.gold, textDecoration:"none" }}>Leer el análisis completo →</Link>
     </div>
   );
 }
@@ -626,7 +684,7 @@ function NoticiasTeaser() {
         {items.map((n, i) => (
           <div key={i} onClick={() => n.url && window.open(n.url, "_blank", "noopener,noreferrer")}
             style={{ cursor:n.url?"pointer":"default", paddingBottom:i===items.length-1?0:12, borderBottom:i===items.length-1?"none":`1px solid ${C.border}` }}>
-            <div style={{ fontSize:10, fontFamily:"'IBM Plex Mono'", color:C.muted, marginBottom:3 }}>{n.fuente} · {formatTiempoRelativo(n.datetime * 1000)} · 🔗 en inglés</div>
+            <div style={{ fontSize:10, fontFamily:F.sans, color:C.muted, marginBottom:3 }}>{n.fuente} · {formatTiempoRelativo(n.datetime * 1000)} · 🔗 en inglés</div>
             <div style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:3, lineHeight:1.4 }}>{n.titulo}</div>
             <p style={{ fontSize:12, color:C.sub, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{n.resumen}</p>
           </div>
@@ -651,7 +709,7 @@ function UltimasGuias() {
             <Link key={idx} to={`/aprende?articulo=${idx}`} className="card-hover"
               style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"18px 20px", textDecoration:"none", display:"block" }}>
               <div style={{ fontSize:20, marginBottom:8 }}>{ICONOS_TIPO[post.tipo] || "📚"}</div>
-              <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:15, fontWeight:800, color:C.text, marginBottom:6, lineHeight:1.35 }}>{post.titulo}</h3>
+              <h3 style={{ fontFamily:F.serif, fontSize:15, fontWeight:800, color:C.text, marginBottom:6, lineHeight:1.35 }}>{post.titulo}</h3>
               <p style={{ fontSize:12, color:C.sub, lineHeight:1.6, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{post.extracto}</p>
             </Link>
           );
@@ -671,15 +729,15 @@ function InicioPage() {
           <div style={{ maxWidth:540 }} className="hero-text">
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
               <span className="live-dot" style={{ width:8, height:8, borderRadius:"50%", background:"#00d68f", display:"inline-block" }} />
-              <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:"#00d68f", letterSpacing:3, fontWeight:700 }}>FINANZADR</span>
+              <span style={{ fontFamily:F.sans, fontSize:10, color:"#00d68f", letterSpacing:3, fontWeight:700 }}>FINANZADR</span>
             </div>
-            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:44, fontWeight:800, color:C.text, marginBottom:8, lineHeight:1.15 }}>
+            <h1 style={{ fontFamily:F.serif, fontSize:44, fontWeight:800, color:C.text, marginBottom:8, lineHeight:1.15 }}>
               Wall Street.<br/><span style={{ color:C.gold }}>En tu idioma.</span>
             </h1>
             <p style={{ fontSize:15, color:C.sub, lineHeight:1.8, marginBottom:28, maxWidth:460 }}>Precios en tiempo real, charts profesionales y educación financiera para latinos que quieren invertir en Wall Street.</p>
             <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-              <Link to="/mercados" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>📊 Explorar Mercados</Link>
-              <Link to="/mercados?view=charts" style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, textDecoration:"none", display:"inline-block" }}>📈 Charts en Vivo</Link>
+              <Link to="/mercados" style={{ background:C.gold, color:"#000", border:"none", padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>📊 Explorar Mercados</Link>
+              <Link to="/mercados?view=charts" style={{ background:dark?"rgba(200,168,75,0.1)":"rgba(200,168,75,0.15)", border:`1px solid ${C.gold}60`, color:C.gold, padding:"13px 26px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:700, textDecoration:"none", display:"inline-block" }}>📈 Charts en Vivo</Link>
             </div>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, minWidth:280 }} className="hero-stocks">
@@ -687,11 +745,11 @@ function InicioPage() {
               <Link key={st.s} to="/mercados" className="market-item"
                 style={{ background:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)", borderRadius:10, padding:"14px 16px", border:`1px solid ${st.c>=0?"#00d68f22":"#ff446622"}`, cursor:"pointer", borderLeft:`3px solid ${st.c>=0?"#00d68f":"#ff4466"}`, textDecoration:"none", color:"inherit", display:"block" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                  <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:800, color:C.gold }}>{st.s}</span>
-                  <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:st.c>=0?"#00d68f":"#ff4466", fontWeight:700 }}>{st.c>=0?"▲":"▼"}{Math.abs(st.c)}%</span>
+                  <span style={{ fontFamily:F.sans, fontSize:11, fontWeight:800, color:C.gold }}>{st.s}</span>
+                  <span style={{ fontFamily:F.sans, fontSize:10, color:st.c>=0?"#00d68f":"#ff4466", fontWeight:700 }}>{st.c>=0?"▲":"▼"}{Math.abs(st.c)}%</span>
                 </div>
-                <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.muted, marginBottom:6 }}>{st.n}</div>
-                <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:18, fontWeight:800, color:C.text }}>{st.p>=1000?st.p.toLocaleString("en-US",{maximumFractionDigits:0}):st.p.toFixed(2)}</div>
+                <div style={{ fontFamily:F.sans, fontSize:10, color:C.muted, marginBottom:6 }}>{st.n}</div>
+                <div style={{ fontFamily:F.sans, fontSize:18, fontWeight:800, color:C.text }}>{st.p>=1000?st.p.toLocaleString("en-US",{maximumFractionDigits:0}):st.p.toFixed(2)}</div>
               </Link>
             ))}
           </div>
@@ -710,7 +768,7 @@ function InicioPage() {
             const sentiment = pct>=70?"Alcista 🟢":pct>=40?"Neutral ⚪":"Bajista 🔴";
             const color = pct>=70?C.green:pct>=40?C.gold:C.red;
             return (<div>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:28, fontWeight:800, color, marginBottom:8 }}>{sentiment}</div>
+              <div style={{ fontFamily:F.serif, fontSize:28, fontWeight:800, color, marginBottom:8 }}>{sentiment}</div>
               <div style={{ background:C.border, borderRadius:99, height:6, marginBottom:8 }}>
                 <div style={{ background:color, borderRadius:99, height:6, width:`${pct}%`, transition:"width 0.5s" }} />
               </div>
@@ -724,11 +782,11 @@ function InicioPage() {
             const top = [...stocks].sort((a,b)=>Math.abs(b.c)-Math.abs(a.c))[0];
             return (<div>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-                <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:22, fontWeight:800, color:C.gold }}>{top.s}</span>
-                <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:20, fontWeight:700, color:clr(top.c) }}>{arr(top.c)}{Math.abs(top.c)}%</span>
+                <span style={{ fontFamily:F.sans, fontSize:22, fontWeight:800, color:C.gold }}>{top.s}</span>
+                <span style={{ fontFamily:F.sans, fontSize:20, fontWeight:700, color:clr(top.c) }}>{arr(top.c)}{Math.abs(top.c)}%</span>
               </div>
               <div style={{ fontSize:13, color:C.sub, marginBottom:6 }}>{top.n}</div>
-              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:16, color:C.text, fontWeight:700 }}>{fmt(top.p)}</div>
+              <div style={{ fontFamily:F.sans, fontSize:16, color:C.text, fontWeight:700 }}>{fmt(top.p)}</div>
             </div>);
           })()}
         </Link>
@@ -741,10 +799,10 @@ function InicioPage() {
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"32px 36px", marginBottom:24, borderLeft:`3px solid ${C.gold}` }}>
         <Label style={{ marginBottom:16 }}>── QUIÉN SOY</Label>
         <div style={{ display:"flex", gap:28, flexWrap:"wrap", alignItems:"flex-start" }}>
-          <div style={{ width:72, height:72, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:"'Playfair Display',serif", fontSize:30, fontWeight:800, color:C.gold }}>J</div>
+          <div style={{ width:72, height:72, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:F.serif, fontSize:30, fontWeight:800, color:C.gold }}>J</div>
           <div style={{ flex:1, minWidth:260 }}>
-            <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:24, fontWeight:800, color:C.text, marginBottom:4 }}>Julio</h2>
-            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, letterSpacing:1, marginBottom:14 }}>DOMINICANO · VIVIENDO EN MASSACHUSETTS</div>
+            <h2 style={{ fontFamily:F.serif, fontSize:24, fontWeight:800, color:C.text, marginBottom:4 }}>Julio</h2>
+            <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, letterSpacing:1, marginBottom:14 }}>DOMINICANO · VIVIENDO EN MASSACHUSETTS</div>
             <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, maxWidth:640 }}>
               Soy dominicano y vivo en Massachusetts. Cuando empecé a invertir en Wall Street, nadie me explicaba nada en español — todo estaba en inglés, lleno de jerga, y me tomó años entender lo básico a punta de prueba y error. Construí FinanzaDR para que ningún latino tenga que pasar por lo mismo: precios reales, herramientas claras y educación financiera, todo en nuestro idioma.
             </p>
@@ -767,7 +825,7 @@ function MercadosPage() {
         <SectionTitle>Mercados Wall Street</SectionTitle>
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
           {["cards","charts"].map(v => (
-            <button key={v} onClick={() => setMercadosView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${mercadosView===v?C.gold:C.border}`, background:mercadosView===v?C.goldBg:"none", color:mercadosView===v?C.gold:C.muted, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+            <button key={v} onClick={() => setMercadosView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${mercadosView===v?C.gold:C.border}`, background:mercadosView===v?C.goldBg:"none", color:mercadosView===v?C.gold:C.muted, fontFamily:F.sans, fontSize:12, fontWeight:600, cursor:"pointer" }}>
               {v==="cards"?"📋 Ver Cards":"📈 Ver Charts"}
             </button>
           ))}
@@ -778,8 +836,8 @@ function MercadosPage() {
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8, flexWrap:"wrap", gap:12 }}>
             <Label style={{ margin:0 }}>── Precios en tiempo real · Powered by Finnhub</Label>
             <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-              {lastUpdate && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green }}>✓ {lastUpdate}</span>}
-              <button onClick={fetchRealPrices} disabled={realLoading} style={{ background:realLoading?C.border:C.gold, color:realLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:realLoading?"not-allowed":"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
+              {lastUpdate && <span style={{ fontFamily:F.sans, fontSize:11, color:C.green }}>✓ {lastUpdate}</span>}
+              <button onClick={fetchRealPrices} disabled={realLoading} style={{ background:realLoading?C.border:C.gold, color:realLoading?C.muted:"#000", border:"none", padding:"9px 18px", borderRadius:6, cursor:realLoading?"not-allowed":"pointer", fontFamily:F.sans, fontSize:11, fontWeight:700 }}>
                 {realLoading?"⏳ Cargando...":"🔴 Actualizar Precios"}
               </button>
             </div>
@@ -792,7 +850,7 @@ function MercadosPage() {
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16 }}>
               {[{s:"SPY",d:"ETF que replica el S&P 500 — las 500 empresas más grandes de EE.UU."},{s:"QQQ",d:"ETF del NASDAQ 100 — dominado por tecnología."},{s:"DIA",d:"ETF del Dow Jones — las 30 empresas más importantes de EE.UU."},{s:"IWM",d:"ETF del Russell 2000 — 2,000 empresas pequeñas de EE.UU."},{s:"TLT",d:"ETF de bonos del Tesoro a 20+ años."},{s:"XLU",d:"ETF del sector Utilities — estable en mercados volátiles."},{s:"GLD",d:"ETF del oro — activo refugio por excelencia."},{s:"BTC-USD",d:"Bitcoin — la criptomoneda más importante del mundo."}].map((x,i) => (
                 <div key={i} style={{ borderLeft:`3px solid ${C.gold}`, paddingLeft:16 }}>
-                  <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>{x.s}</div>
+                  <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>{x.s}</div>
                   <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{x.d}</p>
                 </div>
               ))}
@@ -832,7 +890,7 @@ function NoticiasPage() {
         <button onClick={fetchNoticiasRD} disabled={noticiasRDLoading}
           style={{ background:noticiasRDLoading?C.border:"#1a6b3c", color:noticiasRDLoading?C.muted:"#fff",
             border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasRDLoading?"not-allowed":"pointer",
-            fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
+            fontFamily:F.sans, fontSize:11, fontWeight:700 }}>
           {noticiasRDLoading ? "⏳ Cargando..." : "🔄 Actualizar"}
         </button>
       </div>
@@ -844,7 +902,7 @@ function NoticiasPage() {
       ) : noticiasRD.length === 0 ? (
         <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"32px 24px", textAlign:"center", color:C.muted, marginBottom:40 }}>
           <div style={{ fontSize:28, marginBottom:10 }}>📡</div>
-          <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:12 }}>Sin noticias disponibles en este momento.</p>
+          <p style={{ fontFamily:F.sans, fontSize:12 }}>Sin noticias disponibles en este momento.</p>
         </div>
       ) : (
         <div style={{ display:"grid", gap:14, marginBottom:40 }}>
@@ -855,12 +913,12 @@ function NoticiasPage() {
               onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
                 <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-                  <span style={{ background:"#1a6b3c22", color:"#2ea866", padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>🇩🇴 {item.fuente}</span>
-                  {item.fecha && <span style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'" }}>{new Date(item.fecha).toLocaleDateString("es-DO",{day:"numeric",month:"short"})}</span>}
+                  <span style={{ background:"#1a6b3c22", color:"#2ea866", padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:600 }}>🇩🇴 {item.fuente}</span>
+                  {item.fecha && <span style={{ fontSize:11, color:C.muted, fontFamily:F.sans }}>{new Date(item.fecha).toLocaleDateString("es-DO",{day:"numeric",month:"short"})}</span>}
                 </div>
-                {item.url && <span style={{ fontSize:11, color:"#2ea866", fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{'>'}</span>}
+                {item.url && <span style={{ fontSize:11, color:"#2ea866", fontFamily:F.sans, fontWeight:600 }}>{'>'}</span>}
               </div>
-              <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:17, fontWeight:700, color:C.text, marginBottom:6, lineHeight:1.4 }}>{item.titulo}</h3>
+              <h3 style={{ fontFamily:F.serif, fontSize:17, fontWeight:700, color:C.text, marginBottom:6, lineHeight:1.4 }}>{item.titulo}</h3>
               <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{item.resumen}</p>
             </div>
           ))}
@@ -876,14 +934,14 @@ function NoticiasPage() {
         <button onClick={fetchNoticias} disabled={noticiasLoading}
           style={{ background:noticiasLoading?C.border:C.gold, color:noticiasLoading?C.muted:"#000",
             border:"none", padding:"9px 18px", borderRadius:6, cursor:noticiasLoading?"not-allowed":"pointer",
-            fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700 }}>
+            fontFamily:F.sans, fontSize:11, fontWeight:700 }}>
           {noticiasLoading ? "⏳ Cargando..." : "🔄 Actualizar"}
         </button>
       </div>
       {noticiasLoading ? (
         <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
           <div style={{ fontSize:36, marginBottom:14 }}>⚙️</div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Cargando noticias...</div>
+          <div style={{ fontFamily:F.sans, fontSize:13 }}>Cargando noticias...</div>
         </div>
       ) : (
         <div style={{ display:"grid", gap:14 }}>
@@ -894,12 +952,12 @@ function NoticiasPage() {
               onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
                 <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-                  <span style={{ background:C.goldBg, color:C.gold, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{item.categoria}</span>
-                  <span style={{ fontSize:11, color:C.muted, fontFamily:"'IBM Plex Mono'" }}>{item.tiempo} · {item.fuente}</span>
+                  <span style={{ background:C.goldBg, color:C.gold, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:600 }}>{item.categoria}</span>
+                  <span style={{ fontSize:11, color:C.muted, fontFamily:F.sans }}>{item.tiempo} · {item.fuente}</span>
                 </div>
-                {item.url && <span style={{ fontSize:11, color:C.gold, fontFamily:"'IBM Plex Mono'", fontWeight:600 }}>{'>'}</span>}
+                {item.url && <span style={{ fontSize:11, color:C.gold, fontFamily:F.sans, fontWeight:600 }}>{'>'}</span>}
               </div>
-              <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:C.text, marginBottom:8, lineHeight:1.4 }}>{item.titulo}</h3>
+              <h3 style={{ fontFamily:F.serif, fontSize:18, fontWeight:700, color:C.text, marginBottom:8, lineHeight:1.4 }}>{item.titulo}</h3>
               <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{item.resumen}</p>
             </div>
           ))}
@@ -933,7 +991,7 @@ function BriefingPage() {
     return (
       <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
         <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el briefing del mercado...</div>
+        <div style={{ fontFamily:F.sans, fontSize:13 }}>Generando el briefing del mercado...</div>
       </div>
     );
   }
@@ -957,17 +1015,17 @@ function BriefingPage() {
       <Label>── 🤖 Resumen de Cierre</Label>
       {titulo && (
         <>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
+          <h1 style={{ fontFamily:F.serif, fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:24 }}>
             <span className="live-dot" style={{ width:7, height:7, borderRadius:"50%", background:C.green, display:"inline-block" }} />
-            <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.green }}>Actualizado {formatTiempoRelativo(data.generadoEn)}</span>
+            <span style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.green }}>Actualizado {formatTiempoRelativo(data.generadoEn)}</span>
           </div>
         </>
       )}
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", marginBottom:32 }}>
         {cuerpo.map((p, i) => (
-          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
+          <p key={i} style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
         ))}
       </div>
 
@@ -1003,7 +1061,7 @@ function AperturaPage() {
     return (
       <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
         <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el resumen de apertura...</div>
+        <div style={{ fontFamily:F.sans, fontSize:13 }}>Generando el resumen de apertura...</div>
       </div>
     );
   }
@@ -1027,17 +1085,17 @@ function AperturaPage() {
       <Label>── 🌅 Resumen de Apertura</Label>
       {titulo && (
         <>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
+          <h1 style={{ fontFamily:F.serif, fontSize:32, fontWeight:800, color:C.text, marginBottom:10, lineHeight:1.3 }}>{renderTextoConNegritas(titulo)}</h1>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:24 }}>
             <span className="live-dot" style={{ width:7, height:7, borderRadius:"50%", background:C.green, display:"inline-block" }} />
-            <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.green }}>Actualizado {formatTiempoRelativo(data.generadoEn)}</span>
+            <span style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.green }}>Actualizado {formatTiempoRelativo(data.generadoEn)}</span>
           </div>
         </>
       )}
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px" }}>
         {cuerpo.map((p, i) => (
-          <p key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
+          <p key={i} style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, marginBottom: i === cuerpo.length - 1 ? 0 : 18 }}>{renderTextoConNegritas(p)}</p>
         ))}
       </div>
     </div>
@@ -1054,7 +1112,7 @@ function CopyButton({ texto }) {
     });
   };
   return (
-    <button onClick={copiar} style={{ background:copiado?C.green:"none", border:`1px solid ${copiado?C.green:C.gold}`, color:copiado?"#000":C.gold, padding:"7px 16px", borderRadius:6, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, whiteSpace:"nowrap", flexShrink:0 }}>
+    <button onClick={copiar} style={{ background:copiado?C.green:"none", border:`1px solid ${copiado?C.green:C.gold}`, color:copiado?"#000":C.gold, padding:"7px 16px", borderRadius:6, cursor:"pointer", fontFamily:F.sans, fontSize:11, fontWeight:700, whiteSpace:"nowrap", flexShrink:0 }}>
       {copiado ? "Copiado ✓" : "📋 Copiar"}
     </button>
   );
@@ -1094,7 +1152,7 @@ function ContenidoDiarioPage() {
         <SectionTitle>📱 Contenido Diario</SectionTitle>
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
           {["cierre","apertura"].map(v => (
-            <button key={v} onClick={() => setFuenteView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${fuenteView===v?C.gold:C.border}`, background:fuenteView===v?C.goldBg:"none", color:fuenteView===v?C.gold:C.muted, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+            <button key={v} onClick={() => setFuenteView(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${fuenteView===v?C.gold:C.border}`, background:fuenteView===v?C.goldBg:"none", color:fuenteView===v?C.gold:C.muted, fontFamily:F.sans, fontSize:12, fontWeight:600, cursor:"pointer" }}>
               {v==="cierre"?"🌇 Cierre":"🌅 Apertura"}
             </button>
           ))}
@@ -1104,7 +1162,7 @@ function ContenidoDiarioPage() {
       {status === "loading" && (
         <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
           <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el contenido del día...</div>
+          <div style={{ fontFamily:F.sans, fontSize:13 }}>Generando el contenido del día...</div>
         </div>
       )}
 
@@ -1116,13 +1174,13 @@ function ContenidoDiarioPage() {
 
       {status === "ready" && (
         <>
-          <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:28 }}>
+          <p style={{ fontFamily:F.sans, fontSize:11, color:C.green, marginTop:4, marginBottom:28 }}>
             ✓ Actualizado hoy a las {formatHora(data.generadoEn)}
           </p>
 
           <Label>── 🎬 TikTok / Reels (60 seg)</Label>
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom:20, whiteSpace:"pre-wrap" }}>{data.tiktok.guion}</p>
+            <p style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, marginBottom:20, whiteSpace:"pre-wrap" }}>{data.tiktok.guion}</p>
             <CopyButton texto={data.tiktok.guion} />
           </div>
 
@@ -1130,7 +1188,7 @@ function ContenidoDiarioPage() {
           <div style={{ display:"grid", gap:12, marginBottom:32 }}>
             {data.hiloX.map((tweet, i) => (
               <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"18px 22px", borderLeft:`3px solid ${C.gold}`, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
-                <p style={{ fontFamily:"'Inter',sans-serif", fontSize:14, lineHeight:1.7, color:C.text, flex:1, margin:0 }}>{tweet}</p>
+                <p style={{ fontFamily:F.sans, fontSize:14, lineHeight:1.7, color:C.text, flex:1, margin:0 }}>{tweet}</p>
                 <CopyButton texto={tweet} />
               </div>
             ))}
@@ -1138,10 +1196,10 @@ function ContenidoDiarioPage() {
 
           <Label>── 📸 Instagram</Label>
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"24px 28px", marginBottom:32 }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, marginBottom:16, whiteSpace:"pre-wrap" }}>{data.instagram.caption}</p>
+            <p style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, marginBottom:16, whiteSpace:"pre-wrap" }}>{data.instagram.caption}</p>
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20 }}>
               {data.instagram.hashtags.map((h, i) => (
-                <span key={i} style={{ background:C.goldBg, color:C.gold, padding:"4px 12px", borderRadius:4, fontSize:12, fontFamily:"'IBM Plex Mono'" }}>{h}</span>
+                <span key={i} style={{ background:C.goldBg, color:C.gold, padding:"4px 12px", borderRadius:4, fontSize:12, fontFamily:F.sans }}>{h}</span>
               ))}
             </div>
             <CopyButton texto={instagramCompleto} />
@@ -1176,7 +1234,7 @@ function TablaSimple({ filas }) {
         <thead>
           <tr>
             {columnas.map(col => (
-              <th key={col} style={{ textAlign:"left", padding:"10px 16px", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, borderBottom:`1px solid ${C.border}` }}>{col}</th>
+              <th key={col} style={{ textAlign:"left", padding:"10px 16px", fontFamily:F.sans, fontSize:11, color:C.gold, borderBottom:`1px solid ${C.border}` }}>{col}</th>
             ))}
           </tr>
         </thead>
@@ -1217,7 +1275,7 @@ function MonitoreoReporte({ password }) {
     return (
       <div className="fade-in" style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
         <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Generando el reporte de monitoreo...</div>
+        <div style={{ fontFamily:F.sans, fontSize:13 }}>Generando el reporte de monitoreo...</div>
       </div>
     );
   }
@@ -1239,12 +1297,12 @@ function MonitoreoReporte({ password }) {
   return (
     <div className="fade-in">
       <SectionTitle>📊 Monitoreo</SectionTitle>
-      <p style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.green, marginTop:4, marginBottom:24 }}>
+      <p style={{ fontFamily:F.sans, fontSize:11, color:C.green, marginTop:4, marginBottom:24 }}>
         ✓ Generado hoy a las {formatHora(data.generadoEn)}
       </p>
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", marginBottom:32 }}>
-        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:15, lineHeight:1.9, color:C.text, margin:0, whiteSpace:"pre-wrap" }}>{renderTextoConNegritas(data.resumen)}</p>
+        <p style={{ fontFamily:F.sans, fontSize:15, lineHeight:1.9, color:C.text, margin:0, whiteSpace:"pre-wrap" }}>{renderTextoConNegritas(data.resumen)}</p>
       </div>
 
       <Label>── Páginas más visitadas</Label>
@@ -1295,9 +1353,9 @@ function MonitoreoPage() {
         <input type="password" placeholder="Contraseña" value={password}
           onChange={e=>setPassword(e.target.value)}
           onKeyDown={e=>e.key==="Enter"&&handleSubmit()}
-          style={{ flex:1, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", color:C.text, fontFamily:"'Inter',sans-serif", fontSize:15, outline:"none" }} />
+          style={{ flex:1, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", color:C.text, fontFamily:F.sans, fontSize:15, outline:"none" }} />
         <button onClick={handleSubmit} disabled={verificando || !password}
-          style={{ background:C.gold, color:"#000", border:"none", padding:"14px 24px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, opacity: verificando||!password?0.6:1 }}>
+          style={{ background:C.gold, color:"#000", border:"none", padding:"14px 24px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:13, fontWeight:700, opacity: verificando||!password?0.6:1 }}>
           {verificando ? "⏳..." : "Entrar"}
         </button>
       </div>
@@ -1329,10 +1387,10 @@ function AprendePage() {
         {ARTICULOS.map((post,i) => (
           <div key={i} ref={el => articuloRefs.current[i] = el} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
             <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
-              {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
+              {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:F.sans }}>#{t}</span>)}
             </div>
-            <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.titulo}</h3>
-            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
+            <h3 style={{ fontFamily:F.serif, fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.titulo}</h3>
+            <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
             {expanded===i ? (
               post.tipo==="stats" ? <ArticuloStats post={post} />
               : post.tipo==="tabla" ? <ArticuloTabla post={post} />
@@ -1343,7 +1401,7 @@ function AprendePage() {
             ) : (
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
             )}
-            <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
+            <button onClick={() => setExpanded(expanded===i?null:i)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:600 }}>
              {expanded===i?"Ver menos":"Leer guia completa"}
             </button>
           </div>
@@ -1352,10 +1410,10 @@ function AprendePage() {
       <div style={{ marginTop:28, background:C.goldBg, border:`1px solid ${C.gold}40`, borderRadius:8, padding:"20px 24px", display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
         <span style={{ fontSize:24 }}>🎯</span>
         <div style={{ flex:1, minWidth:220 }}>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:800, color:C.text, marginBottom:4 }}>¿Ya dominas lo básico?</div>
+          <div style={{ fontFamily:F.serif, fontSize:16, fontWeight:800, color:C.text, marginBottom:4 }}>¿Ya dominas lo básico?</div>
           <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>Explora el Opcionario, nuestra guía en crecimiento de estrategias de opciones explicadas paso a paso.</p>
         </div>
-        <Link to="/opciones" style={{ background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 20px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, textDecoration:"none", whiteSpace:"nowrap" }}>Ver Opcionario</Link>
+        <Link to="/opciones" style={{ background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 20px", borderRadius:5, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:600, textDecoration:"none", whiteSpace:"nowrap" }}>Ver Opcionario</Link>
       </div>
     </div>
   );
@@ -1369,11 +1427,11 @@ function ArticuloPasos({ post }) {
       <div style={{ display:"grid", gap:18, marginBottom:24 }}>
         {post.pasos.map((paso,i) => (
           <div key={i} style={{ display:"flex", gap:18, alignItems:"flex-start" }}>
-            <div style={{ width:44, height:44, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:800, color:C.gold }}>
+            <div style={{ width:44, height:44, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:F.serif, fontSize:16, fontWeight:800, color:C.gold }}>
               {String(i+1).padStart(2,"0")}
             </div>
             <div style={{ paddingTop:4 }}>
-              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.text, letterSpacing:0.5, marginBottom:6, textTransform:"uppercase" }}>{paso.titulo}</div>
+              <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, letterSpacing:0.5, marginBottom:6, textTransform:"uppercase" }}>{paso.titulo}</div>
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{paso.texto}</p>
             </div>
           </div>
@@ -1395,8 +1453,8 @@ function ArticuloStats({ post }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:14, marginBottom:28 }}>
         {post.stats.map((s,i) => (
           <div key={i} style={{ background:C.goldBg, border:`1px solid ${C.gold}`, borderRadius:10, padding:"18px 14px", textAlign:"center" }}>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.gold, lineHeight:1.1, marginBottom:6 }}>{s.valor}</div>
-            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.sub, lineHeight:1.5 }}>{s.label}</div>
+            <div style={{ fontFamily:F.serif, fontSize:32, fontWeight:800, color:C.gold, lineHeight:1.1, marginBottom:6 }}>{s.valor}</div>
+            <div style={{ fontFamily:F.sans, fontSize:11, color:C.sub, lineHeight:1.5 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -1405,7 +1463,7 @@ function ArticuloStats({ post }) {
           <div key={i} style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
             <div style={{ width:22, height:22, borderRadius:"50%", background:C.gold, color:"#000", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:12, fontWeight:800, marginTop:2 }}>✓</div>
             <div>
-              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{r.titulo}</div>
+              <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{r.titulo}</div>
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{r.texto}</p>
             </div>
           </div>
@@ -1427,9 +1485,9 @@ function ArticuloTabla({ post }) {
         <table style={{ width:"100%", borderCollapse:"collapse", minWidth:520 }}>
           <thead>
             <tr style={{ background:C.goldBg }}>
-              <th style={{ textAlign:"left", padding:"12px 16px", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.sub, fontWeight:600 }}></th>
+              <th style={{ textAlign:"left", padding:"12px 16px", fontFamily:F.sans, fontSize:11, color:C.sub, fontWeight:600 }}></th>
               {post.tabla.columnas.map((col,j) => (
-                <th key={j} style={{ textAlign:"center", padding:"12px 12px", fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, fontWeight:700, letterSpacing:0.5 }}>{col}</th>
+                <th key={j} style={{ textAlign:"center", padding:"12px 12px", fontFamily:F.sans, fontSize:11, color:C.gold, fontWeight:700, letterSpacing:0.5 }}>{col}</th>
               ))}
             </tr>
           </thead>
@@ -1448,20 +1506,20 @@ function ArticuloTabla({ post }) {
       <div style={{ display:"grid", gap:18, marginBottom:24 }}>
         {post.explicaciones.map((e,i) => (
           <div key={i} style={{ background:C.goldBg, borderRadius:8, padding:"18px 20px" }}>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:800, color:C.text, marginBottom:12 }}>{e.titulo}</div>
+            <div style={{ fontFamily:F.serif, fontSize:16, fontWeight:800, color:C.text, marginBottom:12 }}>{e.titulo}</div>
             {e.ventaja && e.desventaja ? (
               <div style={{ display:"grid", gap:12 }}>
                 <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
                   <span style={{ color:C.green, fontSize:15, flexShrink:0 }}>✓</span>
                   <div>
-                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{e.ventaja.titulo}</div>
+                    <div style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{e.ventaja.titulo}</div>
                     <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{e.ventaja.texto}</p>
                   </div>
                 </div>
                 <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
                   <span style={{ color:C.red, fontSize:15, flexShrink:0 }}>✗</span>
                   <div>
-                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{e.desventaja.titulo}</div>
+                    <div style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{e.desventaja.titulo}</div>
                     <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{e.desventaja.texto}</p>
                   </div>
                 </div>
@@ -1490,8 +1548,8 @@ function ArticuloHerramientas({ post }) {
           <div key={i} style={{ border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 22px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10, flexWrap:"wrap" }}>
               <span style={{ fontSize:24 }}>{h.icono}</span>
-              <h4 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:800, color:C.text, flex:1 }}>{h.nombre}</h4>
-              <Link to={h.ruta} style={{ background:C.gold, color:"#000", padding:"8px 16px", borderRadius:6, fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:800, textDecoration:"none", whiteSpace:"nowrap" }}>{h.cta} →</Link>
+              <h4 style={{ fontFamily:F.serif, fontSize:18, fontWeight:800, color:C.text, flex:1 }}>{h.nombre}</h4>
+              <Link to={h.ruta} style={{ background:C.gold, color:"#000", padding:"8px 16px", borderRadius:6, fontFamily:F.sans, fontSize:11, fontWeight:800, textDecoration:"none", whiteSpace:"nowrap" }}>{h.cta} →</Link>
             </div>
             <p style={{ fontSize:13, color:C.sub, lineHeight:1.7, marginBottom:16 }}>{h.descripcion}</p>
             <div style={{ display:"grid", gap:12, marginBottom:14 }}>
@@ -1499,7 +1557,7 @@ function ArticuloHerramientas({ post }) {
                 <div key={j} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
                   <span style={{ color:C.gold, fontSize:13, flexShrink:0, marginTop:2 }}>●</span>
                   <div>
-                    <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:3 }}>{p.titulo}</div>
+                    <div style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.text, marginBottom:3 }}>{p.titulo}</div>
                     <p style={{ fontSize:13, color:C.sub, lineHeight:1.7 }}>{p.texto}</p>
                   </div>
                 </div>
@@ -1528,8 +1586,8 @@ function ArticuloSimulador({ post }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:12, marginBottom:28 }}>
         {post.ejemplo.filas.map((f,i) => (
           <div key={i} style={{ background:C.goldBg, border:`1px solid ${C.gold}`, borderRadius:10, padding:"14px 10px", textAlign:"center" }}>
-            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.sub, marginBottom:6 }}>{f.periodo}</div>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:800, color:C.gold }}>{f.valor}</div>
+            <div style={{ fontFamily:F.sans, fontSize:10, color:C.sub, marginBottom:6 }}>{f.periodo}</div>
+            <div style={{ fontFamily:F.serif, fontSize:20, fontWeight:800, color:C.gold }}>{f.valor}</div>
           </div>
         ))}
       </div>
@@ -1538,9 +1596,9 @@ function ArticuloSimulador({ post }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14, marginBottom:28 }}>
         {post.comparacion.casos.map((c,i) => (
           <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"18px 20px" }}>
-            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{c.edad}</div>
-            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:10 }}>Aportando {c.aporte}</div>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:28, fontWeight:800, color:C.green, marginBottom:6 }}>{c.resultado}</div>
+            <div style={{ fontFamily:F.sans, fontSize:12, fontWeight:700, color:C.text, marginBottom:4 }}>{c.edad}</div>
+            <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, marginBottom:10 }}>Aportando {c.aporte}</div>
+            <div style={{ fontFamily:F.serif, fontSize:28, fontWeight:800, color:C.green, marginBottom:6 }}>{c.resultado}</div>
             <div style={{ fontSize:12, color:C.sub, lineHeight:1.6 }}>{c.detalle}</div>
           </div>
         ))}
@@ -1592,7 +1650,7 @@ function SimuladorInteres() {
           <div key={i}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
               <span style={{ fontSize:13, color:C.sub }}>{s.label}</span>
-              <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.gold }}>{s.fmt(s.val)}</span>
+              <span style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.gold }}>{s.fmt(s.val)}</span>
             </div>
             <input type="range" min={s.min} max={s.max} step={s.step} value={s.val} onChange={e=>s.set(+e.target.value)} style={{ width:"100%", accentColor:C.gold, cursor:"pointer" }} />
           </div>
@@ -1600,18 +1658,18 @@ function SimuladorInteres() {
       </div>
 
       <div style={{ background:`linear-gradient(135deg,${C.card},${C.bg})`, border:`2px solid ${C.gold}`, borderRadius:12, padding:"20px 24px", textAlign:"center", marginBottom:16 }}>
-        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.gold, letterSpacing:2, marginBottom:6 }}>VALOR FINAL EN {anos} AÑOS</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:34, fontWeight:800, color:C.gold }}>{fmt$(finalVal)}</div>
+        <div style={{ fontFamily:F.sans, fontSize:10, color:C.gold, letterSpacing:2, marginBottom:6 }}>VALOR FINAL EN {anos} AÑOS</div>
+        <div style={{ fontFamily:F.serif, fontSize:34, fontWeight:800, color:C.gold }}>{fmt$(finalVal)}</div>
       </div>
 
       <div style={{ display:"flex", gap:12, marginBottom:24, flexWrap:"wrap" }}>
         <div style={{ flex:1, minWidth:160, background:C.goldBg, borderRadius:8, padding:"12px 16px" }}>
           <div style={{ fontSize:11, color:C.muted, marginBottom:4 }}>Total Invertido</div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:16, fontWeight:700, color:C.text }}>{fmt$(aporteTotal)}</div>
+          <div style={{ fontFamily:F.sans, fontSize:16, fontWeight:700, color:C.text }}>{fmt$(aporteTotal)}</div>
         </div>
         <div style={{ flex:1, minWidth:160, background:C.goldBg, borderRadius:8, padding:"12px 16px" }}>
           <div style={{ fontSize:11, color:C.muted, marginBottom:4 }}>Ganancia Generada</div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:16, fontWeight:700, color:C.green }}>{fmt$(gananciaTotal)}</div>
+          <div style={{ fontFamily:F.sans, fontSize:16, fontWeight:700, color:C.green }}>{fmt$(gananciaTotal)}</div>
         </div>
       </div>
 
@@ -1619,10 +1677,10 @@ function SimuladorInteres() {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={filas} margin={{ top:10, right:10, left:0, bottom:0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-            <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily:"'IBM Plex Mono'", fontSize:10, fill:C.muted }} />
-            <YAxis stroke={C.muted} tick={{ fontFamily:"'IBM Plex Mono'", fontSize:9, fill:C.muted }} tickFormatter={fmtK} />
-            <Tooltip contentStyle={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:"'IBM Plex Mono'", fontSize:12 }} labelFormatter={v=>`Año ${v}`} formatter={(v,n)=>[fmt$(v), n==="aporteAcum"?"Capital Invertido":"Ganancia Generada"]} />
-            <Legend wrapperStyle={{ fontFamily:"'IBM Plex Mono'", fontSize:11, paddingTop:12 }} />
+            <XAxis dataKey="ano" stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:10, fill:C.muted }} />
+            <YAxis stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:9, fill:C.muted }} tickFormatter={fmtK} />
+            <Tooltip contentStyle={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:F.sans, fontSize:12 }} labelFormatter={v=>`Año ${v}`} formatter={(v,n)=>[fmt$(v), n==="aporteAcum"?"Capital Invertido":"Ganancia Generada"]} />
+            <Legend wrapperStyle={{ fontFamily:F.sans, fontSize:11, paddingTop:12 }} />
             <Bar dataKey="aporteAcum" stackId="a" fill="#1e4a7a" name="Capital Invertido" />
             <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="Ganancia Generada" radius={[4,4,0,0]} />
           </ComposedChart>
@@ -1642,7 +1700,7 @@ function ArticuloErrores({ post }) {
           <div key={i} style={{ display:"flex", gap:16, alignItems:"flex-start", background:`${C.red}12`, border:`1px solid ${C.red}30`, borderRadius:10, padding:"16px 20px" }}>
             <div style={{ width:38, height:38, borderRadius:"50%", background:`${C.red}20`, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:17 }}>⚠️</div>
             <div>
-              <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{i+1}. {err.titulo}</div>
+              <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, marginBottom:6 }}>{i+1}. {err.titulo}</div>
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{err.texto}</p>
             </div>
           </div>
@@ -1672,25 +1730,25 @@ function OpcionesPage() {
       <SectionTitle>Opcionario</SectionTitle>
       <p style={{ fontSize:13, color:C.sub, marginTop:4, marginBottom:24 }}>Estrategias de opciones explicadas paso a paso — contenido en crecimiento, empezando por las más comunes</p>
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16, flexWrap:"wrap" }}>
-        <span style={{ fontSize:12, color:C.sub, fontFamily:"'IBM Plex Mono'" }}>Mostrando {filtradas.length} de {ARTICULOS_OPCIONES.length} estrategias</span>
+        <span style={{ fontSize:12, color:C.sub, fontFamily:F.sans }}>Mostrando {filtradas.length} de {ARTICULOS_OPCIONES.length} estrategias</span>
         {(filtroSesgo || filtroNivel) && (
-          <span onClick={() => { setFiltroSesgo(null); setFiltroNivel(null); }} style={{ fontSize:12, color:C.gold, fontFamily:"'IBM Plex Mono'", textDecoration:"underline", cursor:"pointer" }}>Limpiar filtros</span>
+          <span onClick={() => { setFiltroSesgo(null); setFiltroNivel(null); }} style={{ fontSize:12, color:C.gold, fontFamily:F.sans, textDecoration:"underline", cursor:"pointer" }}>Limpiar filtros</span>
         )}
       </div>
       <div style={{ display:"grid", gap:24 }}>
         {filtradas.map((post) => (
           <div key={post.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"26px 30px" }}>
             <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
-              <span onClick={(e) => { e.stopPropagation(); setFiltroSesgo(filtroSesgo===post.sesgo ? null : post.sesgo); }} style={{ background:filtroSesgo===post.sesgo ? C[SESGO_COLOR[post.sesgo]] : C.goldBg, color:filtroSesgo===post.sesgo ? C.bg : C[SESGO_COLOR[post.sesgo]], padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:700, textTransform:"uppercase", cursor:"pointer" }}>{post.sesgo}</span>
-              <span onClick={(e) => { e.stopPropagation(); setFiltroNivel(filtroNivel===post.nivel ? null : post.nivel); }} style={{ background:filtroNivel===post.nivel ? C.gold : C.border, color:filtroNivel===post.nivel ? C.bg : C.sub, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:700, textTransform:"uppercase", cursor:"pointer" }}>{post.nivel}</span>
-              {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'" }}>#{t}</span>)}
+              <span onClick={(e) => { e.stopPropagation(); setFiltroSesgo(filtroSesgo===post.sesgo ? null : post.sesgo); }} style={{ background:filtroSesgo===post.sesgo ? C[SESGO_COLOR[post.sesgo]] : C.goldBg, color:filtroSesgo===post.sesgo ? C.bg : C[SESGO_COLOR[post.sesgo]], padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:700, textTransform:"uppercase", cursor:"pointer" }}>{post.sesgo}</span>
+              <span onClick={(e) => { e.stopPropagation(); setFiltroNivel(filtroNivel===post.nivel ? null : post.nivel); }} style={{ background:filtroNivel===post.nivel ? C.gold : C.border, color:filtroNivel===post.nivel ? C.bg : C.sub, padding:"2px 10px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:700, textTransform:"uppercase", cursor:"pointer" }}>{post.nivel}</span>
+              {post.tags.map((t,j) => <span key={j} style={{ background:C.border, color:C.sub, padding:"2px 10px", borderRadius:4, fontSize:11, fontFamily:F.sans }}>#{t}</span>)}
             </div>
-            <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.nombre}</h3>
-            <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
+            <h3 style={{ fontFamily:F.serif, fontSize:22, fontWeight:800, marginBottom:8, lineHeight:1.35, color:C.text }}>{post.nombre}</h3>
+            <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, marginBottom:14 }}>{post.autor} · {post.fecha}</div>
             {expanded===post.id ? <ArticuloEstrategia post={post} /> : (
               <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.extracto}</p>
             )}
-            <button onClick={() => setExpanded(expanded===post.id?null:post.id)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600 }}>
+            <button onClick={() => setExpanded(expanded===post.id?null:post.id)} style={{ marginTop:18, background:"none", border:`1px solid ${C.gold}`, color:C.gold, padding:"9px 22px", borderRadius:5, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:600 }}>
              {expanded===post.id?"Ver menos":"Ver estrategia completa"}
             </button>
           </div>
@@ -1707,11 +1765,11 @@ function ArticuloEstrategia({ post }) {
     <div>
       <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:20 }}>{post.queEs}</p>
 
-      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Las patas de la operación</div>
+      <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Las patas de la operación</div>
       <div style={{ display:"grid", gap:10, marginBottom:24 }}>
         {post.legs.map((leg,i) => (
           <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", border:`1px solid ${C.border}`, borderRadius:8, padding:"12px 16px" }}>
-            <span style={{ background:C.goldBg, color:C.gold, padding:"3px 10px", borderRadius:4, fontSize:11, fontFamily:"'IBM Plex Mono'", fontWeight:700, whiteSpace:"nowrap", flexShrink:0 }}>
+            <span style={{ background:C.goldBg, color:C.gold, padding:"3px 10px", borderRadius:4, fontSize:11, fontFamily:F.sans, fontWeight:700, whiteSpace:"nowrap", flexShrink:0 }}>
               {leg.accion==="compra"?"+ ":"− "}{leg.tipo.toUpperCase()}
             </span>
             <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{leg.nota}</p>
@@ -1721,30 +1779,30 @@ function ArticuloEstrategia({ post }) {
 
       <div style={{ display:"grid", gap:12, marginBottom:24 }}>
         <div style={{ borderLeft:`3px solid ${C.green}`, background:`${C.green}0f`, borderRadius:6, padding:"12px 18px" }}>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.green, marginBottom:4, textTransform:"uppercase" }}>Ganancia máxima</div>
+          <div style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.green, marginBottom:4, textTransform:"uppercase" }}>Ganancia máxima</div>
           <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.maxGanancia}</p>
         </div>
         <div style={{ borderLeft:`3px solid ${C.red}`, background:`${C.red}0f`, borderRadius:6, padding:"12px 18px" }}>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.red, marginBottom:4, textTransform:"uppercase" }}>Pérdida máxima</div>
+          <div style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.red, marginBottom:4, textTransform:"uppercase" }}>Pérdida máxima</div>
           <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.maxPerdida}</p>
         </div>
         <div style={{ borderLeft:`3px solid ${C.gold}`, background:C.goldBg, borderRadius:6, padding:"12px 18px" }}>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.gold, marginBottom:4, textTransform:"uppercase" }}>Punto de equilibrio</div>
+          <div style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.gold, marginBottom:4, textTransform:"uppercase" }}>Punto de equilibrio</div>
           <p style={{ fontSize:13, color:C.sub, lineHeight:1.6 }}>{post.puntoEquilibrio}</p>
         </div>
       </div>
 
-      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Diagrama de ganancia/pérdida al vencimiento</div>
+      <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Diagrama de ganancia/pérdida al vencimiento</div>
       <div style={{ position:"relative", height:260, marginBottom:8, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 8px 4px" }}>
-        <div style={{ position:"absolute", top:14, right:16, fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.green, fontWeight:700 }}>Ganancia ↑</div>
-        <div style={{ position:"absolute", bottom:24, right:16, fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.red, fontWeight:700 }}>Pérdida ↓</div>
+        <div style={{ position:"absolute", top:14, right:16, fontFamily:F.sans, fontSize:10, color:C.green, fontWeight:700 }}>Ganancia ↑</div>
+        <div style={{ position:"absolute", bottom:24, right:16, fontFamily:F.sans, fontSize:10, color:C.red, fontWeight:700 }}>Pérdida ↓</div>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={post.payoffPoints} margin={{ top:10, right:10, left:0, bottom:0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-            <XAxis dataKey="precio" stroke={C.muted} tick={{ fontFamily:"'IBM Plex Mono'", fontSize:10, fill:C.muted }} tickFormatter={v=>"$"+v} />
-            <YAxis stroke={C.muted} tick={{ fontFamily:"'IBM Plex Mono'", fontSize:9, fill:C.muted }} tickFormatter={fmt$} />
+            <XAxis dataKey="precio" stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:10, fill:C.muted }} tickFormatter={v=>"$"+v} />
+            <YAxis stroke={C.muted} tick={{ fontFamily:F.sans, fontSize:9, fill:C.muted }} tickFormatter={fmt$} />
             <ReferenceLine y={0} stroke={C.muted} strokeDasharray="4 4" />
-            <Tooltip contentStyle={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:"'IBM Plex Mono'", fontSize:12 }}
+            <Tooltip contentStyle={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, fontFamily:F.sans, fontSize:12 }}
               labelFormatter={v=>`Precio subyacente: $${v}`}
               formatter={(v)=>[<span style={{ color:v>=0?C.green:C.red, fontWeight:700 }}>{fmt$(v)}</span>, "Ganancia/Pérdida"]} />
             <Line type="linear" dataKey="ganancia" stroke={C.gold} strokeWidth={2} dot={{ r:3, fill:C.gold, strokeWidth:0 }} activeDot={{ r:5 }} isAnimationActive={false} />
@@ -1753,18 +1811,18 @@ function ArticuloEstrategia({ post }) {
       </div>
       <p style={{ fontSize:11, color:C.muted, lineHeight:1.6, marginBottom:24 }}>Puntos calculados al vencimiento de la opción, sin incluir comisiones. No refleja el valor de la posición antes del vencimiento.</p>
 
-      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Cuándo usarla</div>
+      <div style={{ fontFamily:F.sans, fontSize:11, color:C.muted, fontWeight:700, letterSpacing:0.5, marginBottom:8, textTransform:"uppercase" }}>Cuándo usarla</div>
       <p style={{ fontSize:14, color:C.sub, lineHeight:1.8, marginBottom:24 }}>{post.cuandoUsarla}</p>
 
       <div style={{ background:C.goldBg, borderLeft:`3px solid ${C.gold}`, borderRadius:6, padding:"16px 20px", marginBottom:24 }}>
-        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, fontWeight:700, color:C.gold, marginBottom:6, textTransform:"uppercase" }}>Ejemplo numérico</div>
+        <div style={{ fontFamily:F.sans, fontSize:11, fontWeight:700, color:C.gold, marginBottom:6, textTransform:"uppercase" }}>Ejemplo numérico</div>
         <p style={{ fontSize:14, color:C.text, lineHeight:1.75 }}>{post.ejemplo}</p>
       </div>
 
       <div style={{ display:"flex", gap:16, alignItems:"flex-start", background:`${C.red}12`, border:`1px solid ${C.red}30`, borderRadius:10, padding:"16px 20px", marginBottom:16 }}>
         <div style={{ width:38, height:38, borderRadius:"50%", background:`${C.red}20`, border:`1px solid ${C.red}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:17 }}>⚠️</div>
         <div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700, color:C.text, marginBottom:6, textTransform:"uppercase" }}>Riesgos</div>
+          <div style={{ fontFamily:F.sans, fontSize:13, fontWeight:700, color:C.text, marginBottom:6, textTransform:"uppercase" }}>Riesgos</div>
           <p style={{ fontSize:14, color:C.sub, lineHeight:1.75 }}>{post.riesgos}</p>
         </div>
       </div>
@@ -1848,7 +1906,7 @@ function CompartirPage() {
         <SectionTitle>📸 Market Snapshot</SectionTitle>
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
           {["vivo","cierre"].map(v => (
-            <button key={v} onClick={() => setVista(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${vista===v?C.gold:C.border}`, background:vista===v?C.goldBg:"none", color:vista===v?C.gold:C.muted, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+            <button key={v} onClick={() => setVista(v)} style={{ padding:"9px 18px", borderRadius:6, border:`1px solid ${vista===v?C.gold:C.border}`, background:vista===v?C.goldBg:"none", color:vista===v?C.gold:C.muted, fontFamily:F.sans, fontSize:12, fontWeight:600, cursor:"pointer" }}>
               {v==="vivo"?"🔴 Vivo":"🌇 Cierre de Hoy"}
             </button>
           ))}
@@ -1861,7 +1919,7 @@ function CompartirPage() {
       {vista === "cierre" && cierreStatus === "loading" && (
         <div style={{ textAlign:"center", padding:"60px 0", color:C.muted }}>
           <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:13 }}>Cargando el cierre del mercado...</div>
+          <div style={{ fontFamily:F.sans, fontSize:13 }}>Cargando el cierre del mercado...</div>
         </div>
       )}
 
@@ -1894,8 +1952,8 @@ function NewsletterPage() {
     <div className="fade-in">
       <div style={{ background:dark?"linear-gradient(135deg,#0f1228,#130f2a)":"linear-gradient(135deg,#eef0f8,#e8eaf5)", border:`1px solid ${C.gold}30`, borderRadius:16, padding:"40px", marginBottom:32, textAlign:"center" }}>
         <div style={{ fontSize:48, marginBottom:16 }}>📈</div>
-        <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:C.gold, letterSpacing:3, marginBottom:12 }}>GRATIS · CADA SEMANA</div>
-        <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800, color:C.text, marginBottom:14, lineHeight:1.3 }}>Lo más importante de<br/><span style={{ color:C.gold }}>Wall Street en tu idioma</span></h1>
+        <div style={{ fontFamily:F.sans, fontSize:11, color:C.gold, letterSpacing:3, marginBottom:12 }}>GRATIS · CADA SEMANA</div>
+        <h1 style={{ fontFamily:F.serif, fontSize:32, fontWeight:800, color:C.text, marginBottom:14, lineHeight:1.3 }}>Lo más importante de<br/><span style={{ color:C.gold }}>Wall Street en tu idioma</span></h1>
         <p style={{ fontSize:15, color:C.sub, maxWidth:480, margin:"0 auto 32px", lineHeight:1.8 }}>Cada semana te enviamos un resumen claro de lo que pasó en los mercados.</p>
         <div style={{ maxWidth:480, margin:"0 auto" }}><NewsletterForm /></div>
       </div>
@@ -1908,11 +1966,11 @@ function LegalPage({ title, updated, sections }) {
   return (
     <div className="fade-in">
       <SectionTitle>{title}</SectionTitle>
-      <p style={{ fontSize:12, color:C.muted, marginTop:4, marginBottom:24, fontFamily:"'IBM Plex Mono'" }}>Última actualización: {updated}</p>
+      <p style={{ fontSize:12, color:C.muted, marginTop:4, marginBottom:24, fontFamily:F.sans }}>Última actualización: {updated}</p>
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px", display:"grid", gap:26 }}>
         {sections.map((s,i) => (
           <div key={i} style={{ borderTop:i>0?`1px solid ${C.border}`:"none", paddingTop:i>0?22:0 }}>
-            <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:17, fontWeight:800, color:C.text, marginBottom:10 }}>{s.titulo}</h3>
+            <h3 style={{ fontFamily:F.serif, fontSize:17, fontWeight:800, color:C.text, marginBottom:10 }}>{s.titulo}</h3>
             <div style={{ display:"grid", gap:12 }}>
               {s.parrafos.map((p,j) => <p key={j} style={{ fontSize:14, color:C.sub, lineHeight:1.8 }}>{p}</p>)}
             </div>
@@ -2069,19 +2127,19 @@ function NotFoundPage() {
       <div style={{ fontSize:64, marginBottom:16 }}>🧭</div>
       <SectionTitle>Página no encontrada</SectionTitle>
       <p style={{ fontSize:14, color:C.sub, margin:"12px 0 28px" }}>La página que buscas no existe o fue movida.</p>
-      <Link to="/" style={{ background:C.gold, color:"#000", padding:"12px 24px", borderRadius:8, fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>Volver al inicio</Link>
+      <Link to="/" style={{ background:C.gold, color:"#000", padding:"12px 24px", borderRadius:8, fontFamily:F.sans, fontSize:12, fontWeight:800, textDecoration:"none", display:"inline-block" }}>Volver al inicio</Link>
     </div>
   );
 }
 
 function SectionTitle({ children }) {
   const { C } = useOutletContext();
-  return <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:26, fontWeight:800, color:C.text, marginBottom:4 }}>{children}</h2>;
+  return <h2 style={{ fontFamily:F.serif, fontSize:26, fontWeight:800, color:C.text, marginBottom:4 }}>{children}</h2>;
 }
 
 function Label({ children, style: s }) {
   const { C } = useOutletContext();
-  return <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:10, color:C.gold, letterSpacing:2, textTransform:"uppercase", marginBottom:14, ...s }}>{children}</div>;
+  return <div style={{ fontFamily:F.sans, fontSize:10, color:C.gold, letterSpacing:2, textTransform:"uppercase", marginBottom:14, ...s }}>{children}</div>;
 }
 
 function StockCard({ st }) {
@@ -2090,11 +2148,11 @@ function StockCard({ st }) {
   return (
     <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${pos?C.green:C.red}` }}>
       <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-        <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, color:C.gold }}>{st.s}</span>
-        <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:clr(st.c) }}>{arr(st.c)} {Math.abs(st.c)}%</span>
+        <span style={{ fontFamily:F.sans, fontSize:12, fontWeight:600, color:C.gold }}>{st.s}</span>
+        <span style={{ fontFamily:F.sans, fontSize:11, color:clr(st.c) }}>{arr(st.c)} {Math.abs(st.c)}%</span>
       </div>
       <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{st.n}</div>
-      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:20, fontWeight:600, color:C.text }}>{fmt(st.p)}</div>
+      <div style={{ fontFamily:F.sans, fontSize:20, fontWeight:600, color:C.text }}>{fmt(st.p)}</div>
     </div>
   );
 }
@@ -2106,11 +2164,11 @@ function BriefingStockCard({ p }) {
   return (
     <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${disponible ? (pos?C.green:C.red) : C.muted}` }}>
       <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-        <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:600, color:C.gold }}>{p.simbolo}</span>
-        {disponible && <span style={{ fontFamily:"'IBM Plex Mono'", fontSize:11, color:clr(p.cambioPct) }}>{arr(p.cambioPct)} {Math.abs(p.cambioPct)}%</span>}
+        <span style={{ fontFamily:F.sans, fontSize:12, fontWeight:600, color:C.gold }}>{p.simbolo}</span>
+        {disponible && <span style={{ fontFamily:F.sans, fontSize:11, color:clr(p.cambioPct) }}>{arr(p.cambioPct)} {Math.abs(p.cambioPct)}%</span>}
       </div>
       <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>{p.nombre}</div>
-      <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:20, fontWeight:600, color:C.text }}>{disponible ? fmt(p.precio) : "N/D"}</div>
+      <div style={{ fontFamily:F.sans, fontSize:20, fontWeight:600, color:C.text }}>{disponible ? fmt(p.precio) : "N/D"}</div>
     </div>
   );
 }
@@ -2120,14 +2178,14 @@ function BrokerCard({ b }) {
   return (
     <div className="card-hover" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"22px 20px", display:"flex", flexDirection:"column", gap:14 }}>
       <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-        <div style={{ width:48, height:48, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:800, color:C.gold }}>{b.initial}</div>
+        <div style={{ width:48, height:48, borderRadius:"50%", background:C.goldBg, border:`2px solid ${C.gold}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontFamily:F.serif, fontSize:18, fontWeight:800, color:C.gold }}>{b.initial}</div>
         <div>
-          <div style={{ fontFamily:"'IBM Plex Mono'", fontSize:14, fontWeight:700, color:C.text }}>{b.name}</div>
-          <div style={{ background:C.goldBg, color:C.gold, display:"inline-block", padding:"2px 8px", borderRadius:4, fontSize:10, fontFamily:"'IBM Plex Mono'", fontWeight:600, marginTop:4 }}>{b.nivel}</div>
+          <div style={{ fontFamily:F.sans, fontSize:14, fontWeight:700, color:C.text }}>{b.name}</div>
+          <div style={{ background:C.goldBg, color:C.gold, display:"inline-block", padding:"2px 8px", borderRadius:4, fontSize:10, fontFamily:F.sans, fontWeight:600, marginTop:4 }}>{b.nivel}</div>
         </div>
       </div>
       <p style={{ fontSize:13, color:C.sub, lineHeight:1.7, flex:1 }}>{b.desc}</p>
-      <button onClick={() => window.open(b.url,"_blank","noopener,noreferrer")} style={{ background:C.gold, color:"#000", border:"none", padding:"11px 18px", borderRadius:7, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:12, fontWeight:800, width:"100%" }}>{b.cta} →</button>
+      <button onClick={() => window.open(b.url,"_blank","noopener,noreferrer")} style={{ background:C.gold, color:"#000", border:"none", padding:"11px 18px", borderRadius:7, cursor:"pointer", fontFamily:F.sans, fontSize:12, fontWeight:800, width:"100%" }}>{b.cta} →</button>
     </div>
   );
 }
@@ -2178,7 +2236,7 @@ function SentimientoMercado() {
   if (loading) return (
     <div style={{ textAlign: "center", padding: "60px", color: C.muted }}>
       <div style={{ fontSize: 36, marginBottom: 16 }}>⏳</div>
-      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13 }}>Cargando sentimiento del mercado...</div>
+      <div style={{ fontFamily:F.sans, fontSize: 13 }}>Cargando sentimiento del mercado...</div>
     </div>
   );
 
@@ -2200,18 +2258,18 @@ function SentimientoMercado() {
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 28, textAlign: "center" }}>
           <Label>── FEAR & GREED INDEX CRIPTO · HOY</Label>
           <div style={{ fontSize: 72, marginBottom: 8 }}>{emoji}</div>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 64, fontWeight: 900, color, lineHeight: 1, marginBottom: 8 }}>{val}</div>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 16, fontWeight: 800, color, marginBottom: 20, letterSpacing: 2 }}>{label}</div>
+          <div style={{ fontFamily:F.sans, fontSize: 64, fontWeight: 900, color, lineHeight: 1, marginBottom: 8 }}>{val}</div>
+          <div style={{ fontFamily:F.sans, fontSize: 16, fontWeight: 800, color, marginBottom: 20, letterSpacing: 2 }}>{label}</div>
           <div style={{ background: C.border, borderRadius: 99, height: 12, marginBottom: 8, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${val}%`, background: `linear-gradient(90deg, #00d68f, ${color})`, borderRadius: 99, transition: "width 1s ease" }} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, fontFamily: "'IBM Plex Mono'" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, fontFamily:F.sans }}>
             <span>😱 Miedo Extremo</span>
             <span>😐 Neutral</span>
             <span>🤑 Codicia</span>
           </div>
           <div style={{ marginTop: 16, padding: "14px 16px", background: C.goldBg, borderRadius: 10, borderLeft: `3px solid ${C.gold}`, textAlign: "left" }}>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: C.gold, letterSpacing: 2, fontWeight: 700, marginBottom: 6 }}>── CONSEJO FINANZADR</div>
+            <div style={{ fontFamily:F.sans, fontSize: 10, color: C.gold, letterSpacing: 2, fontWeight: 700, marginBottom: 6 }}>── CONSEJO FINANZADR</div>
             <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
               {val < 25 && "⚠️ Mercado en pánico. Históricamente un buen momento para acumular a precios bajos."}
               {val >= 25 && val < 45 && "😨 Inversores con miedo. Considera acumular posiciones gradualmente (DCA)."}
@@ -2232,11 +2290,11 @@ function SentimientoMercado() {
             const dayName = i === 0 ? "Hoy" : i === 1 ? "Ayer" : date.toLocaleDateString("es-DO", { weekday: "short" });
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, width: 40 }}>{dayName}</div>
+                <div style={{ fontFamily:F.sans, fontSize: 11, color: C.muted, width: 40 }}>{dayName}</div>
                 <div style={{ flex: 1, background: C.border, borderRadius: 99, height: 8, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${v}%`, background: c, borderRadius: 99 }} />
                 </div>
-                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: c, width: 30, textAlign: "right" }}>{v}</div>
+                <div style={{ fontFamily:F.sans, fontSize: 13, fontWeight: 700, color: c, width: 30, textAlign: "right" }}>{v}</div>
                 <div style={{ fontSize: 10, color: C.muted, width: 90 }}>{l}</div>
               </div>
             );
@@ -2252,8 +2310,8 @@ function SentimientoMercado() {
         ].map((ind, i) => (
           <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16, textAlign: "center" }}>
             <div style={{ fontSize: 24, marginBottom: 8 }}>{ind.icon}</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: C.muted, marginBottom: 4 }}>{ind.label}</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 14, fontWeight: 700, color: ind.color }}>{ind.valor}</div>
+            <div style={{ fontFamily:F.sans, fontSize: 11, color: C.muted, marginBottom: 4 }}>{ind.label}</div>
+            <div style={{ fontFamily:F.sans, fontSize: 14, fontWeight: 700, color: ind.color }}>{ind.valor}</div>
           </div>
         ))}
       </div>
@@ -2304,7 +2362,7 @@ function NewsletterForm() {
   if (status === "success") return (
     <div style={{ background:"#00d68f15", border:"1px solid #00d68f", borderRadius:12, padding:"28px 24px", textAlign:"center" }}>
       <div style={{ fontSize:40, marginBottom:12 }}>🎉</div>
-      <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:"#00d68f", marginBottom:8 }}>¡Ya estás suscrito!</div>
+      <div style={{ fontFamily:F.serif, fontSize:22, fontWeight:700, color:"#00d68f", marginBottom:8 }}>¡Ya estás suscrito!</div>
       <p style={{ fontSize:14, color:C.sub }}>Revisa tu correo para confirmar.</p>
     </div>
   );
@@ -2312,8 +2370,8 @@ function NewsletterForm() {
     <div>
       <div style={{ display:"flex", gap:10, marginBottom:12, flexWrap:"wrap" }}>
         <input type="email" placeholder="tu@email.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSubmit()}
-          style={{ flex:1, minWidth:200, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", color:C.text, fontFamily:"'Inter',sans-serif", fontSize:15, outline:"none" }} />
-        <button onClick={handleSubmit} disabled={status==="loading"} style={{ background:C.gold, color:"#000", border:"none", padding:"14px 24px", borderRadius:8, cursor:"pointer", fontFamily:"'IBM Plex Mono'", fontSize:13, fontWeight:700 }}>
+          style={{ flex:1, minWidth:200, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", color:C.text, fontFamily:F.sans, fontSize:15, outline:"none" }} />
+        <button onClick={handleSubmit} disabled={status==="loading"} style={{ background:C.gold, color:"#000", border:"none", padding:"14px 24px", borderRadius:8, cursor:"pointer", fontFamily:F.sans, fontSize:13, fontWeight:700 }}>
          {status==="loading"?"⏳ Enviando...":"Suscribirse"}
         </button>
       </div>
@@ -2352,17 +2410,17 @@ function CompoundCalc() {
   const interesTotal=totalFinal-aporteTotal;
   const gananciaPct=aporteTotal>0?(interesTotal/aporteTotal*100):0;
   const fmtK=v=>v>=1e6?sym+(v/1e6).toFixed(1)+"M":v>=1000?sym+(v/1000).toFixed(0)+"K":sym+Math.round(v);
-  const inputStyle={width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",color:C.text,fontFamily:"'IBM Plex Mono'",fontSize:15,fontWeight:600,outline:"none"};
+  const inputStyle={width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",color:C.text,fontFamily:F.sans,fontSize:15,fontWeight:600,outline:"none"};
   const labelStyle={fontSize:13,color:C.sub,marginBottom:6,display:"block"};
-  const selStyle={width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",color:C.text,fontFamily:"'IBM Plex Mono'",fontSize:13,outline:"none",cursor:"pointer"};
+  const selStyle={width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",color:C.text,fontFamily:F.sans,fontSize:13,outline:"none",cursor:"pointer"};
   const stepBtn=(fn,dir)=>(<button onClick={fn} style={{width:40,background:C.border,border:"none",color:C.gold,fontSize:20,cursor:"pointer",borderRadius:dir==="left"?"8px 0 0 8px":"0 8px 8px 0",flexShrink:0}}>{dir==="left"?"−":"+"}</button>);
-  const numInput=(val,setVal,step,min=0)=>(<div style={{display:"flex",border:`1px solid ${C.border}`,borderRadius:8,overflow:"hidden",height:42}}>{stepBtn(()=>setVal(v=>Math.max(min,+(v-step).toFixed(2))),"left")}<input type="number" value={val||""} min={min} onChange={e=>setVal(e.target.value===""?0:Math.max(min,+e.target.value))} style={{flex:1,background:C.card,border:"none",outline:"none",color:C.gold,fontFamily:"'IBM Plex Mono'",fontSize:15,fontWeight:700,textAlign:"center"}}/>{stepBtn(()=>setVal(v=>+(v+step).toFixed(2)),"right")}</div>);
+  const numInput=(val,setVal,step,min=0)=>(<div style={{display:"flex",border:`1px solid ${C.border}`,borderRadius:8,overflow:"hidden",height:42}}>{stepBtn(()=>setVal(v=>Math.max(min,+(v-step).toFixed(2))),"left")}<input type="number" value={val||""} min={min} onChange={e=>setVal(e.target.value===""?0:Math.max(min,+e.target.value))} style={{flex:1,background:C.card,border:"none",outline:"none",color:C.gold,fontFamily:F.sans,fontSize:15,fontWeight:700,textAlign:"center"}}/>{stepBtn(()=>setVal(v=>+(v+step).toFixed(2)),"right")}</div>);
   return (
     <div>
       <SectionTitle>Calculadora de Inversión</SectionTitle>
       <p style={{fontSize:13,color:C.sub,marginTop:4,marginBottom:20}}>El S&P 500 ha retornado ~10% anual históricamente.</p>
       <div style={{display:"flex",gap:8,marginBottom:24,maxWidth:260}}>
-        {["USD","DOP"].map(m=>(<button key={m} onClick={()=>setMoneda(m)} style={{flex:1,padding:"9px",borderRadius:8,border:`1px solid ${moneda===m?C.gold:C.border}`,background:moneda===m?C.goldBg:"none",color:moneda===m?C.gold:C.muted,fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:600,cursor:"pointer"}}>{m==="USD"?"🇺🇸 USD":"🇩🇴 DOP"}</button>))}
+        {["USD","DOP"].map(m=>(<button key={m} onClick={()=>setMoneda(m)} style={{flex:1,padding:"9px",borderRadius:8,border:`1px solid ${moneda===m?C.gold:C.border}`,background:moneda===m?C.goldBg:"none",color:moneda===m?C.gold:C.muted,fontFamily:F.sans,fontSize:13,fontWeight:600,cursor:"pointer"}}>{m==="USD"?"🇺🇸 USD":"🇩🇴 DOP"}</button>))}
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24,alignItems:"start"}} className="calc-grid">
         <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"24px"}}>
@@ -2379,11 +2437,11 @@ function CompoundCalc() {
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           <div style={{background:`linear-gradient(135deg,${C.card},${C.bg})`,border:`2px solid ${C.gold}`,borderRadius:12,padding:"20px 24px",textAlign:"center"}}>
-            <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:C.gold,letterSpacing:2,marginBottom:6}}>VALOR FINAL EN {anos} AÑOS</div>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:36,fontWeight:800,color:C.gold}}>{fmtM(totalFinal)}</div>
+            <div style={{fontFamily:F.sans,fontSize:10,color:C.gold,letterSpacing:2,marginBottom:6}}>VALOR FINAL EN {anos} AÑOS</div>
+            <div style={{fontFamily:F.serif,fontSize:36,fontWeight:800,color:C.gold}}>{fmtM(totalFinal)}</div>
           </div>
           <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,overflow:"hidden"}}>
-            {[{lbl:"Inversión Total",val:fmtM(aporteTotal),color:C.text},{lbl:"Capital % del Final",val:fmtPct(aporteTotal/totalFinal*100),color:C.muted},{lbl:"Aporte Total",val:fmtM(aporte*periodos*anos),color:C.sub},{lbl:"Ganancia Total",val:fmtM(Math.max(0,interesTotal)),color:C.green},{lbl:"Ganancia Porcentual",val:fmtPct(Math.max(0,gananciaPct)),color:C.green}].map((r,i,arr)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 20px",borderBottom:i<arr.length-1?`1px solid ${C.border}20`:"none"}}><span style={{fontSize:13,color:C.muted}}>{r.lbl}</span><span style={{fontFamily:"'IBM Plex Mono'",fontSize:15,fontWeight:700,color:r.color}}>{r.val}</span></div>))}
+            {[{lbl:"Inversión Total",val:fmtM(aporteTotal),color:C.text},{lbl:"Capital % del Final",val:fmtPct(aporteTotal/totalFinal*100),color:C.muted},{lbl:"Aporte Total",val:fmtM(aporte*periodos*anos),color:C.sub},{lbl:"Ganancia Total",val:fmtM(Math.max(0,interesTotal)),color:C.green},{lbl:"Ganancia Porcentual",val:fmtPct(Math.max(0,gananciaPct)),color:C.green}].map((r,i,arr)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 20px",borderBottom:i<arr.length-1?`1px solid ${C.border}20`:"none"}}><span style={{fontSize:13,color:C.muted}}>{r.lbl}</span><span style={{fontFamily:F.sans,fontSize:15,fontWeight:700,color:r.color}}>{r.val}</span></div>))}
           </div>
         </div>
       </div>
@@ -2393,10 +2451,10 @@ function CompoundCalc() {
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={filas} margin={{top:10,right:30,left:10,bottom:0}}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false}/>
-              <XAxis dataKey="ano" stroke={C.muted} tick={{fontFamily:"'IBM Plex Mono'",fontSize:10,fill:C.muted}}/>
-              <YAxis stroke={C.muted} tick={{fontFamily:"'IBM Plex Mono'",fontSize:9,fill:C.muted}} tickFormatter={(v)=>v>=1000000?"$"+(v/1000000).toFixed(1)+"M":v>=1000?"$"+(v/1000).toFixed(0)+"K":"$"+Math.round(v)}/>
-              <Tooltip contentStyle={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,fontFamily:"'IBM Plex Mono'",fontSize:12}} labelFormatter={v=>`Año ${v}`} formatter={(v,n)=>["$"+Math.round(v).toLocaleString(),n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias Acum.":n==="ganancia"?"Ganancia Año":n]}/>
-              <Legend wrapperStyle={{fontFamily:"'IBM Plex Mono'",fontSize:11,paddingTop:12}}/>
+              <XAxis dataKey="ano" stroke={C.muted} tick={{fontFamily:F.sans,fontSize:10,fill:C.muted}}/>
+              <YAxis stroke={C.muted} tick={{fontFamily:F.sans,fontSize:9,fill:C.muted}} tickFormatter={(v)=>v>=1000000?"$"+(v/1000000).toFixed(1)+"M":v>=1000?"$"+(v/1000).toFixed(0)+"K":"$"+Math.round(v)}/>
+              <Tooltip contentStyle={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,fontFamily:F.sans,fontSize:12}} labelFormatter={v=>`Año ${v}`} formatter={(v,n)=>["$"+Math.round(v).toLocaleString(),n==="aporteAcum"?"Capital Base":n==="interesAcum"?"Ganancias Acum.":n==="ganancia"?"Ganancia Año":n]}/>
+              <Legend wrapperStyle={{fontFamily:F.sans,fontSize:11,paddingTop:12}}/>
               <Bar dataKey="aporteAcum" stackId="a" fill="#1e4a7a" name="Capital Base"/>
               <Bar dataKey="interesAcum" stackId="a" fill="#2d7a4a" name="Ganancias Acum." radius={[4,4,0,0]}/>
               <Line type="monotone" dataKey="ganancia" stroke={C.gold} strokeWidth={2.5} dot={{fill:C.gold,r:3}} name="Ganancia Año"/>
@@ -2405,14 +2463,14 @@ function CompoundCalc() {
         </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:12,margin:"24px 0 12px"}}>
-        <span style={{fontFamily:"'IBM Plex Mono'",fontSize:12,color:vistaTabla==="Anual"?C.gold:C.muted}}>Anual</span>
+        <span style={{fontFamily:F.sans,fontSize:12,color:vistaTabla==="Anual"?C.gold:C.muted}}>Anual</span>
         <div onClick={()=>setVistaTabla(v=>v==="Anual"?"Mensual":"Anual")} style={{width:44,height:24,borderRadius:12,cursor:"pointer",position:"relative",background:vistaTabla==="Mensual"?C.gold:C.border,transition:"background 0.25s"}}>
           <div style={{position:"absolute",top:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left 0.25s",left:vistaTabla==="Mensual"?23:3}}/>
         </div>
-        <span style={{fontFamily:"'IBM Plex Mono'",fontSize:12,color:vistaTabla==="Mensual"?C.gold:C.muted}}>Mensual</span>
+        <span style={{fontFamily:F.sans,fontSize:12,color:vistaTabla==="Mensual"?C.gold:C.muted}}>Mensual</span>
       </div>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"20px 24px",overflowX:"auto"}}>
-        <table style={{width:"100%",borderCollapse:"collapse",fontFamily:"'IBM Plex Mono'",fontSize:12,minWidth:700}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontFamily:F.sans,fontSize:12,minWidth:700}}>
           <thead><tr style={{background:C.card,borderBottom:`1px solid ${C.border}`}}>{[vistaTabla==="Mensual"?"Mes":"Año","Capital Base","Aporte","Capital Total","Ganancia","% Ganancia","Ganancia Acum.","Valor Final"].map((h,i)=>(<th key={i} style={{padding:"10px 12px",fontWeight:500,textAlign:i===0?"left":"right",color:C.muted,whiteSpace:"nowrap"}}>{h}</th>))}</tr></thead>
           <tbody>
             {vistaTabla==="Anual"?filas.map((f,i)=>(<tr key={i} style={{borderBottom:`1px solid ${C.border}20`,background:i%2===0?"transparent":"#ffffff03"}}>
@@ -2467,25 +2525,25 @@ function TradingViewCharts() {
   return (
     <div>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"28px 32px",marginBottom:24,textAlign:"center"}}>
-        <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:C.gold,letterSpacing:3,marginBottom:12}}>BUSCA CUALQUIER ACTIVO</div>
-        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:800,color:C.text,marginBottom:8}}>Acciones · ETFs · Cripto · Materias Primas</h2>
+        <div style={{fontFamily:F.sans,fontSize:10,color:C.gold,letterSpacing:3,marginBottom:12}}>BUSCA CUALQUIER ACTIVO</div>
+        <h2 style={{fontFamily:F.serif,fontSize:24,fontWeight:800,color:C.text,marginBottom:8}}>Acciones · ETFs · Cripto · Materias Primas</h2>
         <p style={{fontSize:13,color:C.sub,marginBottom:24}}>Escribe el símbolo del activo — AAPL, BTC, GLD, EUR/USD.</p>
         <div style={{display:"flex",gap:10,maxWidth:500,margin:"0 auto",flexWrap:"wrap"}}>
           <input type="text" placeholder="Ej: AAPL, TSLA, BTC, GLD..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&loadChart(input)}
-            style={{flex:1,minWidth:200,background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 18px",color:C.text,fontFamily:"'IBM Plex Mono'",fontSize:15,outline:"none"}}/>
-         <button onClick={()=>loadChart(input)} style={{background:C.gold,color:"#000",border:"none",padding:"14px 28px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>Ver Chart {'>'}</button>
+            style={{flex:1,minWidth:200,background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 18px",color:C.text,fontFamily:F.sans,fontSize:15,outline:"none"}}/>
+         <button onClick={()=>loadChart(input)} style={{background:C.gold,color:"#000",border:"none",padding:"14px 28px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>Ver Chart {'>'}</button>
         </div>
       </div>
       {activeSymbol ? (
         <div>
           <div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}>
-            <span style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:C.muted,marginRight:8}}>INTERVALO:</span>
-            {intervals.map(iv=>(<button key={iv.v} onClick={()=>setActiveInterval(iv.v)} style={{padding:"6px 14px",borderRadius:5,border:`1px solid ${activeInterval===iv.v?C.gold:C.border}`,background:activeInterval===iv.v?C.goldBg:"none",color:activeInterval===iv.v?C.gold:C.muted,fontFamily:"'IBM Plex Mono'",fontSize:11,fontWeight:600,cursor:"pointer"}}>{iv.l}</button>))}
+            <span style={{fontFamily:F.sans,fontSize:10,color:C.muted,marginRight:8}}>INTERVALO:</span>
+            {intervals.map(iv=>(<button key={iv.v} onClick={()=>setActiveInterval(iv.v)} style={{padding:"6px 14px",borderRadius:5,border:`1px solid ${activeInterval===iv.v?C.gold:C.border}`,background:activeInterval===iv.v?C.goldBg:"none",color:activeInterval===iv.v?C.gold:C.muted,fontFamily:F.sans,fontSize:11,fontWeight:600,cursor:"pointer"}}>{iv.l}</button>))}
           </div>
           <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,overflow:"hidden"}}>
             <div style={{background:"#09091a",padding:"12px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${C.border}`}}>
-              <div style={{fontFamily:"'IBM Plex Mono'",fontSize:14,fontWeight:700,color:C.gold}}>{activeSymbol}</div>
-              <div style={{fontFamily:"'IBM Plex Mono'",fontSize:10,color:C.muted}}>Powered by TradingView</div>
+              <div style={{fontFamily:F.sans,fontSize:14,fontWeight:700,color:C.gold}}>{activeSymbol}</div>
+              <div style={{fontFamily:F.sans,fontSize:10,color:C.muted}}>Powered by TradingView</div>
             </div>
             <div ref={chartRef} style={{width:"100%",minHeight:560}}/>
           </div>
@@ -2493,9 +2551,9 @@ function TradingViewCharts() {
       ) : (
         <div style={{textAlign:"center",padding:"60px 32px",background:C.card,border:`1px dashed ${C.border}`,borderRadius:12}}>
           <div style={{fontSize:48,marginBottom:16}}>📊</div>
-          <p style={{fontFamily:"'IBM Plex Mono'",fontSize:13,color:C.muted,lineHeight:1.8}}>Escribe el símbolo arriba y presiona <strong style={{color:C.gold}}>Ver Chart</strong></p>
+          <p style={{fontFamily:F.sans,fontSize:13,color:C.muted,lineHeight:1.8}}>Escribe el símbolo arriba y presiona <strong style={{color:C.gold}}>Ver Chart</strong></p>
           <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:20,flexWrap:"wrap"}}>
-            {["SPY","QQQ","AAPL","NVDA","TSLA","BTC","GLD"].map(s=>(<button key={s} onClick={()=>{setInput(s);loadChart(s);}} style={{background:C.goldBg,border:`1px solid ${C.gold}40`,color:C.gold,padding:"6px 14px",borderRadius:6,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:12,fontWeight:600}}>{s}</button>))}
+            {["SPY","QQQ","AAPL","NVDA","TSLA","BTC","GLD"].map(s=>(<button key={s} onClick={()=>{setInput(s);loadChart(s);}} style={{background:C.goldBg,border:`1px solid ${C.gold}40`,color:C.gold,padding:"6px 14px",borderRadius:6,cursor:"pointer",fontFamily:F.sans,fontSize:12,fontWeight:600}}>{s}</button>))}
           </div>
         </div>
       )}
@@ -2640,15 +2698,15 @@ function SnapshotCard({ stocks, modo = "vivo", fecha }) {
   return (
     <div>
       <div style={{display:"flex",gap:8,marginBottom:20}}>
-        {["dark","light"].map(s=>(<button key={s} onClick={()=>setCardTheme(s)} style={{padding:"9px 20px",borderRadius:8,border:`1px solid ${cardTheme===s?C.gold:C.border}`,background:cardTheme===s?C.goldBg:"none",color:cardTheme===s?C.gold:C.muted,fontFamily:"'IBM Plex Mono'",fontSize:12,fontWeight:600,cursor:"pointer"}}>{s==="dark"?"🌙 Oscuro":"☀️ Claro"}</button>))}
+        {["dark","light"].map(s=>(<button key={s} onClick={()=>setCardTheme(s)} style={{padding:"9px 20px",borderRadius:8,border:`1px solid ${cardTheme===s?C.gold:C.border}`,background:cardTheme===s?C.goldBg:"none",color:cardTheme===s?C.gold:C.muted,fontFamily:F.sans,fontSize:12,fontWeight:600,cursor:"pointer"}}>{s==="dark"?"🌙 Oscuro":"☀️ Claro"}</button>))}
       </div>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:20,overflow:"hidden"}}>
         <canvas ref={canvasRef} style={{width:"100%",height:"auto",borderRadius:8,display:"block"}}/>
       </div>
       <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-        <button onClick={downloadImage} style={{background:C.gold,color:"#000",border:"none",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>⬇️ Guardar Imagen</button>
-        <button onClick={copyImage} style={{background:copied?C.gold:"none",color:copied?"#000":C.gold,border:`1px solid ${C.gold}`,padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>{copied?"✅ ¡Copiado!":"📋 Copiar Imagen"}</button>
-        <button onClick={shareOnX} style={{background:"#000",color:"#fff",border:"1px solid #333",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:700}}>𝕏 Compartir en X</button>
+        <button onClick={downloadImage} style={{background:C.gold,color:"#000",border:"none",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>⬇️ Guardar Imagen</button>
+        <button onClick={copyImage} style={{background:copied?C.gold:"none",color:copied?"#000":C.gold,border:`1px solid ${C.gold}`,padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>{copied?"✅ ¡Copiado!":"📋 Copiar Imagen"}</button>
+        <button onClick={shareOnX} style={{background:"#000",color:"#fff",border:"1px solid #333",padding:"13px 24px",borderRadius:8,cursor:"pointer",fontFamily:F.sans,fontSize:13,fontWeight:700}}>𝕏 Compartir en X</button>
       </div>
     </div>
   );
