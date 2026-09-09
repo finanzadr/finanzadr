@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { fetchNoticiasCrudas } from "./agente-mercados.js";
+import { fetchNoticiasCrudas } from "./_agente-mercados.js";
 
 const CACHE_TTL_MS = 8 * 60_000;
 let cache = { data: null, at: 0 };
