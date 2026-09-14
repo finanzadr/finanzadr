@@ -1415,7 +1415,7 @@ function NewsletterPortada() {
             Un correo por semana con lo que movió al mercado, la guía nueva si la hay y el contexto para entenderla. En español y sin jerga.
           </p>
           <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>
-            Puedes darte de baja desde cualquier envío. Tu correo se gestiona con MailerLite y solo se usa para este boletín; los detalles están en la <Link to="/privacidad" style={{ color: C.goldText, textDecoration: "underline" }}>política de privacidad</Link>.
+            Puedes darte de baja desde cualquier envío. Tu correo solo se usa para este boletín; los detalles están en la <Link to="/privacidad" style={{ color: C.goldText, textDecoration: "underline" }}>política de privacidad</Link>.
           </p>
         </div>
         <div><NewsletterForm /></div>
@@ -3755,7 +3755,7 @@ function PrivacidadPage() {
   return (
     <LegalPage title="Política de Privacidad" updated="26 de julio de 2026" sections={[
       { titulo: "Qué información recopilamos", parrafos: [
-        "No recopilamos información personal identificable salvo la que tú decidas darnos voluntariamente, como tu correo al suscribirte al newsletter (gestionado a través de MailerLite).",
+        "No recopilamos información personal identificable salvo la que tú decidas darnos voluntariamente, como tu correo al suscribirte al newsletter.",
       ] },
       { titulo: "Analytics", parrafos: [
         "Usamos Vercel Analytics para medir visitas de forma agregada y anónima, sin cookies de seguimiento individual, únicamente para entender qué contenido es útil y mejorar el sitio.",
@@ -3807,7 +3807,7 @@ function TerminosPage() {
         "Los datos de mercado se muestran al amparo de licencias de terceros que prohíben su redistribución. Su uso indebido puede generar responsabilidad frente a esos proveedores además de frente a nosotros, y da lugar a la revocación inmediata de tu licencia de uso.",
       ] },
       { titulo: "8. Contenido y datos de terceros", parrafos: [
-        "El sitio integra datos y servicios de terceros: Finnhub (cotizaciones y noticias), TradingView (gráficos y mapa de calor), Alternative.me (índice de sentimiento cripto), MailerLite (boletín) y Vercel (alojamiento y analítica). Estos datos se ofrecen tal cual, pueden estar retrasados, incompletos o contener errores, y su disponibilidad depende de terceros sobre los que no tenemos control.",
+        "El sitio integra datos y servicios de terceros: Finnhub (cotizaciones y noticias), TradingView (gráficos y mapa de calor), Alternative.me (índice de sentimiento cripto) y Vercel (alojamiento y analítica). Estos datos se ofrecen tal cual, pueden estar retrasados, incompletos o contener errores, y su disponibilidad depende de terceros sobre los que no tenemos control.",
         "No respaldamos, verificamos ni asumimos responsabilidad por el contenido de sitios externos enlazados desde FinanzaDR.",
       ] },
       { titulo: "9. Uso de las herramientas del sitio", parrafos: [
@@ -3921,71 +3921,34 @@ function Label({ children, style: s }) {
 // NEWSLETTER
 // ===========================================================================
 
-const MAILERLITE_JSONP = "https://assets.mailerlite.com/jsonp/2369844/forms/188124188244968944/subscribe";
+// El alta pasa por /api/newsletter (mismo origen): Listmonk no envía cabeceras
+// CORS, así que un fetch directo desde el navegador fallaría siempre en el
+// preflight. Solo se da por buena la suscripción con un 2xx del proxy; 409
+// significa que el correo ya estaba en la lista; 504 es "sin confirmación"
+// (ni éxito ni rechazo); cualquier otro fallo es error. Nunca se asume éxito
+// sin evidencia.
+async function suscribirEnListaDeCorreo(email, tiempoLimiteMs = 12000) {
+  const controlador = new AbortController();
+  const temporizador = setTimeout(() => controlador.abort(), tiempoLimiteMs);
 
-// El alta se envía por JSONP porque es lo que admite ese endpoint y, a
-// diferencia de un fetch cross-origin, deja leer la respuesta del proveedor.
-// La versión anterior hacía `await fetch(...)` dentro de un try con el catch
-// vacío y ponía el estado en "success" fuera del catch: el visitante veía
-// "¡Ya estás suscrito!" aunque la petición hubiera fallado o el alta hubiera
-// sido rechazada.
-function suscribirPorJsonp(email, tiempoLimiteMs = 10000) {
-  return new Promise((resolve, reject) => {
-    const nombreCallback = `mlCallback${Date.now()}${Math.floor(Math.random() * 1000)}`;
-    const script = document.createElement("script");
-    let resuelto = false;
-
-    const limpiar = () => {
-      delete window[nombreCallback];
-      if (script.parentNode) script.parentNode.removeChild(script);
-    };
-
-    const temporizador = setTimeout(() => {
-      if (resuelto) return;
-      resuelto = true;
-      limpiar();
-      // Sin respuesta no se afirma nada: quien llama muestra "no pudimos
-      // confirmar", que es distinto de éxito y distinto de error.
-      reject(new Error("sin-confirmacion"));
-    }, tiempoLimiteMs);
-
-    window[nombreCallback] = (respuesta) => {
-      if (resuelto) return;
-      resuelto = true;
-      clearTimeout(temporizador);
-      limpiar();
-      resolve(respuesta);
-    };
-
-    script.onerror = () => {
-      if (resuelto) return;
-      resuelto = true;
-      clearTimeout(temporizador);
-      limpiar();
-      reject(new Error("red"));
-    };
-
-    const parametros = new URLSearchParams({
-      callback: nombreCallback,
-      "fields[email]": email,
-      "ml-submit": "1",
-      anticsrf: "true",
+  let respuesta;
+  try {
+    respuesta = await fetch("/api/newsletter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+      signal: controlador.signal,
     });
-    script.src = `${MAILERLITE_JSONP}?${parametros.toString()}`;
-    document.body.appendChild(script);
-  });
-}
+  } catch (err) {
+    throw new Error(err.name === "AbortError" ? "sin-confirmacion" : "red");
+  } finally {
+    clearTimeout(temporizador);
+  }
 
-// Interpreta la respuesta del proveedor sin inventarse un contrato: solo se
-// da por buena si viene una señal explícita de éxito.
-function interpretarRespuestaAlta(respuesta) {
-  if (!respuesta || typeof respuesta !== "object") return "sin-confirmar";
-  if (respuesta.success === true) return "exito";
-
-  const texto = JSON.stringify(respuesta).toLowerCase();
-  if (texto.includes("already") || texto.includes("exists") || texto.includes("duplicate")) return "duplicado";
-  if (respuesta.success === false || respuesta.errors) return "error";
-  return "sin-confirmar";
+  if (respuesta.ok) return "exito";
+  if (respuesta.status === 409) return "duplicado";
+  if (respuesta.status === 504) throw new Error("sin-confirmacion");
+  throw new Error("error-lista-correo");
 }
 
 const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -4000,8 +3963,8 @@ function NewsletterForm() {
     if (!EMAIL_VALIDO.test(email.trim())) { setEstado("invalido"); return; }
     setEstado("enviando");
     try {
-      const respuesta = await suscribirPorJsonp(email.trim());
-      setEstado(interpretarRespuestaAlta(respuesta));
+      const resultado = await suscribirEnListaDeCorreo(email.trim());
+      setEstado(resultado);
     } catch (err) {
       setEstado(err.message === "sin-confirmacion" ? "sin-confirmar" : "error");
     }
@@ -4068,7 +4031,7 @@ function NewsletterForm() {
       )}
 
       <p id="newsletter-privacidad" style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginTop: 12 }}>
-        Un correo por semana. Puedes darte de baja desde el enlace que lleva cada envío. Gestionamos la lista con MailerLite y no usamos tu dirección para otra cosa; el detalle está en la <Link to="/privacidad" style={{ color: C.goldText }}>política de privacidad</Link>.
+        Un correo por semana. Puedes darte de baja desde el enlace que lleva cada envío. No usamos tu dirección para otra cosa; el detalle está en la <Link to="/privacidad" style={{ color: C.goldText }}>política de privacidad</Link>.
       </p>
     </form>
   );
