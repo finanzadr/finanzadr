@@ -4,20 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- seo:inicio -->
+    <!-- Valores de la portada. En el build, scripts/prerender.mjs sustituye
+         todo lo que hay entre seo:inicio y seo:fin por el título, la
+         descripción, el canonical, las etiquetas og/twitter y el JSON-LD de
+         cada ruta, así que un rastreador sin JavaScript ya ve los de la
+         página. useDocumentMeta (src/App.jsx) los mantiene al navegar. -->
     <title>FinanzaDR — Entiende Wall Street, invierte con más criterio</title>
     <meta name="description" content="Guías en español, contexto del mercado y herramientas para latinos que quieren aprender a invertir." />
 
-    <!-- Valores por defecto de la portada. En cada ruta, useDocumentMeta
-         (src/App.jsx) reescribe título, descripción, canonical y las etiquetas
-         og/twitter con los de esa página. Como el sitio se sirve con una sola
-         plantilla HTML, un rastreador que no ejecute JavaScript verá siempre
-         estos valores; los que sí lo ejecutan, incluido Google, leen los de la
-         página. Resolverlo del todo exigiría renderizado en servidor. -->
     <link rel="canonical" href="https://finanzadr.com/" />
-    <meta name="google-site-verification" content="_TSroH_5vGB2p5BoLEonqfG_R4tm7j0HTMb-8-qVqbA" />
-
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1771735358592313" crossorigin="anonymous"></script>
-
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://finanzadr.com/" />
     <meta property="og:title" content="FinanzaDR — Entiende Wall Street, invierte con más criterio" />
@@ -33,6 +29,11 @@
     <meta name="twitter:title" content="FinanzaDR — Entiende Wall Street, invierte con más criterio" />
     <meta name="twitter:description" content="Guías en español, contexto del mercado y herramientas para latinos que quieren aprender a invertir." />
     <meta name="twitter:image" content="https://finanzadr.com/og-image.png" />
+    <!-- seo:fin -->
+
+    <meta name="google-site-verification" content="_TSroH_5vGB2p5BoLEonqfG_R4tm7j0HTMb-8-qVqbA" />
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1771735358592313" crossorigin="anonymous"></script>
   </head>
   <body>
     <div id="root"></div>

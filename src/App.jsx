@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route, Link, Outlet, useOutletContext, useSearchParams, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Outlet, Navigate, useOutletContext, useSearchParams, useLocation, useParams } from "react-router-dom";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from "recharts";
 
 // Modelo de instrumento. Separa simbolo, nombre del producto que realmente
@@ -29,7 +29,7 @@ const INSTRUMENTOS = [
   { titulo: "Bitcoin consolida por encima de los $90,000 con creciente adopción institucional", resumen: "Bitcoin mantiene su posición por encima de los $90,000 respaldado por compras institucionales y la aprobación de nuevos ETFs en mercados europeos y asiáticos.", fuente: "CNBC", tiempo: "Hace 7 horas", categoria: "Cripto" },
   { titulo: "Los bonos del Tesoro a 10 años suben ante señales de desaceleración económica", resumen: "El rendimiento del bono del Tesoro a 10 años cayó al 4.2% mientras los inversores buscan activos más seguros. Los datos de manufactura mostraron una contracción por segundo mes consecutivo.", fuente: "Financial Times", tiempo: "Hace 9 horas", categoria: "Bonos" },
   { titulo: "Dow Jones supera los 42,000 puntos impulsado por sector financiero y salud", resumen: "El Dow Jones Industrial Average superó los 42,000 puntos esta semana, liderado por fuertes ganancias en el sector financiero y de salud.", fuente: "MarketWatch", tiempo: "Hace 11 horas", categoria: "Mercados" },
-];const ARTICULOS = [
+];export const ARTICULOS = [
   { tipo: "pasos", titulo: "Cómo abrir tu primera cuenta de inversión en EE.UU. siendo inmigrante", slug: "abrir-cuenta-inversion-con-itin", nivel: "Principiante", tema: "Cuentas y brokers", extracto: "No necesitas ser ciudadano ni tener SSN para invertir en Wall Street. Con un ITIN y tu pasaporte puedes abrir cuenta en varios brokers: estos son los requisitos y los plazos reales.", intro: "Uno de los mitos más grandes que detiene a los inmigrantes latinos es pensar que hay que ser ciudadano o residente legal permanente para invertir en la bolsa de EE.UU. No es cierto: no hace falta un Social Security Number (SSN), y con un ITIN (Individual Taxpayer Identification Number) y tu pasaporte hay brokers que abren cuenta. Lo que sí cambia según tu situación es qué broker te acepta y qué formulario fiscal te corresponde, porque cada entidad fija su propia política y no todas admiten los mismos perfiles. Esta guía es educativa: antes de abrir una cuenta, confirma los requisitos con el broker y, si tu caso fiscal no es sencillo, con un profesional.", pasos: [
       { titulo: "Consigue tu ITIN si no tienes SSN", texto: "Si no calificas para un SSN, solicita un ITIN con el formulario W-7 del IRS. Es un número de identificación fiscal para quien tiene una obligación tributaria en EE.UU. y no puede obtener un SSN. Puedes tramitarlo por tu cuenta o con un Acceptance Agent certificado por el IRS. Cuenta con tiempo: el propio IRS pide esperar unas 7 semanas para recibir respuesta, y de 9 a 11 semanas si solicitas entre el 15 de enero y el 30 de abril o desde el extranjero. No es un trámite de una semana." },
       { titulo: "Elige tu broker y confirma que acepta tu caso", texto: "Entre los más usados por principiantes están Robinhood y Webull, por lo simple de sus apps; Interactive Brokers es el más habitual para quien vive fuera de EE.UU. Ahora bien, cada broker decide a quién acepta y con qué documentos: antes de empezar el trámite, verifica en su propia web si admite clientes con ITIN y tu situación de residencia. Las políticas cambian con el tiempo y no todas las cuentas están disponibles en todos los países." },
@@ -121,7 +121,7 @@ const INSTRUMENTOS = [
     ], cierre: "No hay una respuesta única de \"cuál es mejor\" — depende de si crees que pagarás más impuestos ahora o en el futuro, y de si calificas por tus ingresos. Una regla general que mucha gente usa: si esperas ganar más en el futuro de lo que ganas hoy (por ejemplo, estás empezando tu carrera), un Roth puede convenir más. Si estás en tu mejor momento de ingresos y esperas ganar menos en la jubilación, un Traditional puede ahorrarte más impuestos ahora. Esto depende de tu situación específica — vale la pena revisarlo con un profesional de impuestos.", nota: "Este contenido es educativo e informativo, no constituye asesoría fiscal ni financiera personalizada. Los límites de ingresos, montos de contribución y reglas de RMD cambian anualmente. Consulta a un contador (CPA) o asesor financiero certificado para tu situación específica.", autor: "Equipo FinanzaDR", fecha: "Julio 2026", tags: ["IRA", "Retiro", "Impuestos", "Principiantes"] },
 ];
 
-const ARTICULOS_OPCIONES = [
+export const ARTICULOS_OPCIONES = [
   { tipo: "estrategia", id: "covered-call", nombre: "Covered Call", sesgo: "neutral", nivel: "básico", riesgo: { etiqueta: "Riesgo alto", nota: "Conservas íntegra la caída de la acción; la prima solo amortigua una parte, y renuncias a la subida por encima del strike." },
     extracto: "La estrategia de opciones más común para generar ingreso extra sobre acciones que ya tienes, a cambio de limitar tu ganancia máxima.",
     queEs: "Un Covered Call combina dos posiciones: tienes 100 acciones de una empresa, y vendes una opción Call sobre esas mismas acciones, cobrando una prima de inmediato. Se llama 'covered' (cubierta) porque ya posees las acciones que respaldan la operación — si te asignan (te obligan a vender), simplemente entregas acciones que ya tenías, sin necesidad de comprarlas en el mercado a un precio desfavorable.",
@@ -490,7 +490,20 @@ function ScrollToTop() {
   return null;
 }
 
-const SITIO = "https://finanzadr.com";
+export const SITIO = "https://finanzadr.com";
+
+// Rutas fijas que se prerenderizan y entran en el sitemap. Las guías y las
+// estrategias se añaden desde ARTICULOS / ARTICULOS_OPCIONES. Quedan fuera las
+// legales, /compartir, /contenido-diario y /monitoreo: existen, pero no tienen
+// por qué competir en el buscador.
+export const RUTAS_ESTATICAS = ["/", "/aprende", "/opciones", "/noticias", "/apertura", "/briefing", "/mercados", "/heatmap", "/sentimiento", "/calculadora", "/brokers", "/newsletter"];
+
+// Colector de cabecera para el prerender. En el navegador nunca se activa:
+// useDocumentMeta y DatosEstructurados escriben en el DOM desde useEffect. En
+// el pase de servidor (scripts/prerender.mjs) no hay efectos, así que las
+// mismas funciones anotan aquí, durante el render, lo que va en el <head>. El
+// pase es síncrono y se reinicia por ruta, por eso un objeto de módulo basta.
+export const cabeceraSSR = { activo: false, meta: null, jsonLd: [] };
 
 // Metadatos por página. Antes solo se cambiaban el título y la descripción, y
 // el canonical de index.html —fijo en la portada— se quedaba puesto en todas
@@ -498,15 +511,17 @@ const SITIO = "https://finanzadr.com";
 // al compartir cualquier URL en redes salía siempre la ficha de la portada.
 //
 // `canonical` se pasa cuando la URL canónica no es el propio pathname (por
-// ejemplo una guía, cuya forma canónica lleva ?guia=<slug>).
+// ejemplo al llegar a una guía por un enlace antiguo con query string).
 function useDocumentMeta(title, description, opciones = {}) {
   const { pathname, search } = useLocation();
   const { canonical, tipo = "website" } = opciones;
+  const url = `${SITIO}${canonical || pathname + (search || "")}`;
+
+  // eslint-disable-next-line react-hooks/immutability -- solo en el pase de servidor, síncrono y sin re-render
+  if (cabeceraSSR.activo) cabeceraSSR.meta = { title, description, url, tipo };
 
   useEffect(() => {
     document.title = title;
-
-    const url = `${SITIO}${canonical || pathname + (search || "")}`;
 
     const fijarMeta = (selector, atributo, valor, contenido) => {
       let etiqueta = document.head.querySelector(selector);
@@ -536,15 +551,18 @@ function useDocumentMeta(title, description, opciones = {}) {
       document.head.appendChild(enlaceCanonico);
     }
     enlaceCanonico.setAttribute("href", url);
-  }, [title, description, canonical, tipo, pathname, search]);
+  }, [title, description, url, tipo]);
 }
 
 // Datos estructurados. Solo se describe lo que existe de verdad: el sitio y
 // su responsable, y cada guía como Article con su autor y sus fechas reales.
 // Nada de valoraciones, productos ni reseñas.
 function DatosEstructurados({ datos }) {
+  if (cabeceraSSR.activo && datos) cabeceraSSR.jsonLd.push(datos);
   useEffect(() => {
     if (!datos) return undefined;
+    // El HTML prerenderizado ya trae este bloque; se retira para no duplicarlo.
+    document.head.querySelectorAll('script[type="application/ld+json"][data-ssr]').forEach((s) => s.remove());
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.textContent = JSON.stringify(datos);
@@ -567,9 +585,11 @@ function fechaISOdeTexto(texto) {
   return mes && ano ? `${ano}-${mes}-01` : null;
 }
 
-export default function FinanzasDR() {
+// Árbol de rutas sin router: el navegador lo envuelve en BrowserRouter y el
+// prerender (src/entry-server.jsx) en StaticRouter.
+export function Rutas() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
@@ -582,7 +602,9 @@ export default function FinanzasDR() {
           <Route path="apertura" element={<AperturaPage />} />
           <Route path="contenido-diario" element={<ContenidoDiarioPage />} />
           <Route path="aprende" element={<AprendePage />} />
+          <Route path="aprende/:slug" element={<AprendePage />} />
           <Route path="opciones" element={<OpcionesPage />} />
+          <Route path="opciones/:id" element={<OpcionesPage />} />
           <Route path="brokers" element={<BrokersPage />} />
           <Route path="calculadora" element={<CalculadoraPage />} />
           <Route path="compartir" element={<CompartirPage />} />
@@ -594,13 +616,27 @@ export default function FinanzasDR() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
+    </>
+  );
+}
+
+export default function FinanzasDR() {
+  return (
+    <BrowserRouter>
+      <Rutas />
     </BrowserRouter>
   );
 }
 
 function Layout() {
   const [stocks, setStocks] = useState(INSTRUMENTOS);
-  const [dark, setDark] = useState(temaInicial);
+  // Arranca en claro y adopta la preferencia real tras montar: el HTML
+  // prerenderizado es claro y React no corrige estilos en línea discrepantes
+  // al hidratar; si el estado inicial fuera oscuro, la página quedaría clara
+  // con el interruptor en oscuro. El coste es un parpadeo para quien usa oscuro.
+  const [dark, setDark] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- la preferencia solo se puede leer tras hidratar
+  useEffect(() => { if (temaInicial()) setDark(true); }, []);
   const [realLoading, setRealLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [realErr, setRealErr] = useState(null);
@@ -1037,7 +1073,7 @@ function PortadaHero() {
 
 // B. Ruta para principiantes: tres pasos que enlazan a contenido que ya existe.
 const RUTA_PASOS = [
-  { to: "/aprende?guia=que-es-un-etf", titulo: "Entiende qué son las acciones y los ETFs", texto: "Qué compras exactamente cuando compras un ETF, y por qué es el punto de partida más común." },
+  { to: "/aprende/que-es-un-etf", titulo: "Entiende qué son las acciones y los ETFs", texto: "Qué compras exactamente cuando compras un ETF, y por qué es el punto de partida más común." },
   { to: "/brokers", titulo: "Conoce los requisitos y compara brokers", texto: "Qué documentos piden, qué cobran y a qué perfil de inversor atiende cada uno." },
   { to: "/calculadora", titulo: "Explora el interés compuesto", texto: "Simula cómo crece un aporte mensual sostenido en el tiempo, con tus propias cifras." },
 ];
@@ -1314,7 +1350,7 @@ function GuiasDestacadas() {
           if (!post) return null;
           return (
             <li key={idx} style={{ display: "flex" }}>
-              <Link to={`/aprende?guia=${post.slug}`} className="tarjeta-enlace" style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
+              <Link to={`/aprende/${post.slug}`} className="tarjeta-enlace" style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, color: C.muted }}>
                   <span style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: "3px 10px", fontWeight: 600, color: C.sub }}>{post.nivel}</span>
                   <span>{post.tema}</span>
@@ -2526,9 +2562,9 @@ const NIVELES_APRENDE = ["Principiante", "Intermedio"];
 // abrir la cuenta y, ya con dinero dentro, ver qué hace el tiempo.
 const SECUENCIA_APRENDE = [3, 1, 0, 5];
 
-// Resuelve la guía pedida por la URL. Se aceptan las dos formas: ?guia=<slug>,
-// que es la que enlaza el sitio, y ?articulo=<n>, que es la que llevaban los
-// enlaces anteriores y sigue funcionando.
+// Resuelve la guía pedida por la query string de los enlaces antiguos:
+// ?guia=<slug> y ?articulo=<n>. La forma actual es /aprende/<slug>; estas dos
+// siguen resolviendo para redirigir a ella.
 function resolverGuia(searchParams) {
   const slug = searchParams.get("guia");
   if (slug) {
@@ -2540,7 +2576,7 @@ function resolverGuia(searchParams) {
   return null;
 }
 
-const enlaceGuia = (post, i) => `/aprende?guia=${post.slug || i}`;
+const enlaceGuia = (post) => `/aprende/${post.slug}`;
 
 function CuerpoGuia({ post }) {
   if (post.tipo === "stats") return <ArticuloStats post={post} />;
@@ -2563,11 +2599,11 @@ function MetaGuia({ post, tamano = 13 }) {
   );
 }
 
-function FichaGuia({ post, indice, paso }) {
+function FichaGuia({ post, paso }) {
   const { C } = useOutletContext();
   return (
     <li style={{ display: "flex" }}>
-      <Link to={enlaceGuia(post, indice)} className="tarjeta-enlace"
+      <Link to={enlaceGuia(post)} className="tarjeta-enlace"
         style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "22px 24px", textDecoration: "none" }}>
         {paso && (
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", background: C.goldBg, color: C.goldText, fontSize: 14, fontWeight: 700 }}>{paso}</span>
@@ -2741,9 +2777,11 @@ function LecturaGuia({ post, indice }) {
 }
 
 function AprendePage() {
+  const { slug } = useParams();
   const [searchParams] = useSearchParams();
-  const indice = resolverGuia(searchParams);
-  const post = indice != null ? ARTICULOS[indice] : null;
+  const indiceLegado = slug ? null : resolverGuia(searchParams);
+  const indice = slug ? ARTICULOS.findIndex((post) => post.slug === slug) : indiceLegado;
+  const post = indice != null && indice !== -1 ? ARTICULOS[indice] : null;
 
   // El título y la descripción cambian con la guía abierta; sin guía, los de
   // la biblioteca. Antes la ruta abría siempre el primer artículo desplegado
@@ -2751,10 +2789,13 @@ function AprendePage() {
   useDocumentMeta(
     post ? `${post.titulo} — FinanzaDR` : "Aprende a invertir — FinanzaDR",
     post ? post.extracto : "Guías en español sobre ETFs, acciones, cuentas de retiro y primeros pasos para invertir, ordenadas por nivel y tema.",
-    // La forma canónica de una guía es siempre ?guia=<slug>, aunque se haya
-    // llegado por el ?articulo=<n> de los enlaces antiguos.
-    post ? { canonical: `/aprende?guia=${post.slug}`, tipo: "article" } : { canonical: "/aprende" }
+    post ? { canonical: enlaceGuia(post), tipo: "article" } : { canonical: "/aprende" }
   );
+
+  // Enlaces antiguos con ?guia= o ?articulo=: se sustituyen por la URL limpia
+  // sin dejar rastro en el historial.
+  if (!slug && indiceLegado != null) return <Navigate to={enlaceGuia(ARTICULOS[indiceLegado])} replace />;
+  if (slug && !post) return <NotFoundPage />;
 
   const datosArticulo = post ? {
     "@context": "https://schema.org",
@@ -2764,7 +2805,7 @@ function AprendePage() {
     inLanguage: "es",
     author: { "@type": "Organization", name: post.autor || "FinanzaDR" },
     publisher: { "@type": "Organization", name: "FinanzaDR", url: SITIO },
-    mainEntityOfPage: `${SITIO}/aprende?guia=${post.slug}`,
+    mainEntityOfPage: `${SITIO}${enlaceGuia(post)}`,
     ...(fechaISOdeTexto(post.fecha) ? { datePublished: fechaISOdeTexto(post.fecha) } : {}),
     ...(fechaISOdeTexto(post.revisadoEn) ? { dateModified: fechaISOdeTexto(post.revisadoEn) } : {}),
   } : null;
@@ -3078,7 +3119,7 @@ function ArticuloErrores({ post }) {
 const SESGOS_OPCIONES = ["alcista", "bajista", "neutral"];
 const NIVELES_OPCIONES = ["básico", "intermedio", "avanzado"];
 
-const enlaceEstrategia = (post) => `/opciones?estrategia=${post.id}`;
+const enlaceEstrategia = (post) => `/opciones/${post.id}`;
 
 // Dos etiquetas distintas, a propósito: la dificultad dice cuánto cuesta
 // entender la estrategia y el riesgo, cuánto puedes perder con ella. Un
@@ -3312,16 +3353,20 @@ function ListadoOpciones() {
 }
 
 function OpcionesPage() {
+  const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const id = searchParams.get("estrategia");
+  const idLegado = id ? null : searchParams.get("estrategia");
   const post = id ? ARTICULOS_OPCIONES.find((e) => e.id === id) : null;
+  const postLegado = idLegado ? ARTICULOS_OPCIONES.find((e) => e.id === idLegado) : null;
 
   useDocumentMeta(
     post ? `${post.nombre} — Opcionario de FinanzaDR` : "Opcionario — FinanzaDR",
     post ? post.extracto : "Estrategias de opciones explicadas paso a paso en español, con su riesgo, su ejemplo y su diagrama de resultado.",
-    post ? { canonical: `/opciones?estrategia=${post.id}`, tipo: "article" } : { canonical: "/opciones" }
+    post ? { canonical: enlaceEstrategia(post), tipo: "article" } : { canonical: "/opciones" }
   );
 
+  if (postLegado) return <Navigate to={enlaceEstrategia(postLegado)} replace />;
+  if (id && !post) return <NotFoundPage />;
   return post ? <DetalleEstrategia post={post} /> : <ListadoOpciones />;
 }
 

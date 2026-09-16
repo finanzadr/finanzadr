@@ -127,7 +127,7 @@ console.log("\n=== 3. Diagramas del Opcionario ===");
 // ---------------------------------------------------------------------------
 console.log("\n=== 4. Integridad de las guías ===");
 {
-  const guias = evaluar("const ARTICULOS = [", "\nconst ARTICULOS_OPCIONES", "ARTICULOS");
+  const guias = evaluar("const ARTICULOS = [", "\nexport const ARTICULOS_OPCIONES", "ARTICULOS");
   const TEMAS = ["Primeros pasos", "Acciones y ETFs", "Cuentas y brokers", "Largo plazo y retiro", "Herramientas"];
   const NIVELES = ["Principiante", "Intermedio"];
   const slugs = new Set();
