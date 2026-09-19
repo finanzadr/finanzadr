@@ -139,6 +139,24 @@ console.log("\n=== 4. Integridad de las guías ===");
     if (!TEMAS.includes(post.tema)) fallar(`guía ${i}: tema fuera de la biblioteca (${post.tema})`);
   }
   ok(`${guias.length} guías con slug único, nivel y tema válidos`);
+
+  // vercel.json es JSON estático (Vercel lo lee antes del build), así que los
+  // redirects 301 de los enlaces antiguos ?articulo=<n> se escriben a mano.
+  // Aquí se comprueba que siguen apuntando al slug que ocupa esa posición.
+  const vercel = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+  if (vercel.rewrites?.length) fallar("vercel.json conserva rewrites: el 404 real depende de que no haya catch-all");
+  const porIndice = new Map();
+  for (const r of vercel.redirects || []) {
+    const q = (r.has || []).find((h) => h.type === "query" && h.key === "articulo");
+    if (q && r.source === "/aprende") porIndice.set(q.value, r.destination);
+  }
+  let desfasados = 0;
+  guias.forEach((post, i) => {
+    const destino = porIndice.get(String(i));
+    if (destino !== `/aprende/${post.slug}`) { desfasados += 1; fallar(`vercel.json: ?articulo=${i} → ${destino || "(sin redirect)"}, debería ser /aprende/${post.slug}`); }
+  });
+  if (porIndice.size !== guias.length) fallar(`vercel.json: ${porIndice.size} redirects ?articulo= para ${guias.length} guías`);
+  else if (!desfasados) ok(`vercel.json: los ${guias.length} redirects ?articulo= apuntan al slug correcto`);
 }
 
 // ---------------------------------------------------------------------------

@@ -2814,6 +2814,9 @@ function AprendePage() {
   // Enlaces antiguos con ?guia= o ?articulo=: se sustituyen por la URL limpia
   // sin dejar rastro en el historial.
   if (!slug && indiceLegado != null) return <Navigate to={enlaceGuia(ARTICULOS[indiceLegado])} replace />;
+  // El redirect 308 de vercel.json arrastra la query original al destino
+  // (/aprende/<slug>?guia=<slug>); aquí se limpia.
+  if (post && (searchParams.has("guia") || searchParams.has("articulo"))) return <Navigate to={enlaceGuia(post)} replace />;
   if (slug && !post) return <NotFoundPage />;
 
   const datosArticulo = post ? {
@@ -3385,6 +3388,8 @@ function OpcionesPage() {
   );
 
   if (postLegado) return <Navigate to={enlaceEstrategia(postLegado)} replace />;
+  // Misma limpieza que en AprendePage: la query sobrevive al redirect de Vercel.
+  if (post && searchParams.has("estrategia")) return <Navigate to={enlaceEstrategia(post)} replace />;
   if (id && !post) return <NotFoundPage />;
   return post ? <DetalleEstrategia post={post} /> : <ListadoOpciones />;
 }

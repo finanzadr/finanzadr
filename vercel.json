@@ -1,6 +1,20 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+    { "source": "/:ruta+/index.html", "destination": "/:ruta+", "permanent": true },
+
+    { "source": "/aprende", "has": [{ "type": "query", "key": "guia", "value": "(?<slug>[a-z0-9-]+)" }], "destination": "/aprende/:slug", "permanent": true },
+    { "source": "/aprende", "has": [{ "type": "query", "key": "articulo", "value": "0" }], "destination": "/aprende/abrir-cuenta-inversion-con-itin", "permanent": true },
+    { "source": "/aprende", "has": [{ "type": "query", "key": "articulo", "value": "1" }], "destination": "/aprende/que-es-el-sp-500", "permanent": true },
+    { "source": "/aprende", "has": [{ "type": "query", "key": "articulo", "value": "2" }], "destination": "/aprende/acciones-etfs-o-fondos-mutuos", "permanent": true },
+    { "source": "/aprende", "has": [{ "type": "query", "key": "articulo", "value": "3" }], "destination": "/aprende/que-es-un-etf", "permanent": true },
+    { "source": "/aprende", "has": [{ "type": "query", "key": "articulo", "value": "4" }], "destination": "/aprende/leer-mapa-de-calor-y-sentimiento", "permanent": true },
+    { "source": "/aprende", "has": [{ "type": "query", "key": "articulo", "value": "5" }], "destination": "/aprende/interes-compuesto", "permanent": true },
+    { "source": "/aprende", "has": [{ "type": "query", "key": "articulo", "value": "6" }], "destination": "/aprende/errores-comunes-al-empezar", "permanent": true },
+    { "source": "/aprende", "has": [{ "type": "query", "key": "articulo", "value": "7" }], "destination": "/aprende/roth-ira-o-traditional-ira", "permanent": true },
+
+    { "source": "/opciones", "has": [{ "type": "query", "key": "estrategia", "value": "(?<id>[a-z0-9-]+)" }], "destination": "/opciones/:id", "permanent": true }
   ],
   "crons": [
     { "path": "/api/agentes?plan=apertura", "schedule": "0 11 * * *" },
