@@ -581,7 +581,9 @@ function DatosEstructurados({ datos }) {
   useEffect(() => {
     if (!datos) return undefined;
     // El HTML prerenderizado ya trae este bloque; se retira para no duplicarlo.
-    document.head.querySelectorAll('script[type="application/ld+json"][data-ssr]').forEach((s) => s.remove());
+    // Solo el del mismo @type: una página puede llevar varios (Article y
+    // BreadcrumbList) y cada instancia repone únicamente el suyo.
+    document.head.querySelectorAll(`script[type="application/ld+json"][data-ssr][data-tipo="${datos["@type"]}"]`).forEach((s) => s.remove());
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.textContent = JSON.stringify(datos);
@@ -589,6 +591,17 @@ function DatosEstructurados({ datos }) {
     return () => { if (script.parentNode) script.parentNode.removeChild(script); };
   }, [datos]);
   return null;
+}
+
+// Migas de pan para el buscador (BreadcrumbList). Se emiten en las secciones
+// con jerarquía real —biblioteca › guía, opcionario › estrategia—; la portada
+// y las páginas de un solo nivel no las necesitan.
+function migasDePan(items) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.nombre, item: `${SITIO}${it.ruta}` })),
+  };
 }
 
 const MESES_ES = { enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05", junio: "06", julio: "07", agosto: "08", septiembre: "09", octubre: "10", noviembre: "11", diciembre: "12" };
@@ -2835,6 +2848,7 @@ function AprendePage() {
   return (
     <>
       <DatosEstructurados datos={datosArticulo} />
+      <DatosEstructurados datos={migasDePan([{ nombre: "Inicio", ruta: "/" }, { nombre: "Aprende", ruta: "/aprende" }, ...(post ? [{ nombre: post.titulo, ruta: enlaceGuia(post) }] : [])])} />
       {post ? <LecturaGuia post={post} indice={indice} /> : <BibliotecaAprende />}
     </>
   );
@@ -3391,7 +3405,12 @@ function OpcionesPage() {
   // Misma limpieza que en AprendePage: la query sobrevive al redirect de Vercel.
   if (post && searchParams.has("estrategia")) return <Navigate to={enlaceEstrategia(post)} replace />;
   if (id && !post) return <NotFoundPage />;
-  return post ? <DetalleEstrategia post={post} /> : <ListadoOpciones />;
+  return (
+    <>
+      <DatosEstructurados datos={migasDePan([{ nombre: "Inicio", ruta: "/" }, { nombre: "Opcionario", ruta: "/opciones" }, ...(post ? [{ nombre: post.nombre, ruta: enlaceEstrategia(post) }] : [])])} />
+      {post ? <DetalleEstrategia post={post} /> : <ListadoOpciones />}
+    </>
+  );
 }
 
 

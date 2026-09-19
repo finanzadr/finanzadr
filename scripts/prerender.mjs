@@ -67,7 +67,7 @@ function cabecera(meta, jsonLd) {
     description && `<meta name="twitter:description" content="${escapar(description)}" />`,
     `<meta name="twitter:image" content="${SITIO}/og-image.png" />`,
     // `</` dentro del JSON rompería el <script>; se escapa como manda el estándar.
-    ...jsonLd.map((d) => `<script type="application/ld+json" data-ssr>${JSON.stringify(d).replace(/<\//g, "<\\/")}</script>`),
+    ...jsonLd.map((d) => `<script type="application/ld+json" data-ssr data-tipo="${escapar(d["@type"])}">${JSON.stringify(d).replace(/<\//g, "<\\/")}</script>`),
   ].filter(Boolean);
   return lineas.map((l) => `    ${l}`).join("\n");
 }
