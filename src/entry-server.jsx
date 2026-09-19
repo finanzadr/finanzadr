@@ -7,7 +7,7 @@ import { StaticRouter } from "react-router";
 import { Rutas, cabeceraSSR } from "./App.jsx";
 
 // Datos que el prerender necesita para saber qué rutas escribir.
-export { RUTAS_ESTATICAS, ARTICULOS, ARTICULOS_OPCIONES, SITIO } from "./App.jsx";
+export { RUTAS_ESTATICAS, RUTAS_NOINDEX, ARTICULOS, ARTICULOS_OPCIONES, SITIO, fechaISOdeTexto } from "./App.jsx";
 
 export function render(url) {
   cabeceraSSR.activo = true;

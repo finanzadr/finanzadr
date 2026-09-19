@@ -498,6 +498,11 @@ export const SITIO = "https://finanzadr.com";
 // por qué competir en el buscador.
 export const RUTAS_ESTATICAS = ["/", "/aprende", "/opciones", "/noticias", "/apertura", "/briefing", "/mercados", "/heatmap", "/sentimiento", "/calculadora", "/brokers", "/newsletter"];
 
+// Existen y se prerenderizan igual, para que sigan sirviéndose sin un rewrite
+// catch-all, pero llevan <meta name="robots" content="noindex"> y no entran en
+// el sitemap. Cada página lo declara con useDocumentMeta(..., { noindex: true }).
+export const RUTAS_NOINDEX = ["/privacidad", "/terminos", "/aviso", "/compartir", "/contenido-diario", "/monitoreo"];
+
 // Colector de cabecera para el prerender. En el navegador nunca se activa:
 // useDocumentMeta y DatosEstructurados escriben en el DOM desde useEffect. En
 // el pase de servidor (scripts/prerender.mjs) no hay efectos, así que las
@@ -512,13 +517,15 @@ export const cabeceraSSR = { activo: false, meta: null, jsonLd: [] };
 //
 // `canonical` se pasa cuando la URL canónica no es el propio pathname (por
 // ejemplo al llegar a una guía por un enlace antiguo con query string).
+// `noindex` marca las páginas que existen pero no deben competir en el
+// buscador (legales, herramientas internas, 404).
 function useDocumentMeta(title, description, opciones = {}) {
   const { pathname, search } = useLocation();
-  const { canonical, tipo = "website" } = opciones;
+  const { canonical, tipo = "website", noindex = false } = opciones;
   const url = `${SITIO}${canonical || pathname + (search || "")}`;
 
   // eslint-disable-next-line react-hooks/immutability -- solo en el pase de servidor, síncrono y sin re-render
-  if (cabeceraSSR.activo) cabeceraSSR.meta = { title, description, url, tipo };
+  if (cabeceraSSR.activo) cabeceraSSR.meta = { title, description, url, tipo, noindex };
 
   useEffect(() => {
     document.title = title;
@@ -551,7 +558,19 @@ function useDocumentMeta(title, description, opciones = {}) {
       document.head.appendChild(enlaceCanonico);
     }
     enlaceCanonico.setAttribute("href", url);
-  }, [title, description, url, tipo]);
+
+    let robots = document.head.querySelector('meta[name="robots"]');
+    if (noindex) {
+      if (!robots) {
+        robots = document.createElement("meta");
+        robots.setAttribute("name", "robots");
+        document.head.appendChild(robots);
+      }
+      robots.setAttribute("content", "noindex, follow");
+    } else if (robots) {
+      robots.remove();
+    }
+  }, [title, description, url, tipo, noindex]);
 }
 
 // Datos estructurados. Solo se describe lo que existe de verdad: el sitio y
@@ -576,7 +595,7 @@ const MESES_ES = { enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "
 
 // Las guías traen la fecha como "Julio 2026". Se convierte a ISO solo cuando
 // se puede leer; si no, no se emite el campo en vez de inventar una fecha.
-function fechaISOdeTexto(texto) {
+export function fechaISOdeTexto(texto) {
   if (!texto) return null;
   const partes = String(texto).trim().toLowerCase().split(/\s+/);
   if (partes.length !== 2) return null;
@@ -2248,7 +2267,7 @@ function ContenidoDiarioPage() {
   useDocumentMeta(
     "Contenido diario — FinanzaDR",
     "Guiones y textos listos para redes, generados a partir de los resúmenes de apertura y cierre.",
-    { canonical: "/contenido-diario" }
+    { canonical: "/contenido-diario", noindex: true }
   );
   const { C } = useOutletContext();
   const [searchParams] = useSearchParams();
@@ -2500,7 +2519,7 @@ function MonitoreoReporte({ password }) {
 }
 
 function MonitoreoPage() {
-  useDocumentMeta("Monitoreo — FinanzaDR");
+  useDocumentMeta("Monitoreo — FinanzaDR", null, { canonical: "/monitoreo", noindex: true });
   const { C } = useOutletContext();
   const [autenticado, setAutenticado] = useState(false);
   const [password, setPassword] = useState("");
@@ -3796,7 +3815,7 @@ function LegalPage({ title, updated, sections }) {
 }
 
 function PrivacidadPage() {
-  useDocumentMeta("Política de Privacidad — FinanzaDR", "Cómo protegemos tu información en FinanzaDR.");
+  useDocumentMeta("Política de Privacidad — FinanzaDR", "Cómo protegemos tu información en FinanzaDR.", { canonical: "/privacidad", noindex: true });
   return (
     <LegalPage title="Política de Privacidad" updated="26 de julio de 2026" sections={[
       { titulo: "Qué información recopilamos", parrafos: [
@@ -3822,7 +3841,7 @@ function PrivacidadPage() {
 }
 
 function TerminosPage() {
-  useDocumentMeta("Términos y Condiciones — FinanzaDR", "Condiciones de uso de FinanzaDR: propiedad intelectual, afiliados, suscripciones, derecho de desistimiento en la UE y ley aplicable.");
+  useDocumentMeta("Términos y Condiciones — FinanzaDR", "Condiciones de uso de FinanzaDR: propiedad intelectual, afiliados, suscripciones, derecho de desistimiento en la UE y ley aplicable.", { canonical: "/terminos", noindex: true });
   return (
     <LegalPage title="Términos y Condiciones" updated="8 de septiembre de 2026" sections={[
       { titulo: "1. Quiénes somos y aceptación de los términos", parrafos: [
@@ -3912,7 +3931,7 @@ function TerminosPage() {
 }
 
 function AvisoPage() {
-  useDocumentMeta("Aviso Legal — FinanzaDR", "Aviso legal y de riesgo de FinanzaDR. Contenido educativo, no asesoría financiera.");
+  useDocumentMeta("Aviso Legal — FinanzaDR", "Aviso legal y de riesgo de FinanzaDR. Contenido educativo, no asesoría financiera.", { canonical: "/aviso", noindex: true });
   return (
     <LegalPage title="Aviso Legal" updated="26 de julio de 2026" sections={[
       { titulo: "No es asesoría de inversión", parrafos: [
@@ -3936,6 +3955,9 @@ function AvisoPage() {
 
 function NotFoundPage() {
   const { C } = useOutletContext();
+  // También se prerenderiza como dist/404.html (scripts/prerender.mjs), que
+  // Vercel sirve con estado 404 para cualquier ruta sin archivo.
+  useDocumentMeta("Página no encontrada — FinanzaDR", null, { canonical: "/404", noindex: true });
   return (
     <div className="fade-in" style={{ textAlign:"center", padding:"80px 20px" }}>
       <SectionTitle>Página no encontrada</SectionTitle>
@@ -5166,7 +5188,7 @@ function CompartirPage() {
   useDocumentMeta(
     "Resumen para compartir — FinanzaDR",
     "Genera una imagen con las cotizaciones del momento o con el cierre de la sesión, lista para compartir.",
-    { canonical: "/compartir" }
+    { canonical: "/compartir", noindex: true }
   );
   const { stocks, C } = useOutletContext();
   const [searchParams] = useSearchParams();

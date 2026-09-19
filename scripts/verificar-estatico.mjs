@@ -10,7 +10,7 @@
  *
  * Devuelve código de salida 1 si algo falla, para poder encadenarlo en CI.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
 const RUTA = new URL("../src/App.jsx", import.meta.url);
 const fuente = readFileSync(RUTA, "utf8").replace(/\r\n/g, "\n");
@@ -184,6 +184,50 @@ console.log("\n=== 5. Heurísticas de accesibilidad ===");
     if (!/overflowX:\s*"auto"/.test(contexto)) { tablasSueltas += 1; fallar(`línea ${i + 1}: tabla ancha sin contenedor con scroll`); }
   });
   if (!tablasSueltas) ok("todas las tablas anchas viven en un contenedor con scroll");
+}
+
+// --- SEO: salida del build (solo si hay dist/) --------------------------------
+// El prerender escribe dist/404.html con noindex y dist/sitemap.xml a partir de
+// RUTAS_ESTATICAS + guías + estrategias; las rutas de RUTAS_NOINDEX se sirven
+// pero no entran en el sitemap. Aquí se comprueba que lo generado cumple eso.
+{
+  const DIST = new URL("../dist/", import.meta.url);
+  const leerLista = (nombre) => {
+    const m = fuente.match(new RegExp(`export const ${nombre} = \\[([^\\]]*)\\]`));
+    return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : null;
+  };
+  const estaticas = leerLista("RUTAS_ESTATICAS");
+  const noindex = leerLista("RUTAS_NOINDEX");
+  if (!estaticas || !noindex) fallar("no se pudieron leer RUTAS_ESTATICAS / RUTAS_NOINDEX de App.jsx");
+  else if (!existsSync(new URL("index.html", DIST))) avisar("dist/ no existe: ejecuta npm run build para comprobar 404.html y sitemap.xml");
+  else {
+    console.log("\nSEO (dist/):");
+    const pag404 = new URL("404.html", DIST);
+    if (!existsSync(pag404)) fallar("falta dist/404.html");
+    else if (!/<meta name="robots" content="noindex/.test(readFileSync(pag404, "utf8"))) fallar("dist/404.html no lleva noindex");
+    else ok("dist/404.html existe y lleva noindex");
+
+    const rutaMapa = new URL("sitemap.xml", DIST);
+    if (!existsSync(rutaMapa)) fallar("falta dist/sitemap.xml");
+    else {
+      const mapa = readFileSync(rutaMapa, "utf8");
+      const locs = [...mapa.matchAll(/<loc>https:\/\/finanzadr\.com([^<]*)<\/loc>/g)].map((m) => m[1]);
+      const faltan = estaticas.filter((r) => !locs.includes(r));
+      const sobran = noindex.filter((r) => locs.includes(r));
+      if (faltan.length) fallar(`sitemap sin: ${faltan.join(", ")}`);
+      if (sobran.length) fallar(`sitemap con rutas noindex: ${sobran.join(", ")}`);
+      if (!faltan.length && !sobran.length) ok(`sitemap.xml: ${locs.length} URLs, todas las estáticas y ninguna noindex`);
+    }
+
+    let robotsMal = 0;
+    for (const r of [...estaticas.filter((x) => x !== "/"), ...noindex]) {
+      const archivo = new URL(`.${r}/index.html`, DIST);
+      if (!existsSync(archivo)) { robotsMal += 1; fallar(`falta dist${r}/index.html`); continue; }
+      const conNoindex = /<meta name="robots" content="noindex/.test(readFileSync(archivo, "utf8"));
+      if (conNoindex !== noindex.includes(r)) { robotsMal += 1; fallar(`dist${r}/index.html ${conNoindex ? "lleva" : "no lleva"} noindex y no debería`); }
+    }
+    if (!robotsMal) ok("todas las rutas estáticas y noindex tienen su index.html con el robots correcto");
+  }
 }
 
 console.log(`\n${fallos === 0 ? "Sin fallos" : fallos + " fallos"}${avisos ? `, ${avisos} avisos` : ""}.`);
